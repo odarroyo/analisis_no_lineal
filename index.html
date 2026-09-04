@@ -11,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
   <style>
     /* ==========================================================================
        SISTEMA DE DISEÑO Y PALETA DE COLORES (MODO CLARO POR DEFECTO / OSCURO)
@@ -687,41 +692,6 @@
         </div>
       </article>
 
-      <!-- Clase 03: Próximamente -->
-      <article class="class-card card-upcoming">
-        <div>
-          <div class="class-header">
-            <span class="class-number">Clase 03</span>
-            <span class="class-status">⏳ En Desarrollo</span>
-          </div>
-          <h3 class="class-title">Control de Desplazamiento y Métodos de Arc-Length</h3>
-          <p class="class-desc">
-            Superación de puntos límite, snap-through y softening pronunciado. Algoritmos de longitud de arco (Crisfield, Riks) y curvas de capacidad pushover completas.
-          </p>
-
-          <ul class="feature-list">
-            <li class="feature-item">
-              <span class="feature-icon">○</span>
-              <span>Puntos límite de carga vs puntos límite de desplazamiento.</span>
-            </li>
-            <li class="feature-item">
-              <span class="feature-icon">○</span>
-              <span>Restricción esférica y cilíndrica de longitud de arco.</span>
-            </li>
-            <li class="feature-item">
-              <span class="feature-icon">○</span>
-              <span>Análisis Pushover estático no lineal con degradación de resistencia.</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="card-footer">
-          <button class="btn-launch btn-disabled" disabled>
-            <span>Próximamente</span>
-          </button>
-        </div>
-      </article>
-
     </div>
 
     <!-- Banner Informativo -->
@@ -782,6 +752,16 @@
     window.addEventListener('load', () => {
       const saved = localStorage.getItem('nl_course_theme') || 'light';
       applyTheme(saved);
+
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false }
+          ],
+          throwOnError: false
+        });
+      }
     });
   </script>
 </body>
