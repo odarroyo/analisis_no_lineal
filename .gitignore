@@ -21,3 +21,15 @@ Thumbs.db
 *Estudiantes*
 *estudiantes*
 *COHORTE*
+
+# LaTeX auxiliary files
+*.aux
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.nav
+*.snm
+*.vrb

@@ -1,0 +1,792 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ==============================================================================
+% PAQUETES DE CONFIGURACIÓN Y TIPOGRAFÍA
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot,es-noshorthands]{babel}
+\usepackage[margin=2.2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{microtype}
+\usepackage{booktabs,array,tabularx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,patterns,calc,positioning,decorations.pathmorphing,shapes.geometric,babel}
+\usepackage[skins,breakable]{tcolorbox}
+\usepackage{hyperref}
+
+% ==============================================================================
+% PALETA DE COLORES INSTITUCIONAL Y PEDAGÓGICA
+% ==============================================================================
+\definecolor{uispurple}{RGB}{109, 40, 217}
+\definecolor{uisblue}{RGB}{2, 132, 199}
+\definecolor{uisgreen}{RGB}{5, 150, 105}
+\definecolor{uisamber}{RGB}{217, 119, 6}
+\definecolor{uisrose}{RGB}{225, 29, 72}
+\definecolor{uisdark}{RGB}{15, 23, 42}
+\definecolor{uisgray}{RGB}{100, 116, 139}
+\definecolor{uislightbg}{RGB}{248, 250, 252}
+\definecolor{uisboxborder}{RGB}{203, 213, 225}
+
+% ==============================================================================
+% HIPERVÍNCULOS
+% ==============================================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=uispurple,
+    citecolor=uisblue,
+    urlcolor=uisblue,
+    pdftitle={Equilibrio No Lineal y Metodo de Newton-Raphson - 2-DOF},
+    pdfauthor={Prof. Orlando Arroyo - Universidad Industrial de Santander}
+}
+
+% ==============================================================================
+% ENCABEZADOS Y PIES DE PÁGINA (FANCYHDR)
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{\color{uispurple}Análisis No Lineal de Estructuras} | Posgrado en Ing. Estructural}
+\fancyhead[R]{\small\color{uisgray}Universidad Industrial de Santander}
+\fancyfoot[L]{\small\color{uisgray}Prof. Orlando Arroyo}
+\fancyfoot[C]{\small\color{uisgray}Material Docente de Cátedra}
+\fancyfoot[R]{\small\color{uisdark}\thepage\ / \pageref{LastPage}}
+
+% ==============================================================================
+% CAJAS DESTACADAS (TCOLORBOX)
+% ==============================================================================
+\newtcolorbox{conceptbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uislightbg,
+    colframe=uispurple,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    sharp corners=downhill,
+    arc=4mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt,
+    shadow={2pt}{-2pt}{0pt}{black!10}
+}
+
+\newtcolorbox{stepbox}[1][]{
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=uisblue,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+\newtcolorbox{alertbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uisrose!5,
+    colframe=uisrose,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+% ==============================================================================
+% DOCUMENTO PRINCIPAL
+% ==============================================================================
+\begin{document}
+
+% --- PORTADA / ENCABEZADO TITULAR ---
+\begin{center}
+    {\scshape\Large Universidad Industrial de Santander}\\[0.2cm]
+    {\large Escuela de Ingeniería Civil --- Posgrado en Ingeniería Estructural}\\[0.35cm]
+    {\color{uispurple}\hrule height 2pt}\vspace{0.4cm}
+    {\huge\bfseries\color{uisdark} Formulación Teórica y Algorítmica del Equilibrio Estático No Lineal mediante el Método de Newton-Raphson}\\[0.25cm]
+    {\Large\bfseries\color{uispurple} Sistema de Edificación Cortante de Dos Grados de Libertad (2-DOF)}\\[0.35cm]
+    {\color{uispurple}\hrule height 1pt}\vspace{0.35cm}
+    {\textbf{Autor:} Prof. Orlando Arroyo}\quad\textbullet\quad
+    {\textbf{Asignatura:} Análisis No Lineal de Estructuras}\quad\textbullet\quad
+    {\textbf{Versión:} Material Docente Consolidado (2026)}
+\end{center}
+
+\vspace{0.2cm}
+
+\begin{abstract}
+\noindent El presente documento constituye una guía formal, matemática y computacionalmente rigurosa, para comprender la resolución del equilibrio estático no lineal en estructuras discretizadas. Se desarrolla en detalle la deducción del vector de desequilibrio residual $\mathbf{r}(\mathbf{u})$, la linealización mediante series de Taylor, el ensamblaje explícito de la matriz de rigidez tangente o Jacobiana $\mathbf{K}_t$, y la solución incremental-iterativa según el algoritmo de Newton-Raphson. La teoría se aplica paso a paso sobre un modelo físico de edificio cortante de dos pisos (\textit{shear building} 2-DOF) con constitutivas bilineales elasto-plásticas, ilustrando de manera analítica y gráfica la evolución cinemática, la plastificación secuencial de entrepisos y la extinción cuadrática del desequilibrio de fuerzas.
+\end{abstract}
+
+\vspace{0.2cm}
+
+% ==============================================================================
+% SECCIÓN 1: FUNDAMENTOS DEL EQUILIBRIO NO LINEAL
+% ==============================================================================
+\section{Fundamentos del Equilibrio Estático No Lineal}
+
+En mecánica computacional y análisis estructural inelástico, la respuesta resistente interna de la estructura deja de ser una función lineal de las coordenadas nodales. El equilibrio estático entre el vector de fuerzas externas aplicadas $\mathbf{P} \in \mathbb{R}^N$ y el vector de fuerzas resistentes internas $\mathbf{F}_{\text{int}}(\mathbf{u}) \in \mathbb{R}^N$ se expresa mediante la condición residual:
+\begin{equation}
+    \label{eq:residual}
+    \mathbf{r}(\mathbf{u}) = \mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}
+\end{equation}
+donde $\mathbf{u} \in \mathbb{R}^N$ es el vector de desplazamientos generalizados y $\mathbf{r}(\mathbf{u})$ representa el \textbf{vector de desequilibrio o residuo dinámico}. A diferencia del análisis elástico lineal donde $\mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{K}_0 \mathbf{u}$ permite una inversión directa $\mathbf{u} = \mathbf{K}_0^{-1} \mathbf{P}$, en el régimen no lineal la ecuación~(\ref{eq:residual}) representa un sistema algebraico acoplado de ecuaciones no lineales que debe resolverse mediante procesos iterativos.
+
+\subsection{Linealización mediante Expansión en Series de Taylor}
+
+Supóngase conocido un estado cinemático estimado en la iteración $i$, denotado como $\mathbf{u}^{(i)}$. Si el residuo $\mathbf{r}(\mathbf{u}^{(i)}) \neq \mathbf{0}$, se busca un incremento de desplazamiento correctivo $\delta \mathbf{u}^{(i)}$ tal que el nuevo estado $\mathbf{u}^{(i+1)} = \mathbf{u}^{(i)} + \delta \mathbf{u}^{(i)}$ satisfaga la condición de equilibrio:
+\begin{equation}
+    \mathbf{r}\left(\mathbf{u}^{(i)} + \delta \mathbf{u}^{(i)}\right) = \mathbf{0}
+\end{equation}
+
+Aproximando la función residual multivariable mediante una serie de Taylor de primer orden alrededor de $\mathbf{u}^{(i)}$:
+\begin{equation}
+    \mathbf{r}\left(\mathbf{u}^{(i)} + \delta \mathbf{u}^{(i)}\right) \approx \mathbf{r}\left(\mathbf{u}^{(i)}\right) + \left.\frac{\partial \mathbf{r}}{\partial \mathbf{u}}\right|_{\mathbf{u}^{(i)}} \delta \mathbf{u}^{(i)} + \mathcal{O}\left(\|\delta \mathbf{u}^{(i)}\|^2\right) = \mathbf{0}
+\end{equation}
+
+Puesto que las fuerzas externas aplicadas $\mathbf{P}$ en análisis controlado por carga no dependen cinemáticamente de $\mathbf{u}$ ($\partial \mathbf{P} / \partial \mathbf{u} = \mathbf{0}$), el Jacobiano del residuo resulta:
+\begin{equation}
+    \left.\frac{\partial \mathbf{r}}{\partial \mathbf{u}}\right|_{\mathbf{u}^{(i)}} = \frac{\partial \left(\mathbf{P} - \mathbf{F}_{\text{int}}\right)}{\partial \mathbf{u}} = -\left.\frac{\partial \mathbf{F}_{\text{int}}}{\partial \mathbf{u}}\right|_{\mathbf{u}^{(i)}} \equiv -\mathbf{K}_t^{(i)}
+\end{equation}
+donde $\mathbf{K}_t^{(i)} \in \mathbb{R}^{N \times N}$ es la \textbf{matriz de rigidez tangente} del sistema en el estado $\mathbf{u}^{(i)}$. Sustituyendo esta definición, se obtiene el sistema fundamental de ecuaciones de corrección de Newton-Raphson:
+
+\begin{conceptbox}[Ecuación Fundamental de Corrección de Newton-Raphson]
+\begin{equation}
+    \label{eq:NR_system}
+    \mathbf{K}_t^{(i)} \, \delta \mathbf{u}^{(i)} = \mathbf{r}^{(i)}
+\end{equation}
+con la correspondiente actualización cinemática:
+\begin{equation}
+    \label{eq:kinematic_update}
+    \mathbf{u}^{(i+1)} = \mathbf{u}^{(i)} + \delta \mathbf{u}^{(i)}
+\end{equation}
+\end{conceptbox}
+
+\subsection{Criterios de Convergencia}
+
+La iteración continúa hasta que el estado estructural satisface tolerancias numéricas predefinidas. En la práctica de la ingeniería sismorresistente se evalúan dos criterios fundamentales:
+\begin{enumerate}
+    \item \textbf{Criterio de Fuerzas Desequilibradas (Residuo):}
+    \begin{equation}
+        \|\mathbf{r}^{(i)}\|_2 = \sqrt{\sum_{j=1}^N \left(r_j^{(i)}\right)^2} \le \epsilon_R
+    \end{equation}
+    donde $\epsilon_R$ es una tolerancia admisible de fuerza (e.g., $0.50\text{ kN}$ o $10^{-3} \|\mathbf{P}\|_2$).
+    
+    \item \textbf{Criterio de Incremento Cinemático:}
+    \begin{equation}
+        \|\delta \mathbf{u}^{(i)}\|_2 = \sqrt{\sum_{j=1}^N \left(\delta u_j^{(i)}\right)^2} \le \epsilon_U
+    \end{equation}
+\end{enumerate}
+
+% ==============================================================================
+% SECCIÓN 2: DESCRIPCIÓN DEL MODELO DE EDIFICIO 2-DOF
+% ==============================================================================
+\section{Cinemática y Modelo Constitutivo del Edificio Cortante (2-DOF)}
+
+Considérese un pórtico o edificio cortante (\textit{shear building}) de dos niveles, caracterizado por losa de piso infinitamente rígida a flexión y deformación axial despreciable en las columnas. Los grados de libertad del sistema corresponden a los desplazamientos laterales horizontales de cada entrepiso:
+\begin{equation}
+    \mathbf{u} = \begin{Bmatrix} u_1 \\ u_2 \end{Bmatrix}
+\end{equation}
+
+\subsection{Cinemática de Deformación de Entrepiso (Derivas)}
+
+El estado resistente de los elementos disipativos depende directamente de la deformación relativa o \textbf{deriva de entrepiso} $\Delta_j$, definida cinemáticamente como:
+\begin{align}
+    \Delta_1 &= u_1 - u_0 = u_1 \quad (\text{dado que la base está empotrada: } u_0 = 0) \label{eq:drift1} \\
+    \Delta_2 &= u_2 - u_1 \label{eq:drift2}
+\end{align}
+En notación matricial, la cinemática se relaciona mediante la matriz de compatibilidad $\mathbf{B}$:
+\begin{equation}
+    \mathbf{\Delta} = \begin{Bmatrix} \Delta_1 \\ \Delta_2 \end{Bmatrix} = \begin{bmatrix} 1 & 0 \\ -1 & 1 \end{bmatrix} \begin{Bmatrix} u_1 \\ u_2 \end{Bmatrix} = \mathbf{B} \, \mathbf{u}
+\end{equation}
+
+\subsection{Ley Constitutiva Bilineal con Endurecimiento Cinemático}
+
+Cada entrepiso $j \in \{1, 2\}$ actúa como un resorte cortante elasto-plástico bilineal gobernado por:
+\begin{itemize}
+    \item Rigidez elástica inicial: $k_{0j}$.
+    \item Resistencia de fluencia al corte: $F_{yj}$.
+    \item Desplazamiento de fluencia: $u_{yj} = F_{yj} / k_{0j}$.
+    \item Razón de rigidez post-fluencia (\textit{hardening ratio}): $\alpha_j \in [0, 1]$.
+    \item Rigidez tangente plástica: $k_{pj} = \alpha_j \, k_{0j}$.
+\end{itemize}
+
+El cortante de entrepiso resistente $V_j(\Delta_j)$ y la rigidez tangente instantánea $k_{tj}$ se evalúan analíticamente según:
+\begin{equation}
+    \label{eq:constitutive}
+    V_j(\Delta_j) = 
+    \begin{cases}
+        k_{0j} \, \Delta_j, & \text{si } |\Delta_j| \le u_{yj} \quad (\text{\bfseries Régimen Elástico: } k_{tj} = k_{0j}) \\[0.2cm]
+        \operatorname{sgn}(\Delta_j) \left[ F_{yj} + \alpha_j k_{0j} \left(|\Delta_j| - u_{yj}\right) \right], & \text{si } |\Delta_j| > u_{yj} \quad (\text{\bfseries Régimen Plástico: } k_{tj} = \alpha_j k_{0j})
+    \end{cases}
+\end{equation}
+
+% --- FIGURA 1: MODELO DEL EDIFICIO Y DCL ---
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.92, >=Stealth]
+    % --- SUBFIGURA A: EDIFICIO 2-DOF ---
+    \begin{scope}[shift={(-4.0,0)}]
+        % Terreno / Base
+        \fill[pattern=north east lines, pattern color=uisgray!60] (-1.8,-0.35) rectangle (1.8,0);
+        \draw[thick, line width=1.2pt, uisdark] (-1.8,0) -- (1.8,0);
+        \node at (0,-0.60) {\small\textbf{Base Empotrada} ($u_0=0$)};
+        
+        % Columnas Piso 1
+        \draw[line width=2.5pt, uisblue] (-1.0,0) -- (-1.0,2.35);
+        \draw[line width=2.5pt, uisblue] (1.0,0) -- (1.0,2.35);
+        % Resorte equivalente Piso 1
+        \draw[decorate, decoration={zigzag, segment length=5.5, amplitude=4}, thick, uisblue] (0,0.3) -- (0,2.05);
+        \node[right, font=\footnotesize, uisblue] at (0.22, 1.20) {$V_1(\Delta_1), \; k_{t1}$};
+        
+        % Diafragma Piso 1
+        \node[draw=uisdark, line width=1.2pt, fill=uislightbg, rounded corners=2pt, inner sep=4pt, minimum width=2.6cm, font=\bfseries\footnotesize] (piso1) at (0,2.5) {Nivel 1 ($m_1$)};
+        
+        % Columnas Piso 2
+        \draw[line width=2.5pt, uisrose] (-1.0,2.65) -- (-1.0,5.15);
+        \draw[line width=2.5pt, uisrose] (1.0,2.65) -- (1.0,5.15);
+        % Resorte equivalente Piso 2
+        \draw[decorate, decoration={zigzag, segment length=5.5, amplitude=4}, thick, uisrose] (0,2.95) -- (0,4.85);
+        \node[right, font=\footnotesize, uisrose] at (0.22, 3.90) {$V_2(\Delta_2), \; k_{t2}$};
+        
+        % Diafragma Piso 2
+        \node[draw=uisdark, line width=1.2pt, fill=uislightbg, rounded corners=2pt, inner sep=4pt, minimum width=2.6cm, font=\bfseries\footnotesize] (piso2) at (0,5.3) {Nivel 2 ($m_2$)};
+        
+        % Cargas y Grados de Libertad Nivel 1
+        \draw[->, line width=1.5pt, uisamber] (piso1.east) -- ++(1.1, 0) node[right, font=\small\bfseries] {$P_1$};
+        \draw[->, line width=1.2pt, uispurple] (piso1.west) -- ++(-1.0, 0) node[left, font=\small\bfseries] {$u_1$};
+        
+        % Cargas y Grados de Libertad Nivel 2
+        \draw[->, line width=1.5pt, uisamber] (piso2.east) -- ++(1.1, 0) node[right, font=\small\bfseries] {$P_2$};
+        \draw[->, line width=1.2pt, uispurple] (piso2.west) -- ++(-1.0, 0) node[left, font=\small\bfseries] {$u_2$};
+
+        \node[below, font=\bfseries\small, uisdark] at (0,-1.05) {(a) Modelo Cinemático 2-DOF};
+    \end{scope}
+
+    % --- SUBFIGURA B: DIAGRAMAS DE CUERPO LIBRE NODALES (DCL) ---
+    \begin{scope}[shift={(4.0,0)}]
+        % DCL Nivel 2
+        \node[draw=uisdark, line width=1.2pt, fill=uislightbg, rounded corners=2pt, inner sep=4pt, minimum width=2.6cm, font=\bfseries\footnotesize] (nodo2) at (0,5.3) {Nodo 2 (Nivel 2)};
+        
+        \draw[->, line width=1.5pt, uisamber] (nodo2.east) -- ++(1.1, 0) node[right, font=\small\bfseries] {$P_2$};
+        \draw[->, line width=1.5pt, uisrose] (nodo2.west) -- ++(-1.1, 0) node[left, font=\small\bfseries] {$V_2(\Delta_2)$};
+        \node[above, font=\footnotesize, uisdark] at (0, 5.75) {$r_2 = P_2 - V_2$};
+
+        % Separador entre pisos
+        \draw[dashed, uisgray!50] (-2.5, 3.9) -- (2.5, 3.9);
+
+        % DCL Nivel 1
+        \node[draw=uisdark, line width=1.2pt, fill=uislightbg, rounded corners=2pt, inner sep=4pt, minimum width=2.6cm, font=\bfseries\footnotesize] (nodo1) at (0,2.5) {Nodo 1 (Nivel 1)};
+        
+        % Fuerzas en Nodo 1
+        \draw[->, line width=1.5pt, uisamber] (nodo1.east) -- ++(1.1, 0) node[right, font=\small\bfseries] {$P_1$};
+        \draw[->, line width=1.5pt, uisblue] (nodo1.west) -- ++(-1.1, 0) node[left, font=\small\bfseries] {$V_1(\Delta_1)$};
+        \draw[->, line width=1.4pt, uisrose] (-0.8, 3.0) -- (0.8, 3.0) node[midway, above, font=\footnotesize\bfseries] {$V_2(\Delta_2)$ (corte sup.)};
+        \node[below, font=\footnotesize, uisdark] at (0, 1.85) {$r_1 = P_1 - [V_1(\Delta_1) - V_2(\Delta_2)]$};
+
+        \node[below, font=\bfseries\small, uisdark] at (0,-1.05) {(b) Diagramas de Cuerpo Libre (DCL)};
+    \end{scope}
+\end{tikzpicture}
+\caption{Representación física del edificio cortante de dos pisos (2-DOF) y diagramas de cuerpo libre nodales.}
+\label{fig:building_model}
+\end{figure}
+
+\subsection{Vector de Fuerzas Internas Nodales}
+
+A partir de los diagramas de cuerpo libre nodales ilustrados en la Figura~\ref{fig:building_model}(b):
+\begin{itemize}
+    \item \textbf{Equilibrio en el Nodo 2 (Techo):} La única fuerza resistente que se opone a $P_2$ es el esfuerzo cortante generado por el resorte del segundo entrepiso:
+    \begin{equation}
+        F_{\text{int},2} = V_2(\Delta_2)
+    \end{equation}
+    
+    \item \textbf{Equilibrio en el Nodo 1 (Piso intermedio):} El nodo recibe el cortante resistente del resorte inferior $V_1$ transmitido hacia la base, mientras que el resorte superior le transfiere en dirección contraria el cortante $V_2$:
+    \begin{equation}
+        F_{\text{int},1} = V_1(\Delta_1) - V_2(\Delta_2)
+    \end{equation}
+\end{itemize}
+
+Por consiguiente, el vector global de fuerzas internas nodales está dado por:
+\begin{equation}
+    \label{eq:Fint_vector}
+    \mathbf{F}_{\text{int}}(\mathbf{u}) = 
+    \begin{Bmatrix} 
+        F_{\text{int},1}(u_1, u_2) \\ 
+        F_{\text{int},2}(u_1, u_2) 
+    \end{Bmatrix} = 
+    \begin{Bmatrix} 
+        V_1(u_1) - V_2(u_2 - u_1) \\ 
+        V_2(u_2 - u_1) 
+    \end{Bmatrix}
+\end{equation}
+
+Y el vector de desequilibrio residual $\mathbf{r}(\mathbf{u})$ adopta la forma explícita:
+\begin{equation}
+    \label{eq:residual_vector}
+    \mathbf{r}(\mathbf{u}) = \mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u}) = 
+    \begin{Bmatrix} 
+        P_1 - \left[ V_1(u_1) - V_2(u_2 - u_1) \right] \\ 
+        P_2 - V_2(u_2 - u_1) 
+    \end{Bmatrix}
+\end{equation}
+
+% ==============================================================================
+% SECCIÓN 3: ENSAMBLAJE DE LA MATRIZ DE RIGIDEZ TANGENTE
+% ==============================================================================
+\section{Ensamblaje Analítico de la Matriz de Rigidez Tangente \texorpdfstring{$\mathbf{K}_t$}{Kt}}
+
+La matriz de rigidez tangente $\mathbf{K}_t$ se obtiene derivando formalmente el vector de fuerzas internas respecto a los grados de libertad nodales $\mathbf{u} = [u_1, u_2]^T$, aplicando la regla de la cadena multivariable:
+\begin{equation}
+    \mathbf{K}_t = \frac{\partial \mathbf{F}_{\text{int}}}{\partial \mathbf{u}} = 
+    \begin{bmatrix}
+        \dfrac{\partial F_{\text{int},1}}{\partial u_1} & \dfrac{\partial F_{\text{int},1}}{\partial u_2} \\[0.3cm]
+        \dfrac{\partial F_{\text{int},2}}{\partial u_1} & \dfrac{\partial F_{\text{int},2}}{\partial u_2}
+    \end{bmatrix}
+\end{equation}
+
+\subsection{Deducción Término a Término}
+
+\begin{enumerate}
+    \item \textbf{Término $K_{11} = \dfrac{\partial F_{\text{int},1}}{\partial u_1}$:}
+    \begin{equation}
+        \frac{\partial F_{\text{int},1}}{\partial u_1} = \frac{\partial \left(V_1 - V_2\right)}{\partial u_1} = \frac{\partial V_1}{\partial \Delta_1} \frac{\partial \Delta_1}{\partial u_1} - \frac{\partial V_2}{\partial \Delta_2} \frac{\partial \Delta_2}{\partial u_1}
+    \end{equation}
+    Puesto que $\frac{\partial \Delta_1}{\partial u_1} = 1$ y $\frac{\partial \Delta_2}{\partial u_1} = \frac{\partial (u_2 - u_1)}{\partial u_1} = -1$:
+    \begin{equation}
+        K_{11} = k_{t1} \cdot (1) - k_{t2} \cdot (-1) = k_{t1} + k_{t2}
+    \end{equation}
+    \textit{Significado físico:} Al mover unitariamente el Nivel 1 ($\delta u_1 = 1$), se deforma tanto el resorte inferior como el resorte superior, por lo cual ambas rigideces tangentes se suman directamente.
+
+    \item \textbf{Término $K_{12} = \dfrac{\partial F_{\text{int},1}}{\partial u_2}$:}
+    \begin{equation}
+        K_{12} = \frac{\partial \left(V_1 - V_2\right)}{\partial u_2} = \underbrace{\frac{\partial V_1}{\partial u_2}}_{=0} - \frac{\partial V_2}{\partial \Delta_2} \frac{\partial \Delta_2}{\partial u_2} = -k_{t2} \cdot (1) = -k_{t2}
+    \end{equation}
+
+    \item \textbf{Término $K_{21} = \dfrac{\partial F_{\text{int},2}}{\partial u_1}$:}
+    \begin{equation}
+        K_{21} = \frac{\partial V_2}{\partial u_1} = \frac{\partial V_2}{\partial \Delta_2} \frac{\partial \Delta_2}{\partial u_1} = k_{t2} \cdot (-1) = -k_{t2}
+    \end{equation}
+    Nótese que $K_{12} = K_{21} = -k_{t2}$, garantizando la \textbf{simetría} de la matriz $\mathbf{K}_t$ en virtud del teorema de reciprocidad de Maxwell-Betti.
+
+    \item \textbf{Término $K_{22} = \dfrac{\partial F_{\text{int},2}}{\partial u_2}$:}
+    \begin{equation}
+        K_{22} = \frac{\partial V_2}{\partial u_2} = \frac{\partial V_2}{\partial \Delta_2} \frac{\partial \Delta_2}{\partial u_2} = k_{t2} \cdot (1) = k_{t2}
+    \end{equation}
+    \textit{Significado físico:} Al desplazar unitariamente el Nivel 2 ($\delta u_2 = 1$), únicamente el resorte 2 experimenta deformación.
+\end{enumerate}
+
+\begin{conceptbox}[Estructura Matricial Tangente Ensamblada]
+\begin{equation}
+    \label{eq:Kt_assembled}
+    \mathbf{K}_t = 
+    \begin{bmatrix}
+        k_{t1} + k_{t2} & -k_{t2} \\
+        -k_{t2} & k_{t2}
+    \end{bmatrix}
+\end{equation}
+\end{conceptbox}
+
+\subsection{Determinante y Análisis de Estabilidad Mecánica}
+
+El determinante de la matriz tangente resulta:
+\begin{equation}
+    \det(\mathbf{K}_t) = (k_{t1} + k_{t2})(k_{t2}) - (-k_{t2})(-k_{t2}) = k_{t1} k_{t2} + k_{t2}^2 - k_{t2}^2 = k_{t1} \cdot k_{t2}
+\end{equation}
+
+\begin{alertbox}[Pérdida de Capacidad Portante y Singularidad]
+El determinante de $\mathbf{K}_t$ es exactamente igual al producto de las rigideces tangentes de entrepiso:
+\begin{equation}
+    \det(\mathbf{K}_t) = k_{t1} \cdot k_{t2}
+\end{equation}
+Si alguno de los entrepisos presenta comportamiento elasto-plástico perfecto ($\alpha_j = 0 \implies k_{tj} = 0$), el determinante se anula ($\det(\mathbf{K}_t) = 0$). La matriz se vuelve \textbf{singular}, el algoritmo de Newton-Raphson tradicional colapsa por división por cero y la estructura alcanza una cinemática de \textit{piso blando} o mecanismo plástico libre de carga.
+\end{alertbox}
+
+\subsection{Inversión Explícita y Flexibilidad Física de Corrección}
+
+Al invertir analíticamente $\mathbf{K}_t$:
+\begin{equation}
+    \mathbf{K}_t^{-1} = \frac{1}{\det(\mathbf{K}_t)} 
+    \begin{bmatrix} 
+        K_{22} & -K_{12} \\ 
+        -K_{21} & K_{11} 
+    \end{bmatrix} = \frac{1}{k_{t1} k_{t2}} 
+    \begin{bmatrix} 
+        k_{t2} & k_{t2} \\ 
+        k_{t2} & k_{t1} + k_{t2} 
+    \end{bmatrix} = 
+    \begin{bmatrix} 
+        \dfrac{1}{k_{t1}} & \dfrac{1}{k_{t1}} \\[0.35cm] 
+        \dfrac{1}{k_{t1}} & \dfrac{1}{k_{t1}} + \dfrac{1}{k_{t2}} 
+    \end{bmatrix}
+\end{equation}
+
+Multiplicando $\mathbf{K}_t^{-1}$ por el vector residuo $\mathbf{r} = [r_1, r_2]^T$, se deduce la solución analítica de los incrementos:
+\begin{align}
+    \delta u_1 &= \frac{1}{k_{t1}} (r_1 + r_2) = \frac{r_{\text{basal}}}{k_{t1}} \label{eq:du1_physical} \\[0.25cm]
+    \delta u_2 &= \frac{1}{k_{t1}} (r_1 + r_2) + \frac{1}{k_{t2}} r_2 = \delta u_1 + \frac{r_2}{k_{t2}} \label{eq:du2_physical}
+\end{align}
+
+\noindent\textbf{Interpretación Mecánica Fundamental:}
+\begin{itemize}
+    \item La corrección del Nivel 1 ($\delta u_1$) depende exclusivamente de la flexibilidad de la base ($1/k_{t1}$) y absorbe el \textbf{desequilibrio total de cortante sobre la base} ($r_1 + r_2$).
+    \item La corrección del Nivel 2 ($\delta u_2$) arrastra el desplazamiento de la base ($\delta u_1$) y le suma la deformación interna producida por la flexibilidad del entrepiso superior ($1/k_{t2}$) sometido al desequilibrio de su propio nivel ($r_2$).
+\end{itemize}
+
+% --- FIGURA 2: CONSTITUTIVA Y NEWTON 1D ---
+% --- FIGURA 2: CONSTITUTIVA Y NEWTON 1D ---
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.88, >=Stealth]
+    % --- SUBFIGURA A: CURVA CONSTITUTIVA BILINEAL ---
+    % --- SUBFIGURA A: CURVA CONSTITUTIVA BILINEAL ---
+    \begin{scope}[shift={(-4.2,0)}]
+        % Ejes
+        \draw[->, thick, uisdark] (-0.3,0) -- (4.4,0) node[right, font=\footnotesize\bfseries] {$\Delta_j$ [mm]};
+        \draw[->, thick, uisdark] (0,-0.3) -- (0,4.2) node[above, font=\footnotesize\bfseries] {$V_j$ [kN]};
+
+        % Puntos clave
+        \coordinate (O) at (0,0);
+        \coordinate (Y) at (1.5,2.4);
+        \coordinate (P) at (4.0,3.3);
+
+        % Curva bilineal
+        \draw[line width=2pt, uisgreen] (O) -- (Y);
+        \draw[line width=2pt, uisrose] (Y) -- (P);
+
+        % Líneas de proyección
+        \draw[dashed, uisgray] (1.5,0) -- (Y) -- (0,2.4);
+        \fill[uisdark] (Y) circle (2.5pt);
+        \node[above left, font=\scriptsize, uisdark] at (Y) {Fluencia $(u_{yj}, F_{yj})$};
+
+        % Etiquetas de ejes
+        \node[below, font=\scriptsize] at (1.5,0) {$u_{yj}$};
+        \node[left, font=\scriptsize] at (0,2.4) {$F_{yj}$};
+
+        % Pendientes
+        \draw[uisgreen, thick] (0.6,0.4) -- (1.1,0.4) -- (1.1,1.2);
+        \node[right, font=\scriptsize\bfseries, uisgreen] at (1.1,0.75) {$k_{0j}$ (elástica)};
+
+        \draw[uisrose, thick] (2.4,2.7) -- (3.4,2.7) -- (3.4,3.02);
+        \node[above, font=\scriptsize\bfseries, uisrose] at (2.9,3.05) {$k_{pj} = \alpha_j k_{0j}$};
+
+        \node[below, font=\bfseries\small, uisdark] at (2.0,-0.75) {(a) Relación Bilineal};
+    \end{scope}
+
+    % --- SUBFIGURA B: PROYECCIÓN NEWTON-RAPHSON ---
+    \begin{scope}[shift={(4.2,0)}]
+        % Ejes
+        \draw[->, thick, uisdark] (-0.3,0) -- (4.6,0) node[right, font=\footnotesize\bfseries] {$u$ [mm]};
+        \draw[->, thick, uisdark] (0,-0.3) -- (0,4.2) node[above, font=\footnotesize\bfseries] {$F$ [kN]};
+
+        % Curva real
+        \draw[line width=1.8pt, uisgray!50] (0,0) -- (1.2,1.8) -- (4.2,2.8);
+        \node[above, font=\scriptsize, uisgray] at (3.8,2.75) {$F_{\text{int}}(u)$};
+
+        % Carga objetivo P
+        \draw[dashed, line width=1.2pt, uisamber] (0,3.3) -- (4.3,3.3) node[right, font=\scriptsize\bfseries] {Carga $P$};
+
+        % Iteración 0: (0,0) -> Salto tangente elástico
+        \fill[uisblue] (0,0) circle (2.2pt) node[below left, font=\scriptsize] {$u^{(0)}$};
+        \draw[line width=1.2pt, uisblue, dashed] (0,0) -- (2.2, 3.3);
+        \node[below, font=\scriptsize, uisblue] at (2.2, 0) {$u^{(1)}$};
+        \draw[dotted, uisgray] (2.2,0) -- (2.2, 3.3);
+
+        % Iteración 1: punto en curva
+        \fill[uisrose] (2.2, 2.13) circle (2.2pt) node[right=3pt, font=\scriptsize] {$F_{\text{int}}(u^{(1)})$};
+        
+        % Residuo vertical
+        \draw[line width=1.4pt, uisrose, <->] (2.2, 2.13) -- (2.2, 3.3) node[midway, left, font=\scriptsize\bfseries] {$r^{(1)}$};
+
+        % Tangente plástica
+        \draw[line width=1.2pt, uispurple] (2.2, 2.13) -- (3.9, 3.3);
+        \fill[uispurple] (3.9, 3.3) circle (2.5pt) node[above left, font=\scriptsize\bfseries] {Solución $u^*$};
+        \draw[dotted, uisgray] (3.9,0) -- (3.9, 3.3);
+        \node[below, font=\scriptsize, uispurple] at (3.9, 0) {$u^{(2)}$};
+
+        \node[below, font=\bfseries\small, uisdark] at (2.0,-0.75) {(b) Proyección Newton-Raphson};
+    \end{scope}
+\end{tikzpicture}
+\caption{Relación constitutiva bilineal y esquema geométrico del algoritmo incremental de Newton-Raphson.}
+\label{fig:constitutive_and_nr}
+\end{figure}
+
+% ==============================================================================
+% SECCIÓN 4: CASO DE ESTUDIO NUMÉRICO RESUELTO PASO A PASO
+% ==============================================================================
+\section{Ejemplo de Aplicación Numérica Resuelto Paso a Paso}
+
+Para consolidar la comprensión práctica del algoritmo, se resuelve a continuación un caso numérico idéntico al implementado en el simulador interactivo de clase.
+
+\subsection{Parámetros de la Estructura y Solicitaciones}
+
+\begin{itemize}
+    \item \textbf{Propiedades del Entrepiso 1 (Base):}
+    $k_{01} = 100.0\text{ kN/mm}$, $F_{y1} = 100.0\text{ kN}$, $\alpha_1 = 0.10$ ($10\%$).
+    \[
+        u_{y1} = \frac{100.0}{100.0} = 1.00\text{ mm}, \quad k_{p1} = 0.10 \times 100.0 = 10.0\text{ kN/mm}
+    \]
+    \item \textbf{Propiedades del Entrepiso 2 (Superior):}
+    $k_{02} = 80.0\text{ kN/mm}$, $F_{y2} = 80.0\text{ kN}$, $\alpha_2 = 0.10$ ($10\%$).
+    \[
+        u_{y2} = \frac{80.0}{80.0} = 1.00\text{ mm}, \quad k_{p2} = 0.10 \times 80.0 = 8.0\text{ kN/mm}
+    \]
+    \item \textbf{Vector de Cargas Laterales Aplicadas:}
+    \[
+        \mathbf{P} = \begin{Bmatrix} P_1 \\ P_2 \end{Bmatrix} = \begin{Bmatrix} 60.0 \\ 110.0 \end{Bmatrix} \text{ kN}
+    \]
+    \textit{Observación previa:} El cortante total en la base es $P_1 + P_2 = 170.0\text{ kN} > F_{y1} = 100.0\text{ kN}$, y la fuerza en el segundo nivel $P_2 = 110.0\text{ kN} > F_{y2} = 80.0\text{ kN}$. Ambos pisos experimentarán plastificación forzosa.
+    \item \textbf{Tolerancia de Convergencia:} $\epsilon_R = 0.50\text{ kN}$.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% ITERACIÓN 0
+% ------------------------------------------------------------------------------
+\subsection{Iteración \texorpdfstring{$i = 0$}{i = 0}}
+
+\begin{stepbox}[Paso 0: Estado Inicial Elástico]
+\begin{enumerate}
+    \item \textbf{Vector cinemático inicial:} $\mathbf{u}^{(0)} = \begin{Bmatrix} 0.000 \\ 0.000 \end{Bmatrix}\text{ mm}$.
+    \item \textbf{Derivas de entrepiso:} $\Delta_1 = u_1 = 0.000\text{ mm}$, $\Delta_2 = u_2 - u_1 = 0.000\text{ mm}$.
+    \item \textbf{Cortantes resistentes:} $V_1 = 0.00\text{ kN}$, $V_2 = 0.00\text{ kN}$. Ambos pisos están en régimen \textbf{Elástico}:
+    \[
+        k_{t1}^{(0)} = k_{01} = 100.0\text{ kN/mm}, \quad k_{t2}^{(0)} = k_{02} = 80.0\text{ kN/mm}
+    \]
+    \item \textbf{Fuerzas internas nodales:}
+    \[
+        \mathbf{F}_{\text{int}}^{(0)} = \begin{Bmatrix} V_1 - V_2 \\ V_2 \end{Bmatrix} = \begin{Bmatrix} 0.00 \\ 0.00 \end{Bmatrix}\text{ kN}
+    \]
+    \item \textbf{Vector residuo de desequilibrio:}
+    \[
+        \mathbf{r}^{(0)} = \mathbf{P} - \mathbf{F}_{\text{int}}^{(0)} = \begin{Bmatrix} 60.00 - 0.00 \\ 110.00 - 0.00 \end{Bmatrix} = \begin{Bmatrix} +60.00 \\ +110.00 \end{Bmatrix}\text{ kN}
+    \]
+    \[
+        \|\mathbf{r}^{(0)}\|_2 = \sqrt{(60.00)^2 + (110.00)^2} = 125.300\text{ kN} > 0.50\text{ kN} \quad (\text{\bfseries No converge})
+    \]
+    \item \textbf{Ensamblaje de la matriz tangente inicial $\mathbf{K}_t^{(0)}$:}
+    \[
+        \mathbf{K}_t^{(0)} = \begin{bmatrix} 100.0 + 80.0 & -80.0 \\ -80.0 & 80.0 \end{bmatrix} = \begin{bmatrix} 180.0 & -80.0 \\ -80.0 & 80.0 \end{bmatrix}\text{ kN/mm}
+    \]
+    \[
+        \det(\mathbf{K}_t^{(0)}) = 100.0 \times 80.0 = 8000.0
+    \]
+    \item \textbf{Solución del sistema $\mathbf{K}_t^{(0)} \delta \mathbf{u}^{(0)} = \mathbf{r}^{(0)}$:}
+    \[
+        \begin{bmatrix} 180.0 & -80.0 \\ -80.0 & 80.0 \end{bmatrix} \begin{Bmatrix} \delta u_1^{(0)} \\ \delta u_2^{(0)} \end{Bmatrix} = \begin{Bmatrix} +60.00 \\ +110.00 \end{Bmatrix}
+    \]
+    Aplicando las ecuaciones analíticas~(\ref{eq:du1_physical})--(\ref{eq:du2_physical}):
+    \[
+        \delta u_1^{(0)} = \frac{r_1 + r_2}{k_{t1}} = \frac{60.00 + 110.00}{100.0} = \frac{170.00}{100.0} = \mathbf{+1.700\text{ mm}}
+    \]
+    \[
+        \delta u_2^{(0)} = \delta u_1^{(0)} + \frac{r_2}{k_{t2}} = 1.700 + \frac{110.00}{80.0} = 1.700 + 1.375 = \mathbf{+3.075\text{ mm}}
+    \]
+    \item \textbf{Actualización cinemática para la siguiente iteración:}
+    \[
+        \mathbf{u}^{(1)} = \mathbf{u}^{(0)} + \delta \mathbf{u}^{(0)} = \begin{Bmatrix} 0.000 + 1.700 \\ 0.000 + 3.075 \end{Bmatrix} = \begin{Bmatrix} \mathbf{1.700} \\ \mathbf{3.075} \end{Bmatrix}\text{ mm}
+    \]
+\end{enumerate}
+\end{stepbox}
+
+% ------------------------------------------------------------------------------
+% ITERACIÓN 1
+% ------------------------------------------------------------------------------
+\subsection{Iteración \texorpdfstring{$i = 1$}{i = 1}}
+
+\begin{stepbox}[Paso 1: Transición Inelástica y Plastificación de Ambos Entrepisos]
+\begin{enumerate}
+    \item \textbf{Estado cinemático actual:} $\mathbf{u}^{(1)} = \begin{Bmatrix} 1.700 \\ 3.075 \end{Bmatrix}\text{ mm}$.
+    \item \textbf{Evaluación de derivas de entrepiso:}
+    \begin{align*}
+        \Delta_1 &= u_1 = 1.700\text{ mm} > u_{y1} = 1.00\text{ mm} \quad \implies \quad \text{\bfseries\color{uisrose} ¡Piso 1 en Régimen Plástico!} \\
+        \Delta_2 &= u_2 - u_1 = 1.375\text{ mm} > u_{y2} = 1.00\text{ mm} \quad \implies \quad \text{\bfseries\color{uisrose} ¡Piso 2 en Régimen Plástico!}
+    \end{align*}
+    \item \textbf{Cálculo de cortantes resistentes inelásticos:}
+    \[
+        V_1 = F_{y1} + k_{p1}(\Delta_1 - u_{y1}) = 100.0 + 10.0(1.700 - 1.00) = 100.0 + 7.00 = \mathbf{107.00\text{ kN}}
+    \]
+    \[
+        V_2 = F_{y2} + k_{p2}(\Delta_2 - u_{y2}) = 80.0 + 8.0(1.375 - 1.00) = 80.0 + 3.00 = \mathbf{83.00\text{ kN}}
+    \]
+    Rigideces tangentes activas:
+    \[
+        k_{t1}^{(1)} = k_{p1} = \mathbf{10.0\text{ kN/mm}}, \quad k_{t2}^{(1)} = k_{p2} = \mathbf{8.0\text{ kN/mm}}
+    \]
+    \item \textbf{Fuerzas internas nodales:}
+    \[
+        F_{\text{int},1}^{(1)} = V_1 - V_2 = 107.00 - 83.00 = \mathbf{24.00\text{ kN}}
+    \]
+    \[
+        F_{\text{int},2}^{(1)} = V_2 = \mathbf{83.00\text{ kN}}
+    \]
+    \item \textbf{Vector residuo de desequilibrio:}
+    \[
+        r_1^{(1)} = P_1 - F_{\text{int},1}^{(1)} = 60.00 - 24.00 = \mathbf{+36.00\text{ kN}}
+    \]
+    \[
+        r_2^{(1)} = P_2 - F_{\text{int},2}^{(1)} = 110.00 - 83.00 = \mathbf{+27.00\text{ kN}}
+    \]
+    \[
+        \|\mathbf{r}^{(1)}\|_2 = \sqrt{(36.00)^2 + (27.00)^2} = \sqrt{1296 + 729} = \sqrt{2025} = \mathbf{45.000\text{ kN}} > 0.50\text{ kN}
+    \]
+    \item \textbf{Ensamblaje de la nueva matriz tangente plástica $\mathbf{K}_t^{(1)}$:}
+    \[
+        \mathbf{K}_t^{(1)} = \begin{bmatrix} 10.0 + 8.0 & -8.0 \\ -8.0 & 8.0 \end{bmatrix} = \begin{bmatrix} \mathbf{18.0} & \mathbf{-8.0} \\ \mathbf{-8.0} & \mathbf{8.0} \end{bmatrix}\text{ kN/mm}
+    \]
+    \[
+        \det(\mathbf{K}_t^{(1)}) = k_{t1}^{(1)} \cdot k_{t2}^{(1)} = 10.0 \times 8.0 = \mathbf{80.0}
+    \]
+    \textit{Comentario pedagógico:} Nótese la drástica reducción del determinante de $8000$ a $80$ (disminución del $99\%$), reflejo fiel de la pérdida de rigidez al plastificarse la estructura.
+    \item \textbf{Solución del sistema de corrección $\mathbf{K}_t^{(1)} \delta \mathbf{u}^{(1)} = \mathbf{r}^{(1)}$:}
+    \[
+        \begin{bmatrix} 18.0 & -8.0 \\ -8.0 & 8.0 \end{bmatrix} \begin{Bmatrix} \delta u_1^{(1)} \\ \delta u_2^{(1)} \end{Bmatrix} = \begin{Bmatrix} +36.00 \\ +27.00 \end{Bmatrix}
+    \]
+    \[
+        \delta u_1^{(1)} = \frac{r_1^{(1)} + r_2^{(1)}}{k_{t1}^{(1)}} = \frac{36.00 + 27.00}{10.0} = \frac{63.00}{10.0} = \mathbf{+6.300\text{ mm}}
+    \]
+    \[
+        \delta u_2^{(1)} = \delta u_1^{(1)} + \frac{r_2^{(1)}}{k_{t2}^{(1)}} = 6.300 + \frac{27.00}{8.0} = 6.300 + 3.375 = \mathbf{+9.675\text{ mm}}
+    \]
+    \item \textbf{Actualización cinemática:}
+    \[
+        \mathbf{u}^{(2)} = \mathbf{u}^{(1)} + \delta \mathbf{u}^{(1)} = \begin{Bmatrix} 1.700 + 6.300 \\ 3.075 + 9.675 \end{Bmatrix} = \begin{Bmatrix} \mathbf{8.000} \\ \mathbf{12.750} \end{Bmatrix}\text{ mm}
+    \]
+\end{enumerate}
+\end{stepbox}
+
+% ------------------------------------------------------------------------------
+% ITERACIÓN 2
+% ------------------------------------------------------------------------------
+\subsection{Iteración \texorpdfstring{$i = 2$}{i = 2}}
+
+\begin{stepbox}[Paso 2: Evaluación en Estado Final y Verificación de Convergencia]
+\begin{enumerate}
+    \item \textbf{Estado cinemático actual:} $\mathbf{u}^{(2)} = \begin{Bmatrix} 8.000 \\ 12.750 \end{Bmatrix}\text{ mm}$.
+    \item \textbf{Derivas de entrepiso:}
+    \[
+        \Delta_1 = u_1 = 8.000\text{ mm} > 1.00\text{ mm} \quad (\text{Plástico})
+    \]
+    \[
+        \Delta_2 = u_2 - u_1 = 12.750 - 8.000 = 4.750\text{ mm} > 1.00\text{ mm} \quad (\text{Plástico})
+    \]
+    \item \textbf{Cortantes resistentes inelásticos evaluados:}
+    \[
+        V_1 = 100.0 + 10.0(8.000 - 1.00) = 100.0 + 70.00 = \mathbf{170.00\text{ kN}}
+    \]
+    \[
+        V_2 = 80.0 + 8.0(4.750 - 1.00) = 80.0 + 30.00 = \mathbf{110.00\text{ kN}}
+    \]
+    \item \textbf{Fuerzas internas nodales:}
+    \[
+        F_{\text{int},1}^{(2)} = V_1 - V_2 = 170.00 - 110.00 = \mathbf{60.00\text{ kN}}
+    \]
+    \[
+        F_{\text{int},2}^{(2)} = V_2 = \mathbf{110.00\text{ kN}}
+    \]
+    \item \textbf{Vector residuo de desequilibrio:}
+    \[
+        r_1^{(2)} = P_1 - F_{\text{int},1}^{(2)} = 60.00 - 60.00 = \mathbf{0.00\text{ kN}}
+    \]
+    \[
+        r_2^{(2)} = P_2 - F_{\text{int},2}^{(2)} = 110.00 - 110.00 = \mathbf{0.00\text{ kN}}
+    \]
+    \[
+        \|\mathbf{r}^{(2)}\|_2 = \sqrt{0^2 + 0^2} = \mathbf{0.000\text{ kN}} \le \epsilon_R = 0.50\text{ kN}
+    \]
+    \item \textbf{\color{uisgreen} ¡Convergencia Estricta Alcanzada!} El sistema se encuentra en equilibrio estático exacto en el estado $\mathbf{u}^* = [8.000, 12.750]^T\text{ mm}$.
+\end{enumerate}
+\end{stepbox}
+
+\begin{alertbox}[Propiedad de Convergencia en Modelos Lineales por Tramos]
+Nótese que en este sistema bilineal, una vez que el algoritmo identificó correctamente el régimen activo de ambos pisos (ambos en rama plástica con rigideces $k_{p1}$ y $k_{p2}$), el método de Newton-Raphson alcanzó la solución exacta en \textbf{exactamente una sola iteración correctiva adicional}. Esto ocurre porque sobre cada rama el modelo es afín (lineal por tramos), por lo que la aproximación de Taylor de primer orden resulta exacta.
+\end{alertbox}
+
+\subsection{Resumen Comparativo de Iteraciones}
+
+En el Cuadro~\ref{tab:results_summary} se sintetiza la evolución cuantitativa del algoritmo Newton-Raphson estándar frente al comportamiento del método Newton-Raphson modificado (donde la matriz de rigidez se congela en la elástica inicial $\mathbf{K}_0$).
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.25}
+\caption{Historial de convergencia numérico detallado del sistema 2-DOF.}
+\label{tab:results_summary}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} c c c c c c c c c l @{}}
+\toprule
+\textbf{Iter $i$} & $u_1\text{ [mm]}$ & $u_2\text{ [mm]}$ & $\Delta_1\text{ [mm]}$ & $\Delta_2\text{ [mm]}$ & $V_1\text{ [kN]}$ & $V_2\text{ [kN]}$ & $\|\mathbf{r}\|_2\text{ [kN]}$ & $\|\delta \mathbf{u}\|_2\text{ [mm]}$ & \textbf{Estado del Sistema} \\
+\midrule
+\multicolumn{10}{l}{\textbf{Método Newton-Raphson Estándar (Actualización Completa de $\mathbf{K}_t$):}} \\
+0 & 0.000 & 0.000 & 0.000 & 0.000 & 0.0 & 0.0 & 125.30 & 3.514 & Elástico / Elástico \\
+1 & 1.700 & 3.075 & 1.700 & 1.375 & 107.0 & 83.0 & 45.00 & 11.545 & Plástico / Plástico \\
+2 & 8.000 & 12.750 & 8.000 & 4.750 & 170.0 & 110.0 & \textbf{0.00} & \textbf{0.000} & \textbf{Convergido (2 iter)} \\
+\midrule
+\multicolumn{10}{l}{\textbf{Método Newton-Raphson Modificado (Rigidez Constante $\mathbf{K}_0 = \mathbf{K}_t^{(0)}$):}} \\
+0 & 0.000 & 0.000 & 0.000 & 0.000 & 0.0 & 0.0 & 125.30 & 3.514 & Elástico / Elástico \\
+1 & 1.700 & 3.075 & 1.700 & 1.375 & 107.0 & 83.0 & 45.00 & 1.263 & Iterando... \\
+2 & 2.330 & 4.218 & 2.330 & 1.888 & 113.3 & 87.1 & 37.80 & 1.061 & Iterando... \\
+3 & 2.859 & 5.177 & 2.859 & 2.318 & 118.6 & 90.5 & 31.75 & 0.891 & Iterando... \\
+$\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+28 & 7.965 & 12.687 & 7.965 & 4.722 & 169.7 & 109.8 & 0.49 & 0.014 & \textbf{Convergido (28 iter)} \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+% ==============================================================================
+% SECCIÓN 5: COMPARACIÓN DE MÉTODOS Y CONSIDERACIONES INGENIERILES
+% ==============================================================================
+\section{Aspectos Teóricos y Prácticos en Ingeniería Estructural}
+
+\subsection{Newton-Raphson Estándar vs. Modificado}
+
+\begin{itemize}
+    \item \textbf{Newton-Raphson Estándar (Consistente):}
+    \begin{itemize}
+        \item \textit{Ventaja:} Tasa de convergencia cuadrática en la proximidad de la solución ($\|\mathbf{r}^{(i+1)}\| \propto \|\mathbf{r}^{(i)}\|^2$). En el ejemplo, requirió únicamente 2 iteraciones.
+        \item \textit{Desventaja:} Requiere formar, ensamblar y factorizar la matriz $\mathbf{K}_t$ en cada iteración, lo que en modelos de elementos finitos con cientos de miles de grados de libertad resulta computacionalmente muy demandante.
+    \end{itemize}
+
+    \item \textbf{Newton-Raphson Modificado (Initial Stiffness):}
+    \begin{itemize}
+        \item \textit{Ventaja:} La matriz $\mathbf{K}_0$ se factoriza una sola vez al inicio del análisis. Las iteraciones subsecuentes consisten en sustituciones progresivas y regresivas de bajo costo computacional.
+        \item \textit{Desventaja:} Tasa de convergencia puramente lineal. Cuando la estructura experimenta plastificación pronunciada ($\alpha \ll 1$), la rigidez inicial elástica sobreestima enormemente la rigidez real, provocando que el algoritmo requiera decenas de iteraciones (28 pasos en nuestro ejemplo) o incluso diverja.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Sensibilidad a la Pérdida de Capacidad Portante}
+
+Cuando un sistema estructural experimenta degradación de resistencia (\textit{strain softening}, donde $\alpha < 0$), los términos diagonales de $\mathbf{K}_t$ se reducen hasta que $\det(\mathbf{K}_t) \le 0$. En ese instante:
+\begin{enumerate}
+    \item El método controlado por carga de Newton-Raphson es incapaz de superar el punto límite de carga (\textit{limit point}).
+    \item Se hace mandatorio migrar a algoritmos avanzados de \textbf{Control por Desplazamiento} o técnicas de \textbf{Longitud de Arco} (\textit{Arc-Length Methods} de Riks-Wempner y Crisfield), donde el factor de carga $\lambda$ pasa a ser una variable cinemática desconocida del sistema.
+\end{enumerate}
+
+% ==============================================================================
+% CONCLUSIONES
+% ==============================================================================
+\section{Conclusiones Pedagógicas}
+
+\begin{enumerate}
+    \item El equilibrio estático en estructuras no lineales no se satisface de forma directa, sino mediante la anulación progresiva de un vector residual de fuerzas $\mathbf{r}(\mathbf{u}) = \mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u})$.
+    \item La matriz de rigidez tangente $\mathbf{K}_t$ no es una constante del material, sino el operador Jacobiano instantáneo de las fuerzas internas nodales respecto a los desplazamientos.
+    \item En sistemas de edificación cortante, el determinante de $\mathbf{K}_t$ se reduce al producto directo de las rigideces tangentes de entrepiso ($\prod k_{tj}$), lo que permite visualizar físicamente cómo la plastificación de un solo entrepiso disminuye en órdenes de magnitud la estabilidad global del edificio.
+    \item La solución explícita de las correcciones cinemáticas desacopla la física del problema: el primer piso absorbe el desequilibrio de corte basal acumulado ($r_1 + r_2$), mientras que los pisos superiores acumulan dicho desplazamiento y añaden su propia flexibilidad relativa.
+\end{enumerate}
+
+% ==============================================================================
+% REFERENCIAS
+% ==============================================================================
+\begin{thebibliography}{9}
+    \bibitem{chopra} Chopra, A. K. (2020). \textit{Dynamics of Structures: Theory and Applications to Earthquake Engineering}. 5th Edition, Pearson.
+    \bibitem{crisfield} Crisfield, M. A. (1991). \textit{Non-linear Finite Element Analysis of Solids and Structures: Essentials}. John Wiley \& Sons.
+    \bibitem{bathe} Bathe, K. J. (2006). \textit{Finite Element Procedures}. Prentice Hall, Pearson Education.
+    \bibitem{arroyo} Arroyo, O. (2026). \textit{Notas de Clase y Laboratorios Computacionales de Análisis No Lineal de Estructuras}. Universidad Industrial de Santander. Repositorio en línea: \url{https://odarroyo.github.io/analisis_no_lineal/}.
+\end{thebibliography}
+
+\end{document}
