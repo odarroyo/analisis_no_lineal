@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis No Lineal de Estructuras | Portal de Laboratorios Interactivos</title>
+  <meta name="description" content="Laboratorios interactivos, simuladores numéricos y material docente para el curso de Análisis No Lineal de Estructuras. Prof. Orlando Arroyo, Universidad Industrial de Santander.">
+
+  <!-- Tipografías modernas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       SISTEMA DE DISEÑO Y PALETA DE COLORES (MODO CLARO POR DEFECTO / OSCURO)
+       ========================================================================== */
+    :root {
+      /* MODO CLARO (Default - Óptimo para proyectores y lectura en aula) */
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #7c3aed;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --hero-bg: radial-gradient(circle at 50% 0%, #ede9fe 0%, #f8fafc 70%);
+      --hero-title-gradient: linear-gradient(135deg, #0f172a 20%, #6d28d9 70%, #0284c7 100%);
+      
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --blue-400: #2563eb;
+      --blue-500: #1d4ed8;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --rose-400: #e11d48;
+      --rose-500: #be123c;
+      --purple-400: #7c3aed;
+      --purple-500: #6d28d9;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.06);
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="dark"] {
+      /* MODO OSCURO (Activación manual) */
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: #1f293d;
+      --bg-card-hover: #26334d;
+      --border-subtle: #2d3748;
+      --border-accent: #8b5cf6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-faint: #6b7280;
+
+      --header-bg: rgba(17, 24, 39, 0.92);
+      --hero-bg: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0a0e17 75%);
+      --hero-title-gradient: linear-gradient(135deg, #ffffff 20%, #c084fc 70%, #38bdf8 100%);
+      
+      --cyan-400: #38bdf8;
+      --cyan-500: #0ea5e9;
+      --blue-400: #60a5fa;
+      --blue-500: #3b82f6;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --purple-400: #c084fc;
+      --purple-500: #a855f7;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.25s ease, color 0.25s ease;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.85rem 1.5rem;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #7c3aed, #0284c7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 800;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-text {
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+
+    /* Hero */
+    .hero {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 4rem 1.5rem 3.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(124, 58, 237, 0.12);
+      color: var(--purple-400);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+      font-size: clamp(2.1rem, 4.5vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.1rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 2rem;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    .section-title-wrap {
+      margin-bottom: 2.25rem;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Grid de Clases */
+    .classes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.75rem;
+    }
+
+    .class-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.85rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .class-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-accent);
+    }
+
+    .class-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #7c3aed, #0284c7);
+      opacity: 0.85;
+    }
+
+    .class-card.card-02::before {
+      background: linear-gradient(90deg, #0284c7, #059669);
+    }
+
+    .class-card.card-upcoming::before {
+      background: linear-gradient(90deg, #94a3b8, #cbd5e1);
+    }
+
+    .class-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .class-number {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(124, 58, 237, 0.12);
+      color: var(--purple-400);
+      font-family: var(--font-mono);
+    }
+
+    .card-02 .class-number {
+      background: rgba(2, 132, 199, 0.12);
+      color: var(--cyan-400);
+    }
+
+    .card-upcoming .class-number {
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--text-faint);
+    }
+
+    .class-status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--emerald-400);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .card-upcoming .class-status {
+      color: var(--amber-400);
+    }
+
+    .class-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 0.75rem;
+      color: var(--text-main);
+    }
+
+    .class-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .feature-item {
+      font-size: 0.82rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .feature-icon {
+      color: var(--purple-400);
+      font-weight: 800;
+    }
+
+    .card-02 .feature-icon {
+      color: var(--cyan-400);
+    }
+
+    .card-footer {
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-launch {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      width: 100%;
+      padding: 0.75rem 1.25rem;
+      border-radius: 9px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .btn-launch:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .card-02 .btn-launch {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    }
+
+    .card-02 .btn-launch:hover {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+    }
+
+    .btn-disabled {
+      background: var(--bg-card);
+      color: var(--text-faint);
+      box-shadow: none;
+      cursor: not-allowed;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-disabled:hover {
+      transform: none;
+      box-shadow: none;
+      background: var(--bg-card);
+    }
+
+    /* Banner de Notas Teóricas */
+    .theory-banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-top: 3.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theory-banner-info {
+      max-width: 650px;
+    }
+
+    .theory-banner-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.35rem;
+    }
+
+    .theory-banner-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 2.5rem 1.5rem;
+      margin-top: auto;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--purple-400);
+    }
+
+    @media (max-width: 640px) {
+      .classes-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        padding: 2.5rem 1rem;
+      }
+      .footer-container {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado Sticky -->
+  <header>
+    <div class="header-container">
+      <a href="#" class="brand">
+        <div class="brand-icon">&sigma;&epsilon;</div>
+        <div>
+          <span class="brand-text">Análisis No Lineal</span>
+          <span class="brand-sub">Universidad Industrial de Santander</span>
+        </div>
+      </a>
+      <div class="header-actions">
+        <button class="btn-icon" id="theme-toggle" title="Alternar tema de color">
+          <span id="theme-icon">🌙</span> <span id="theme-text">Modo Oscuro</span>
+        </button>
+        <a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener" class="btn-icon">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Principal -->
+  <section class="hero">
+    <div class="hero-tag">Docencia Universitaria • Posgrado en Ingeniería Civil</div>
+    <h1 class="hero-title">Laboratorios Interactivos de Análisis No Lineal de Estructuras</h1>
+    <p class="hero-subtitle">
+      Plataforma interactiva para la exploración rigurosa de conceptos fundamentales: memoria estructural, 
+      dependencia de trayectoria inelástica y solución iterativa del equilibrio mediante métodos numéricos como Newton-Raphson.
+    </p>
+
+    <div class="hero-badges">
+      <div class="hero-badge">⚡ Simulaciones en Tiempo Real</div>
+      <div class="hero-badge">📐 Formulación KaTeX Rigurosa</div>
+      <div class="hero-badge">🖥️ Canvas 2D HiDPI con Autoescala</div>
+      <div class="hero-badge">☀️ Modo Proyección en Aula</div>
+    </div>
+  </section>
+
+  <!-- Contenedor Principal: Módulos de Aprendizaje -->
+  <main>
+    <div class="section-title-wrap">
+      <h2 class="section-title">📚 Módulos y Laboratorios Interactivos</h2>
+      <p class="section-desc">Selecciona una de las clases para ingresar al simulador numérico y a la formulación teórica completa.</p>
+    </div>
+
+    <div class="classes-grid">
+      
+      <!-- Clase 01: La Trayectoria Importa -->
+      <article class="class-card card-01">
+        <div>
+          <div class="class-header">
+            <span class="class-number">Clase 01</span>
+            <span class="class-status">● Disponible</span>
+          </div>
+          <h3 class="class-title">La Trayectoria Importa: Memoria Estructural e Histéresis</h3>
+          <p class="class-desc">
+            Demuestra por qué los desplazamientos máximos o el estado final no determinan el comportamiento de una estructura inelástica. Explora la memoria interna plástica y el endurecimiento cinemático.
+          </p>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Oscilador 1-DOF con rigidez inicial \(K_0\), fluencia \(F_y\) y pendiente post-fluencia \(\alpha\).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Editor interactivo de historias de desplazamiento arbitrarias (ciclos, rampas, pulsos).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Visualización de lazo histerético Fuerza–Desplazamiento con memoria plástica activa.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Comparador de trayectorias monotónicas vs cíclicas con el mismo punto final.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <a href="01_la_trayectoria_importa.html" class="btn-launch">
+            <span>Iniciar Clase 01</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- Clase 02: El Equilibrio Iterativo y Newton-Raphson -->
+      <article class="class-card card-02">
+        <div>
+          <div class="class-header">
+            <span class="class-number">Clase 02</span>
+            <span class="class-status">● Disponible</span>
+          </div>
+          <h3 class="class-title">El Equilibrio Iterativo y Newton-Raphson</h3>
+          <p class="class-desc">
+            Estudia cómo se resuelve el equilibrio estático no lineal \(\mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}\) mediante iteraciones de Newton-Raphson en un edificio cortante de 2 pisos (2-DOF).
+          </p>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Edificio 2-DOF con resortes de entrepiso elasto-plásticos y animación física en vivo.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Comparación interactiva: Newton-Raphson Estándar (Full \(\mathbf{K}_t\)) vs Modificado (\(\mathbf{K}_0\)).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Desglose operacional explícito: identificación física de cada término matricial y residuo nodal.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Mini-Simulador 1D con autoescala dinámica y control de pendiente post-fluencia.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <a href="02_equilibrio_newton_raphson.html" class="btn-launch">
+            <span>Iniciar Clase 02</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- Clase 03: Próximamente -->
+      <article class="class-card card-upcoming">
+        <div>
+          <div class="class-header">
+            <span class="class-number">Clase 03</span>
+            <span class="class-status">⏳ En Desarrollo</span>
+          </div>
+          <h3 class="class-title">Control de Desplazamiento y Métodos de Arc-Length</h3>
+          <p class="class-desc">
+            Superación de puntos límite, snap-through y softening pronunciado. Algoritmos de longitud de arco (Crisfield, Riks) y curvas de capacidad pushover completas.
+          </p>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <span class="feature-icon">○</span>
+              <span>Puntos límite de carga vs puntos límite de desplazamiento.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">○</span>
+              <span>Restricción esférica y cilíndrica de longitud de arco.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">○</span>
+              <span>Análisis Pushover estático no lineal con degradación de resistencia.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <button class="btn-launch btn-disabled" disabled>
+            <span>Próximamente</span>
+          </button>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- Banner Informativo -->
+    <div class="theory-banner">
+      <div class="theory-banner-info">
+        <h3 class="theory-banner-title">📖 Material Didáctico Complementario</h3>
+        <p class="theory-banner-desc">
+          Las formulaciones matemáticas, derivaciones de matrices de rigidez tangente y notas conceptuales detalladas están documentadas en el repositorio para su consulta libre.
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener" class="btn-icon" style="background: var(--purple-400); color: #fff; border: none;">
+          <span>⭐ Ver en GitHub</span>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div>
+        <strong style="color: var(--text-main);">Análisis No Lineal de Estructuras</strong><br>
+        <span>Prof. Orlando Arroyo • Universidad Industrial de Santander (UIS)</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="01_la_trayectoria_importa.html">Clase 01</a></li>
+        <li><a href="02_equilibrio_newton_raphson.html">Clase 02</a></li>
+        <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">Repositorio</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    // Gestión del tema Claro / Oscuro con persistencia en localStorage
+    function isDarkTheme() {
+      return document.documentElement.getAttribute('data-theme') === 'dark';
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.getElementById('theme-text').textContent = 'Modo Claro';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.getElementById('theme-icon').textContent = '🌙';
+        document.getElementById('theme-text').textContent = 'Modo Oscuro';
+      }
+      localStorage.setItem('nl_course_theme', theme);
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      applyTheme(isDarkTheme() ? 'light' : 'dark');
+    });
+
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('nl_course_theme') || 'light';
+      applyTheme(saved);
+    });
+  </script>
+</body>
+</html>

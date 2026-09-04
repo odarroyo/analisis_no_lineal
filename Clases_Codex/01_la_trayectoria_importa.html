@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 01: La Trayectoria Importa | Análisis No Lineal</title>
+  
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES DE COLOR Y TEMAS (MODO CLARO POR DEFECTO / MODO OSCURO)
+       ========================================================================== */
+    :root {
+      /* MODO CLARO (Óptimo para proyección en aulas y salones) */
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #0284c7;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 35%, #0284c7 100%);
+      
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --blue-400: #2563eb;
+      --blue-500: #1d4ed8;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --rose-400: #e11d48;
+      --rose-500: #be123c;
+      --purple-400: #7c3aed;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(2, 132, 199, 0.2);
+    }
+
+    /* MODO OSCURO (Activado con la clase .dark-theme) */
+    body.dark-theme {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: #162032;
+      --bg-card-hover: #1e2c45;
+      --border-subtle: #1f2d47;
+      --border-accent: #38bdf8;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(17, 24, 39, 0.95);
+      --hero-bg: linear-gradient(135deg, rgba(22, 32, 50, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 40%, #38bdf8 100%);
+
+      --cyan-400: #22d3ee;
+      --cyan-500: #06b6d4;
+      --blue-400: #60a5fa;
+      --blue-500: #3b82f6;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --purple-400: #c084fc;
+
+      --canvas-bg: #0d131f;
+      --canvas-grid: #1e293b;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(6, 182, 212, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--blue-500);
+    }
+
+    /* Header y Navegación */
+    header {
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--cyan-500), var(--blue-500));
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      list-style: none;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    .nav-btn.active {
+      color: var(--cyan-400);
+      background: rgba(2, 132, 199, 0.1);
+      border-color: rgba(2, 132, 199, 0.3);
+    }
+
+    /* Botón Selector de Tema */
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+      margin-left: 0.5rem;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      color: var(--text-main);
+    }
+
+    /* Hero Banner */
+    .hero {
+      max-width: 1440px;
+      margin: 2rem auto 1.5rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .hero-box {
+      background: var(--hero-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2.2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--cyan-400);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-quote {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--cyan-400);
+      border-left: 3px solid var(--cyan-500);
+      padding-left: 1rem;
+      margin: 0.75rem 0 1.25rem 0;
+      font-style: italic;
+    }
+
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 960px;
+      line-height: 1.6;
+    }
+
+    /* Layout Principal */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem 1.5rem;
+    }
+
+    .grid-lab {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-lab {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-faint);
+    }
+
+    /* Controles del Laboratorio */
+    .control-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.4rem;
+    }
+
+    .control-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-val {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--cyan-400);
+      background: rgba(2, 132, 199, 0.1);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid rgba(2, 132, 199, 0.25);
+    }
+
+    .slider-input {
+      width: 100%;
+      height: 6px;
+      background: var(--border-subtle);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--cyan-400);
+      border: 2px solid var(--bg-surface);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
+      transition: transform 0.1s ease;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-faint);
+      margin-top: 0.25rem;
+      font-family: var(--font-mono);
+    }
+
+    /* Historial de Desplazamientos Input */
+    .history-input-area {
+      width: 100%;
+      min-height: 80px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      padding: 0.75rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .history-input-area:focus {
+      border-color: var(--cyan-500);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+
+    .presets-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .preset-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-weight: 500;
+    }
+
+    .preset-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .preset-btn.highlight {
+      border-color: var(--cyan-500);
+      color: var(--cyan-400);
+      background: rgba(2, 132, 199, 0.08);
+      font-weight: 600;
+    }
+
+    /* Panel de Telemetría HUD */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .telemetry-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+    }
+
+    .telemetry-title {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.15rem;
+    }
+
+    .telemetry-value {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .telemetry-unit {
+      font-size: 0.75rem;
+      font-weight: normal;
+      color: var(--text-muted);
+      margin-left: 0.25rem;
+    }
+
+    /* Estado Material Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      width: 100%;
+      justify-content: center;
+      letter-spacing: 0.02em;
+    }
+
+    .status-badge.elastic {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald-400);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .status-badge.plastic-tension {
+      background: rgba(225, 29, 72, 0.15);
+      color: var(--rose-400);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+    }
+
+    .status-badge.plastic-comp {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--blue-400);
+      border: 1px solid rgba(37, 99, 235, 0.35);
+    }
+
+    .status-badge.unloading {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--amber-400);
+      border: 1px solid rgba(217, 119, 6, 0.35);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* Controles de Animación */
+    .playback-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .btn-action {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: var(--cyan-500);
+      border-color: var(--cyan-500);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    body:not(.dark-theme) .btn-primary {
+      background: #0284c7;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--cyan-400);
+      border-color: var(--cyan-400);
+      box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+      color: #fff;
+    }
+
+    /* Barra de progreso de pasos */
+    .step-slider-container {
+      margin-top: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Visualización Gráfica (Derecha) */
+    .viz-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .canvas-overlay-info {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: var(--header-bg);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(8px);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .memory-alert-box {
+      background: rgba(217, 119, 6, 0.12);
+      border: 1px solid rgba(217, 119, 6, 0.4);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-top: 0.75rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .memory-alert-icon {
+      font-size: 1.25rem;
+      color: var(--amber-400);
+      line-height: 1;
+    }
+
+    .memory-alert-text {
+      font-size: 0.85rem;
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    .memory-alert-text strong {
+      color: var(--amber-400);
+    }
+
+    /* Secciones Teóricas */
+    .theory-section {
+      margin-top: 3.5rem;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 2.5rem;
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-tag {
+      font-family: var(--font-mono);
+      color: var(--cyan-400);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .section-heading {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-top: 0.3rem;
+    }
+
+    .theory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .theory-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.75rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .theory-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .theory-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theory-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .math-callout {
+      background: var(--bg-card);
+      border-left: 3px solid var(--cyan-500);
+      padding: 0.85rem 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+      overflow-x: auto;
+      color: var(--text-main);
+    }
+
+    /* Tabla Comparativa */
+    .compare-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    .compare-table th {
+      background: var(--bg-card);
+      color: var(--text-main);
+      padding: 0.85rem 1.25rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .compare-table td {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      background: var(--bg-surface);
+    }
+
+    .compare-table tr:hover td {
+      background: var(--bg-card);
+    }
+
+    .compare-table td.strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Preguntas Socráticas Interactivas (Accordion) */
+    .socratic-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .socratic-item:hover {
+      border-color: var(--border-accent);
+    }
+
+    .socratic-question {
+      padding: 1.1rem 1.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-main);
+      user-select: none;
+    }
+
+    .socratic-question:hover {
+      color: var(--cyan-400);
+    }
+
+    .socratic-chevron {
+      transition: transform 0.2s ease;
+      color: var(--text-faint);
+    }
+
+    .socratic-item.open .socratic-chevron {
+      transform: rotate(180deg);
+      color: var(--cyan-400);
+    }
+
+    .socratic-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .socratic-item.open .socratic-answer {
+      max-height: 400px;
+      padding: 1.2rem 1.4rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      padding: 2.5rem 1.5rem;
+      color: var(--text-faint);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--cyan-400);
+      text-decoration: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado / Barra Superior -->
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-badge">Clase 01</span>
+        <span class="brand-title">Análisis No Lineal de Estructuras</span>
+      </div>
+      <nav style="display: flex; align-items: center;">
+        <ul class="nav-links">
+          <li><a href="#laboratorio" class="nav-btn active">🔬 Laboratorio SDOF</a></li>
+          <li><a href="#teoria" class="nav-btn">📖 Paradigma & Memoria</a></li>
+          <li><a href="#matematica" class="nav-btn">📐 Formulación Constitutiva</a></li>
+          <li><a href="#socratico" class="nav-btn">💡 Preguntas de Clase</a></li>
+        </ul>
+        <!-- Botón de Alternancia Modo Claro / Modo Oscuro -->
+        <button id="theme-toggle" class="theme-toggle-btn" title="Alternar entre modo claro y oscuro">
+          <span id="theme-icon">🌙</span> <span id="theme-label">Modo Oscuro</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <div class="hero">
+    <div class="hero-box">
+      <div class="hero-tag">
+        <span>⚡ Cambio de Paradigma Estructural</span>
+      </div>
+      <h1 class="hero-title">La Trayectoria Importa</h1>
+      <div class="hero-quote">
+        "Una estructura no lineal tiene memoria. La respuesta futura no depende únicamente de la carga actual, sino del estado interno y del camino recorrido para llegar a él."
+      </div>
+      <p class="hero-desc">
+        En el análisis lineal tradicional (\(\mathbf{K}\mathbf{u}=\mathbf{P}\)), cada estado es independiente de su pasado: descargar siempre regresa al origen sin disipación. 
+        En esta primera sesión rompemos ese esquema mediante un <strong>oscilador de un grado de libertad (SDOF) elastoplástico bilineal</strong>. Experimenta cómo una misma deformación puede producir fuerzas radicalmente opuestas según la historia previa de plastificación.
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenedor Principal del Laboratorio -->
+  <main class="container" id="laboratorio">
+    <div class="grid-lab">
+      
+      <!-- Columna Izquierda: Panel de Control e Historial -->
+      <aside class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⚙️ Parámetros del Oscilador</div>
+            <div class="card-subtitle">Constitutiva Bilineal con Endurecimiento</div>
+          </div>
+        </div>
+
+        <!-- Rigidez Elástica K0 -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Rigidez Inicial (\(K_0\))</span>
+            <span class="control-val" id="val-k0">100.0 kN/mm</span>
+          </div>
+          <input type="range" id="slider-k0" class="slider-input" min="20" max="250" step="5" value="100">
+          <div class="slider-limits">
+            <span>20 kN/mm</span>
+            <span>250 kN/mm</span>
+          </div>
+        </div>
+
+        <!-- Fuerza de Fluencia Fy -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Fuerza de Fluencia (\(F_y\))</span>
+            <span class="control-val" id="val-fy">100.0 kN</span>
+          </div>
+          <input type="range" id="slider-fy" class="slider-input" min="20" max="250" step="5" value="100">
+          <div class="slider-limits">
+            <span>20 kN</span>
+            <span>250 kN</span>
+          </div>
+        </div>
+
+        <!-- Pendiente Post-fluencia alpha -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Relación Post-fluencia (\(\alpha = K_p/K_0\))</span>
+            <span class="control-val" id="val-alpha">0.05 (5%)</span>
+          </div>
+          <input type="range" id="slider-alpha" class="slider-input" min="0.0" max="0.30" step="0.01" value="0.05">
+          <div class="slider-limits">
+            <span>\(\alpha=0\) (Plástico Perfecto)</span>
+            <span>\(\alpha=0.30\) (Endurecimiento)</span>
+          </div>
+        </div>
+
+        <!-- Valores Derivados -->
+        <div style="background: var(--bg-card); padding: 0.6rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; font-size: 0.8rem; font-family: var(--font-mono); display: flex; justify-content: space-between;">
+          <span>\(u_y = F_y/K_0 = \) <strong id="val-uy" style="color:var(--cyan-400)">1.00 mm</strong></span>
+          <span>\(K_p = \alpha K_0 = \) <strong id="val-kp" style="color:var(--cyan-400)">5.0 kN/mm</strong></span>
+        </div>
+
+        <!-- Entrada del Historial de Desplazamientos -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Historia de Desplazamiento \(u\) [mm]</span>
+            <span class="card-subtitle">Separar por comas o espacios</span>
+          </div>
+          <textarea id="history-input" class="history-input-area" rows="3">0, 0.5, 1.0, 2.0, 1.0, 0, 0.5</textarea>
+          
+          <!-- Botones de Preajustes Pedagógicos -->
+          <div class="presets-container">
+            <button class="preset-btn highlight" id="btn-preset-central">⭐ Caso Central (Memoria u=0.5)</button>
+            <button class="preset-btn" id="btn-preset-monot">Monotónico</button>
+            <button class="preset-btn" id="btn-preset-cyclic">Ciclos Histeréticos</button>
+            <button class="preset-btn" id="btn-preset-ep">Elastoplástico (\(\alpha=0\))</button>
+            <button class="preset-btn" id="btn-preset-seismic">Demanda Sísmica</button>
+          </div>
+        </div>
+
+        <!-- Barra de Reproducción y Avance -->
+        <div class="playback-toolbar">
+          <button class="btn-action btn-primary" id="btn-play">▶ Reproducir</button>
+          <button class="btn-action" id="btn-prev" title="Paso Anterior">⏮</button>
+          <button class="btn-action" id="btn-next" title="Paso Siguiente">⏭</button>
+          <button class="btn-action" id="btn-reset" title="Reiniciar">🔄 Reset</button>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 0.3rem;">
+            <span style="font-size: 0.75rem; color: var(--text-faint);">Vel:</span>
+            <select id="select-speed" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.2rem 0.4rem; font-size: 0.75rem;">
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Slider de Paso Temporal -->
+        <div class="step-slider-container">
+          <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-faint);" id="lbl-step-current">Paso: 0 / 6</span>
+          <input type="range" id="slider-step" class="slider-input" min="0" max="6" step="1" value="0">
+        </div>
+
+        <!-- Telemetría en Tiempo Real -->
+        <div class="telemetry-grid">
+          <div class="telemetry-item">
+            <div class="telemetry-title">Desplazamiento \(u\)</div>
+            <div class="telemetry-value" id="hud-u">0.00 <span class="telemetry-unit">mm</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-title">Fuerza Restauradora \(F\)</div>
+            <div class="telemetry-value" id="hud-f">0.00 <span class="telemetry-unit">kN</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-title">Deformación Plástica \(u_p\)</div>
+            <div class="telemetry-value" id="hud-up">0.00 <span class="telemetry-unit">mm</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-title">Rigidez Tangente \(K_t\)</div>
+            <div class="telemetry-value" id="hud-kt">100.0 <span class="telemetry-unit">kN/mm</span></div>
+          </div>
+        </div>
+
+        <!-- Estado Interno Chip -->
+        <div id="status-chip" class="status-badge elastic">
+          <span class="status-dot"></span>
+          <span id="status-text">Rango Elástico Lineal</span>
+        </div>
+
+        <!-- Alerta de Demostración de Memoria -->
+        <div id="memory-alert" class="memory-alert-box" style="display: none;">
+          <div class="memory-alert-icon">💡</div>
+          <div class="memory-alert-text" id="memory-alert-desc">
+            <strong>¡Efecto de memoria demostrado!</strong> En este paso la deformación es la misma que al inicio (\(u = 0.5\text{ mm}\)), pero la fuerza es radicalmente distinta debido al daño plástico acumulado.
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Columna Derecha: Gráficas Canvas y Representación Física -->
+      <div class="viz-column">
+        
+        <!-- Canvas 1: Curva de Histéresis Fuerza-Desplazamiento -->
+        <div class="card" style="padding: 1rem 1rem 0.5rem 1rem;">
+          <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
+            <div class="card-title">📈 Trayectoria Fuerza — Desplazamiento (\(F - u\))</div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn-action" id="btn-download-plot" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">💾 Guardar PNG</button>
+            </div>
+          </div>
+          <div class="canvas-wrapper" style="height: 380px;">
+            <canvas id="canvas-hysteresis"></canvas>
+            <div class="canvas-overlay-info" id="overlay-info">Punto: (0.00 mm, 0.00 kN)</div>
+          </div>
+          <!-- Leyenda de colores -->
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.6rem; font-size: 0.75rem; color: var(--text-muted); justify-content: center;">
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 12px; height: 3px; background: #059669; border-radius: 2px;"></span> Elástico (\(K_0\))
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 12px; height: 3px; background: #e11d48; border-radius: 2px;"></span> Post-fluencia Tracción (\(K_p\))
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 12px; height: 3px; background: #2563eb; border-radius: 2px;"></span> Post-fluencia Compresión (\(K_p\))
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 12px; height: 3px; background: #d97706; border-radius: 2px;"></span> Descarga Elástica
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 12px; height: 1px; border-top: 1px dashed #64748b;"></span> Envolvente Teórica
+            </span>
+          </div>
+        </div>
+
+        <!-- Sección Inferior: Animación Física SDOF y Gráfica Temporal -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          
+          <!-- Canvas 2: Oscilador SDOF Físico Animado -->
+          <div class="card" style="padding: 1rem;">
+            <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.4rem;">
+              <div class="card-title" style="font-size: 0.95rem;">🧱 Oscilador Físico SDOF</div>
+              <span style="font-size: 0.75rem; color: var(--cyan-400); font-family: var(--font-mono);">\(F_s = f(u, \text{historia})\)</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 180px;">
+              <canvas id="canvas-sdof"></canvas>
+            </div>
+          </div>
+
+          <!-- Canvas 3: Historias Temporales u(t) y F(t) -->
+          <div class="card" style="padding: 1rem;">
+            <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.4rem;">
+              <div class="card-title" style="font-size: 0.95rem;">⏱️ Evolución Temporal</div>
+              <span style="font-size: 0.75rem; color: var(--text-faint); font-family: var(--font-mono);">\(u(t)\) & \(F(t)\)</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 180px;">
+              <canvas id="canvas-time"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Módulo Teórico I: El Cambio de Paradigma -->
+    <section class="theory-section" id="teoria">
+      <div class="section-header">
+        <div class="section-tag">Fundamentos Conceptuales</div>
+        <h2 class="section-heading">1. De una Solución Estática a una Trayectoria Evolutiva</h2>
+      </div>
+
+      <div class="theory-grid">
+        
+        <!-- Tarjeta: Analogía Malcolm -->
+        <div class="theory-card">
+          <h3>🦖 La Metáfora de Malcolm (Jurassic Park)</h3>
+          <p>
+            En la célebre escena de <em>Jurassic Park</em>, Ian Malcolm coloca dos gotas de agua sobre el dorso de la mano de Ellie Sattler. Aunque el punto de partida parece idéntico, la segunda gota nunca sigue el mismo recorrido que la primera.
+          </p>
+          <p>
+            En ingeniería estructural no lineal, esto no implica necesariamente un comportamiento caótico, sino una verdad insoslayable: <strong>para predecir la respuesta futura de una estructura, no basta con conocer la carga que actúa sobre ella; es imperativo conocer el estado interno en el que se encuentra.</strong>
+          </p>
+          <div class="math-callout">
+            \[\boxed{\text{Respuesta Futura} = f(\text{Estado Actual}, \text{Historia}, \Delta \mathbf{P})}\]
+          </div>
+        </div>
+
+        <!-- Tarjeta: Experimento Mental de los Dos Elementos -->
+        <div class="theory-card">
+          <h3>🔬 El Experimento Mental: Vigas A y B</h3>
+          <p>
+            Imaginemos dos elementos de concreto armado idénticos en dimensiones y armadura:
+          </p>
+          <ul style="color: var(--text-muted); padding-left: 1.25rem; margin-bottom: 1rem; font-size: 0.9rem;">
+            <li><strong>Elemento A:</strong> Nuevo, nunca sometido a cargas relevantes (intacto).</li>
+            <li><strong>Elemento B:</strong> Previamente cargado hasta fisurar el concreto y plastificar el acero, y luego descargado hasta \(F=0\).</li>
+          </ul>
+          <p>
+            Si aplicamos a ambos el mismo incremento de carga \(\Delta P\), <em>¿responderán de la misma manera?</em> <strong>Rotundamente no.</strong> El Elemento B tiene fisuras residuales, barras de acero con deformación plástica y un módulo tangente degradado.
+          </p>
+          <div class="math-callout">
+            \[\boxed{\text{Estado Actual} \neq \text{Solo Carga Actual}}\]
+          </div>
+        </div>
+
+        <!-- Tarjeta: Fuentes de No Linealidad -->
+        <div class="theory-card">
+          <h3>🌐 Tres Fuentes de No Linealidad Estructural</h3>
+          <p>La no linealidad en estructuras civiles proviene de tres orígenes físicos diferenciados:</p>
+          <ul style="color: var(--text-muted); padding-left: 1.25rem; font-size: 0.9rem; line-height: 1.6;">
+            <li><strong>Material:</strong> Fisuración y aplastamiento del concreto, fluencia y efecto Bauschinger en el acero, degradación de adherencia.</li>
+            <li><strong>Geométrica (\(P-\Delta\)):</strong> Grandes deformaciones que alteran las ecuaciones de equilibrio en la configuración deformada (\(M = P\Delta\)).</li>
+            <li><strong>Frontera / Contacto:</strong> Apertura y cierre de fisuras, apoyos unilaterales, aisladores sísmicos de fricción.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Tabla Comparativa Lineal vs No Lineal -->
+      <div class="compare-table-wrapper">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Criterio</th>
+              <th>Análisis Elástico Lineal Tradicional</th>
+              <th>Análisis Inelástico No Lineal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="strong">Ecuación Gobernanza</td>
+              <td>\(\mathbf{K}\mathbf{u} = \mathbf{P}\)</td>
+              <td>\(\mathbf{R}(\mathbf{u}, \text{estado interno}) = \mathbf{P}\)</td>
+            </tr>
+            <tr>
+              <td class="strong">Dependencia de la Historia</td>
+              <td>Nula. Cada estado es independiente de cómo se llegó a él.</td>
+              <td>Absoluta. El orden, amplitud y ciclos de carga definen la respuesta.</td>
+            </tr>
+            <tr>
+              <td class="strong">Principio de Superposición</td>
+              <td>Válido: el doble de carga produce el doble de deformación.</td>
+              <td>Inválido. \(\Delta \mathbf{u}\) depende de la rigidez tangente instantánea \(\mathbf{K}_t\).</td>
+            </tr>
+            <tr>
+              <td class="strong">Descarga a Cero Carga (\(P=0\))</td>
+              <td>El desplazamiento regresa exactamente a cero (\(u=0\)).</td>
+              <td>Queda una deformación plástica residual (\(u_r \neq 0\)).</td>
+            </tr>
+            <tr>
+              <td class="strong">Filosofía de Cálculo</td>
+              <td>Encontrar un punto de equilibrio estático directo.</td>
+              <td>Construir una <strong>trayectoria incremental</strong> y corregir el equilibrio.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- Módulo Matemático: Formulación Constitutiva -->
+    <section class="theory-section" id="matematica">
+      <div class="section-header">
+        <div class="section-tag">Rigor Matemático</div>
+        <h2 class="section-heading">2. Formulación Constitutiva del Oscilador Bilineal</h2>
+      </div>
+
+      <div class="theory-grid">
+        
+        <div class="theory-card">
+          <h3>Ecuaciones Constitutivas (1D)</h3>
+          <p>
+            Consideramos un sistema de 1 Grado de Libertad (SDOF) donde el desplazamiento total se descompone aditivamente en componente elástica y plástica:
+          </p>
+          <div class="math-callout">
+            \[u = u_e + u_p\]
+          </div>
+          <p>La fuerza restauradora elástica del resorte se expresa como:</p>
+          <div class="math-callout">
+            \[F = K_0 (u - u_p)\]
+          </div>
+          <p>
+            Donde \(K_0\) es la rigidez elástica inicial. La función de superficie de fluencia con <strong>endurecimiento cinemático</strong> viene dada por:
+          </p>
+          <div class="math-callout">
+            \[f(F, \beta) = |F - \beta| - F_y \le 0\]
+          </div>
+          <p>
+            Donde \(\beta\) es la fuerza de retroceso (*back-force* o centro del dominio elástico), gobernada por el módulo de endurecimiento cinemático \(K_{kin}\):
+          </p>
+          <div class="math-callout">
+            \[\beta = K_{kin} u_p, \qquad K_{kin} = \frac{\alpha}{1 - \alpha} K_0 \quad (\text{para } \alpha < 1)\]
+          </div>
+        </div>
+
+        <div class="theory-card">
+          <h3>Algoritmo de Retorno Radial (Return Mapping)</h3>
+          <p>
+            Dado un incremento de desplazamiento \(\Delta u = u_{n+1} - u_n\), el estado en el paso \(n+1\) se calcula en dos fases:
+          </p>
+          <p><strong>1. Paso de Prueba Elástica (Elastic Predictor):</strong></p>
+          <div class="math-callout">
+            \[F^{\text{trial}} = F_n + K_0 \Delta u\]
+            \[f^{\text{trial}} = |F^{\text{trial}} - \beta_n| - F_y\]
+          </div>
+          <p><strong>2. Verificación de Fluencia y Corrección (Plastic Corrector):</strong></p>
+          <div class="math-callout">
+            \[\text{Si } f^{\text{trial}} \le 0 \implies \begin{cases} F_{n+1} = F^{\text{trial}} \\ u_{p,n+1} = u_{p,n} \\ \beta_{n+1} = \beta_n \end{cases}\]
+            \[\text{Si } f^{\text{trial}} > 0 \implies \begin{cases} \Delta \gamma = \frac{f^{\text{trial}}}{K_0 + K_{kin}} \\ \Delta u_p = \Delta \gamma \operatorname{sign}(F^{\text{trial}} - \beta_n) \\ F_{n+1} = F^{\text{trial}} - K_0 \Delta u_p \\ \beta_{n+1} = \beta_n + K_{kin} \Delta u_p \end{cases}\]
+          </div>
+          <p>
+            Este algoritmo garantiza que durante la fluencia la rigidez tangente sea exactamente \(K_t = \alpha K_0\), y que durante la descarga elástica se recupere la rigidez inicial \(K_0\).
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Demostración del Disipación de Energía -->
+      <div class="theory-card" style="margin-top: 1rem;">
+        <h3>Disipación Histerética y Deformación Residual</h3>
+        <p>
+          El área encerrada por la curva \(F-u\) durante un ciclo completo representa la <strong>energía disipada por deformación plástica (\(W_p\))</strong>, fundamental en el diseño sismorresistente:
+        </p>
+        <div class="math-callout">
+          \[W_p = \oint F \, du_p = \int_0^t F(\tau) \, \dot{u}_p(\tau) \, d\tau\]
+        </div>
+        <p>
+          Al descargar completamente la estructura hasta una fuerza nula (\(F = 0\)), el desplazamiento no retorna al origen. La <strong>deformación residual</strong> es:
+        </p>
+        <div class="math-callout">
+          \[u_r = u - \frac{F}{K_0} = u_p\]
+        </div>
+        <p>
+          Esto demuestra el axioma fundamental de la clase: <strong>Cero fuerza no equivale a cero daño o cero deformación.</strong>
+        </p>
+      </div>
+
+    </section>
+
+    <!-- Módulo Socrático: Preguntas para Discusión en Clase -->
+    <section class="theory-section" id="socratico">
+      <div class="section-header">
+        <div class="section-tag">Pedagogía Activa</div>
+        <h2 class="section-heading">3. Preguntas Socráticas para el Aula de Clase</h2>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>1. ¿Por qué al aplicar el historial [0, 0.5, 1.0, 2.0, 1.0, 0, 0.5] mm, el valor u = 0.5 mm genera dos fuerzas distintas?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          En el primer paso (\(u=0.5\text{ mm}\)), el material se encuentra intacto en su régimen elástico inicial (\(F = K_0 u = 100 \times 0.5 = 50\text{ kN}\)). 
+          Posteriormente, la estructura incursiona profundamente en el rango plástico hasta \(u = 2.0\text{ mm}\), generando una deformación plástica permanente de \(u_p = 0.95\text{ mm}\). 
+          Al descargar y volver a alcanzar \(u = 0.5\text{ mm}\), la fuerza elástica es \(F = K_0(u - u_p) = 100(0.5 - 0.95) = -45\text{ kN}\). El sistema ahora experimenta compresión elástica a pesar de estar en una posición positiva relativa al origen. ¡La estructura recordó su historia de deformación plástica!
+        </div>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>2. ¿Qué ocurre física y analíticamente si establecemos la pendiente post-fluencia en \(\alpha = 0\)?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          Cuando \(\alpha = 0\), obtenemos el modelo <strong>elastoplástico perfecto</strong>. En este caso \(K_p = 0\) y \(K_{kin} = 0\). Una vez alcanzada la fuerza de fluencia (\(F = F_y = 100\text{ kN}\)), la estructura puede seguir deformándose indefinidamente sin ningún incremento de fuerza. 
+          En análisis numérico de estructuras completas (como en pórticos de concreto), una rigidez post-fluencia nula o negativa (ablandamiento) puede generar matrices tangentes singulares y problemas graves de convergencia en algoritmos como Newton-Raphson.
+        </div>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>3. ¿Por qué en análisis no lineal no podemos simplemente resolver el sistema con inversión de matriz directa como \(\mathbf{u} = \mathbf{K}^{-1}\mathbf{P}\)?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          Porque la matriz de rigidez no es una constante geométrica del sistema: es una función del estado interno actual \(\mathbf{K}_t = \mathbf{K}_t(\mathbf{u}, \text{historia})\). 
+          Además, aplicar una carga total \(\mathbf{P}\) de un solo golpe ignorando los estados intermedios imposibilitaría calcular correctamente las deformaciones plásticas acumuladas y violaría el equilibrio interno, ya que el camino seguido altera el estado resistente del material.
+        </div>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>4. ¿Cómo conecta este oscilador SDOF con programas avanzados como OpenSees, Perform-3D o SAP2000?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          Este mismo algoritmo de retorno radial que acabamos de implementar en JavaScript es exactamente el que ejecutan OpenSees o SAP2000 a nivel de punto de integración de una fibra de concreto o acero (modelos <em>Steel01</em>, <em>Concrete01</em>), o a nivel de rótula plástica concentrada. 
+          Entender la memoria en 1 grado de libertad es el cimiento insustituible para comprender el comportamiento de un edificio de 40 pisos sometido a un terremoto real.
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 1440px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong>Curso de Análisis No Lineal de Estructuras</strong> | Material Docente Interactivo
+      </div>
+      <div>
+        Diseñado para docencia universitaria de posgrado en ingeniería estructural.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lógica de Simulación y Visualización en JavaScript -->
+  <script>
+    /**
+     * Motor Constitutivo y Laboratorio Interactivo: Oscilador Bilineal SDOF
+     * Modelo con Endurecimiento Cinemático (Cinematic Hardening)
+     */
+
+    // --- Control de Tema (Modo Claro / Modo Oscuro) ---
+    function isDarkTheme() {
+      return document.body.classList.contains('dark-theme');
+    }
+
+    function applyTheme(theme) {
+      const themeIcon = document.getElementById('theme-icon');
+      const themeLabel = document.getElementById('theme-label');
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'Modo Claro';
+      } else {
+        document.body.classList.remove('dark-theme');
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Modo Oscuro';
+      }
+      localStorage.setItem('nl_course_theme', theme);
+      drawAllCanvases();
+    }
+
+    // Paleta de colores para Canvas adaptada al tema actual
+    function getCanvasPalette() {
+      const dark = isDarkTheme();
+      return {
+        bg: dark ? '#0d131f' : '#ffffff',
+        grid: dark ? '#1e293b' : '#e2e8f0',
+        axis: dark ? '#475569' : '#64748b',
+        text: dark ? '#94a3b8' : '#334155',
+        faint: dark ? '#64748b' : '#94a3b8',
+        wallFill: dark ? '#1e293b' : '#f1f5f9',
+        wallBorder: dark ? '#475569' : '#cbd5e1',
+        wallHatch: dark ? '#334155' : '#cbd5e1',
+        massGrad0: dark ? '#1e293b' : '#f8fafc',
+        massGrad1: dark ? '#0f172a' : '#e2e8f0',
+        massBorder: dark ? '#38bdf8' : '#0284c7',
+        massText: dark ? '#f8fafc' : '#0f172a',
+        arrowColor: dark ? '#fbbf24' : '#d97706',
+        elasticColor: dark ? '#34d399' : '#059669',
+        plasticTensionColor: dark ? '#fb7185' : '#e11d48',
+        plasticCompColor: dark ? '#60a5fa' : '#2563eb',
+        unloadingColor: dark ? '#fbbf24' : '#d97706'
+      };
+    }
+
+    // --- Estado de la Simulación ---
+    const simState = {
+      k0: 100.0,
+      fy: 100.0,
+      alpha: 0.05,
+      inputHistory: [0, 0.5, 1.0, 2.0, 1.0, 0, 0.5],
+      keyPoints: [],
+      denseTrajectory: [],
+      currentDenseIndex: 0,
+      isPlaying: false,
+      speedMultiplier: 1.0,
+      animationFrameId: null,
+      lastTimestamp: 0,
+      visitedStepsAtHalf: []
+    };
+
+    // --- Algoritmo de Retorno Radial 1D (Kinematic Hardening) ---
+    function computeBilinearKinematicState(uHistory, k0, fy, alpha) {
+      const kp = alpha * k0;
+      const kkin = (alpha < 0.999) ? (alpha / (1.0 - alpha)) * k0 : 1e6;
+      const states = [];
+      
+      let u_curr = 0;
+      let f_curr = 0;
+      let up_curr = 0;
+      let beta_curr = 0;
+      let wp_curr = 0;
+      
+      states.push({
+        stepIndex: 0,
+        u: 0,
+        f: 0,
+        up: 0,
+        ur: 0,
+        beta: 0,
+        kt: k0,
+        stateType: 'elastic',
+        wp: 0,
+        deltaU: 0
+      });
+
+      for (let i = 1; i < uHistory.length; i++) {
+        const u_next = uHistory[i];
+        const du = u_next - u_curr;
+        
+        const f_trial = f_curr + k0 * du;
+        const beta_trial = beta_curr;
+        const xi_trial = f_trial - beta_trial;
+        const f_yield_trial = Math.abs(xi_trial) - fy;
+
+        let f_next, up_next, beta_next, kt_next, stateType_next;
+        let d_up = 0;
+
+        if (f_yield_trial <= 1e-9) {
+          f_next = f_trial;
+          beta_next = beta_trial;
+          up_next = up_curr;
+          kt_next = k0;
+          
+          if (up_curr !== 0 && Math.abs(f_next) < fy) {
+            stateType_next = 'unloading';
+          } else {
+            stateType_next = 'elastic';
+          }
+        } else {
+          const s = Math.sign(xi_trial);
+          const delta_gamma = f_yield_trial / (k0 + kkin);
+          d_up = delta_gamma * s;
+          
+          up_next = up_curr + d_up;
+          f_next = f_trial - k0 * d_up;
+          beta_next = beta_trial + kkin * d_up;
+          kt_next = kp;
+          stateType_next = (s > 0) ? 'plastic-tension' : 'plastic-comp';
+        }
+
+        const delta_wp = Math.abs(0.5 * (f_curr + f_next) * d_up);
+        wp_curr += delta_wp;
+        const ur_next = up_next;
+
+        states.push({
+          stepIndex: i,
+          u: u_next,
+          f: f_next,
+          up: up_next,
+          ur: ur_next,
+          beta: beta_next,
+          kt: kt_next,
+          stateType: stateType_next,
+          wp: wp_curr,
+          deltaU: du
+        });
+
+        u_curr = u_next;
+        f_curr = f_next;
+        up_curr = up_next;
+        beta_curr = beta_next;
+      }
+
+      return states;
+    }
+
+    // --- Generación de Trayectoria Densa Interpolada ---
+    function generateDenseTrajectory(keyHistory, k0, fy, alpha, subStepsPerSegment = 25) {
+      if (keyHistory.length < 2) return [];
+
+      const denseU = [];
+      const segmentMarkers = [0];
+
+      for (let i = 0; i < keyHistory.length - 1; i++) {
+        const uStart = keyHistory[i];
+        const uEnd = keyHistory[i + 1];
+        
+        for (let s = (i === 0 ? 0 : 1); s <= subStepsPerSegment; s++) {
+          const t = s / subStepsPerSegment;
+          denseU.push(uStart + (uEnd - uStart) * t);
+        }
+        segmentMarkers.push(denseU.length - 1);
+      }
+
+      const denseStates = computeBilinearKinematicState(denseU, k0, fy, alpha);
+      
+      for (let i = 0; i < segmentMarkers.length; i++) {
+        const denseIdx = segmentMarkers[i];
+        if (denseStates[denseIdx]) {
+          denseStates[denseIdx].isKeyPoint = true;
+          denseStates[denseIdx].keyPointIndex = i;
+        }
+      }
+
+      return { denseStates, segmentMarkers };
+    }
+
+    // --- Elementos del DOM ---
+    const sliderK0 = document.getElementById('slider-k0');
+    const sliderFy = document.getElementById('slider-fy');
+    const sliderAlpha = document.getElementById('slider-alpha');
+    const valK0 = document.getElementById('val-k0');
+    const valFy = document.getElementById('val-fy');
+    const valAlpha = document.getElementById('val-alpha');
+    const valUy = document.getElementById('val-uy');
+    const valKp = document.getElementById('val-kp');
+
+    const historyInput = document.getElementById('history-input');
+    const btnPlay = document.getElementById('btn-play');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnReset = document.getElementById('btn-reset');
+    const selectSpeed = document.getElementById('select-speed');
+    const sliderStep = document.getElementById('slider-step');
+    const lblStepCurrent = document.getElementById('lbl-step-current');
+
+    const hudU = document.getElementById('hud-u');
+    const hudF = document.getElementById('hud-f');
+    const hudUp = document.getElementById('hud-up');
+    const hudKt = document.getElementById('hud-kt');
+    const statusChip = document.getElementById('status-chip');
+    const statusText = document.getElementById('status-text');
+    const memoryAlert = document.getElementById('memory-alert');
+    const memoryAlertDesc = document.getElementById('memory-alert-desc');
+    const overlayInfo = document.getElementById('overlay-info');
+
+    // Canvas
+    const canvasHyst = document.getElementById('canvas-hysteresis');
+    const ctxHyst = canvasHyst.getContext('2d');
+    const canvasSdof = document.getElementById('canvas-sdof');
+    const ctxSdof = canvasSdof.getContext('2d');
+    const canvasTime = document.getElementById('canvas-time');
+    const ctxTime = canvasTime.getContext('2d');
+
+    // --- Parseo de Entrada de Desplazamientos ---
+    function parseHistoryInput(text) {
+      const cleaned = text.replace(/[\[\]]/g, ' ').replace(/[;,]/g, ' ');
+      const tokens = cleaned.trim().split(/\s+/);
+      const values = [];
+      for (const tok of tokens) {
+        if (tok === '') continue;
+        const val = parseFloat(tok);
+        if (!isNaN(val)) {
+          values.push(val);
+        }
+      }
+      if (values.length === 0 || values[0] !== 0) {
+        values.unshift(0);
+      }
+      return values;
+    }
+
+    // --- Recalcular y Actualizar Todo ---
+    function recomputeSimulation() {
+      simState.k0 = parseFloat(sliderK0.value);
+      simState.fy = parseFloat(sliderFy.value);
+      simState.alpha = parseFloat(sliderAlpha.value);
+      simState.speedMultiplier = parseFloat(selectSpeed.value);
+
+      valK0.textContent = `${simState.k0.toFixed(1)} kN/mm`;
+      valFy.textContent = `${simState.fy.toFixed(1)} kN`;
+      valAlpha.textContent = `${simState.alpha.toFixed(2)} (${Math.round(simState.alpha * 100)}%)`;
+      const uy = simState.fy / simState.k0;
+      const kp = simState.alpha * simState.k0;
+      valUy.textContent = `${uy.toFixed(2)} mm`;
+      valKp.textContent = `${kp.toFixed(1)} kN/mm`;
+
+      simState.keyPoints = computeBilinearKinematicState(simState.inputHistory, simState.k0, simState.fy, simState.alpha);
+      
+      const { denseStates, segmentMarkers } = generateDenseTrajectory(
+        simState.inputHistory, simState.k0, simState.fy, simState.alpha, 30
+      );
+      simState.denseTrajectory = denseStates;
+      simState.segmentMarkers = segmentMarkers;
+
+      sliderStep.max = simState.keyPoints.length - 1;
+      
+      if (simState.currentDenseIndex >= simState.denseTrajectory.length) {
+        simState.currentDenseIndex = simState.denseTrajectory.length - 1;
+      }
+
+      updateHUD();
+      drawAllCanvases();
+    }
+
+    // --- Detección de Casos de Memoria (u=0.5) ---
+    function checkMemoryPhenomenon(currentState) {
+      const currentU = currentState.u;
+      const toleranceU = 0.02;
+      const matches = [];
+
+      for (let i = 0; i < simState.keyPoints.length; i++) {
+        const kp = simState.keyPoints[i];
+        if (Math.abs(kp.u - currentU) <= toleranceU && Math.abs(kp.u) > 0.1) {
+          matches.push({ index: i, f: kp.f, up: kp.up });
+        }
+      }
+
+      if (matches.length >= 2 && Math.abs(currentU - 0.5) < 0.05) {
+        const first = matches[0];
+        const last = matches[matches.length - 1];
+        if (Math.abs(first.f - last.f) > 5.0) {
+          memoryAlert.style.display = 'flex';
+          memoryAlertDesc.innerHTML = `<strong>¡Memoria estructural demostrada!</strong> La estructura se encuentra en \(u = ${currentU.toFixed(2)}\\text{ mm}\).<br>` +
+            `• En el paso #${first.index}: \(F = ${first.f.toFixed(1)}\\text{ kN}\) (Material elástico virgen, \(u_p = ${first.up.toFixed(2)}\\text{ mm}\))<br>` +
+            `• En el paso #${last.index}: \(F = ${last.f.toFixed(1)}\\text{ kN}\) (Tras plastificación y descarga, \(u_p = ${last.up.toFixed(2)}\\text{ mm}\)).<br>` +
+            `<em>¡Misma posición pero fuerzas totalmente distintas debido al camino recorrido!</em>`;
+          if (window.renderMathInElement) {
+            renderMathInElement(memoryAlertDesc);
+          }
+          return;
+        }
+      }
+      memoryAlert.style.display = 'none';
+    }
+
+    // --- Actualización de Telemetría ---
+    function updateHUD() {
+      if (simState.denseTrajectory.length === 0) return;
+      
+      const curr = simState.denseTrajectory[simState.currentDenseIndex] || simState.denseTrajectory[0];
+      
+      hudU.innerHTML = `${curr.u.toFixed(2)} <span class="telemetry-unit">mm</span>`;
+      hudF.innerHTML = `${curr.f.toFixed(1)} <span class="telemetry-unit">kN</span>`;
+      hudUp.innerHTML = `${curr.up.toFixed(2)} <span class="telemetry-unit">mm</span>`;
+      hudKt.innerHTML = `${curr.kt.toFixed(1)} <span class="telemetry-unit">kN/mm</span>`;
+
+      let closestKey = 0;
+      let minDist = 999999;
+      for (let i = 0; i < simState.segmentMarkers.length; i++) {
+        const d = Math.abs(simState.segmentMarkers[i] - simState.currentDenseIndex);
+        if (d < minDist) {
+          minDist = d;
+          closestKey = i;
+        }
+      }
+      sliderStep.value = closestKey;
+      lblStepCurrent.textContent = `Paso: ${closestKey} / ${simState.keyPoints.length - 1}`;
+
+      statusChip.className = 'status-badge';
+      if (curr.stateType === 'elastic') {
+        statusChip.classList.add('elastic');
+        statusText.textContent = '🟢 Rango Elástico Lineal (Kt = K0)';
+      } else if (curr.stateType === 'plastic-tension') {
+        statusChip.classList.add('plastic-tension');
+        statusText.textContent = '🔴 Post-fluencia Tracción (Kt = Kp)';
+      } else if (curr.stateType === 'plastic-comp') {
+        statusChip.classList.add('plastic-comp');
+        statusText.textContent = '🔵 Post-fluencia Compresión (Kt = Kp)';
+      } else if (curr.stateType === 'unloading') {
+        statusChip.classList.add('unloading');
+        statusText.textContent = '🟡 Descarga Elástica (Kt = K0)';
+      }
+
+      overlayInfo.textContent = `u: ${curr.u.toFixed(2)} mm | F: ${curr.f.toFixed(1)} kN | ur: ${curr.ur.toFixed(2)} mm`;
+
+      checkMemoryPhenomenon(curr);
+    }
+
+    // --- Utilidad para Ajustar Canvas a Retina/HiDPI ---
+    function resizeCanvasHiDPI(canvas, ctx) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const displayWidth = Math.floor(rect.width);
+      const displayHeight = Math.floor(rect.height);
+
+      if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+      }
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+      return { width: displayWidth, height: displayHeight };
+    }
+
+    // --- Dibujo: Canvas 1 - Histéresis Fuerza-Desplazamiento ---
+    function drawHysteresisPlot() {
+      const palette = getCanvasPalette();
+      const { width, height } = resizeCanvasHiDPI(canvasHyst, ctxHyst);
+      
+      // Fondo sólido para proyección y descarga PNG
+      ctxHyst.fillStyle = palette.bg;
+      ctxHyst.fillRect(0, 0, width, height);
+
+      const pad = { top: 30, right: 30, bottom: 45, left: 65 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      let minU = -0.5, maxU = 2.5;
+      let minF = -150, maxF = 150;
+
+      simState.keyPoints.forEach(p => {
+        if (p.u < minU) minU = p.u;
+        if (p.u > maxU) maxU = p.u;
+        if (p.f < minF) minF = p.f;
+        if (p.f > maxF) maxF = p.f;
+      });
+
+      const rangeU = Math.max(maxU - minU, 2.0);
+      const rangeF = Math.max(maxF - minF, 100.0);
+      minU -= rangeU * 0.15;
+      maxU += rangeU * 0.15;
+      minF -= rangeF * 0.15;
+      maxF += rangeF * 0.15;
+
+      const toX = u => pad.left + ((u - minU) / (maxU - minU)) * plotW;
+      const toY = f => pad.top + ((maxF - f) / (maxF - minF)) * plotH;
+
+      // 1. Cuadrícula y Ejes
+      ctxHyst.strokeStyle = palette.grid;
+      ctxHyst.lineWidth = 1;
+      ctxHyst.fillStyle = palette.text;
+      ctxHyst.font = '10px JetBrains Mono, monospace';
+
+      const uStep = rangeU > 4 ? 1.0 : (rangeU > 1.5 ? 0.5 : 0.2);
+      const startU = Math.ceil(minU / uStep) * uStep;
+      for (let u = startU; u <= maxU; u += uStep) {
+        const x = toX(u);
+        ctxHyst.beginPath();
+        ctxHyst.moveTo(x, pad.top);
+        ctxHyst.lineTo(x, pad.top + plotH);
+        ctxHyst.stroke();
+        ctxHyst.fillText(u.toFixed(1), x - 8, pad.top + plotH + 18);
+      }
+
+      const fStep = rangeF > 300 ? 100 : (rangeF > 150 ? 50 : 25);
+      const startF = Math.ceil(minF / fStep) * fStep;
+      for (let f = startF; f <= maxF; f += fStep) {
+        const y = toY(f);
+        ctxHyst.beginPath();
+        ctxHyst.moveTo(pad.left, y);
+        ctxHyst.lineTo(pad.left + plotW, y);
+        ctxHyst.stroke();
+        ctxHyst.fillText(f.toFixed(0), pad.left - 38, y + 4);
+      }
+
+      // Ejes principales (0,0)
+      const x0 = toX(0);
+      const y0 = toY(0);
+
+      ctxHyst.strokeStyle = palette.axis;
+      ctxHyst.lineWidth = 1.5;
+      if (y0 >= pad.top && y0 <= pad.top + plotH) {
+        ctxHyst.beginPath();
+        ctxHyst.moveTo(pad.left, y0);
+        ctxHyst.lineTo(pad.left + plotW, y0);
+        ctxHyst.stroke();
+      }
+      if (x0 >= pad.left && x0 <= pad.left + plotW) {
+        ctxHyst.beginPath();
+        ctxHyst.moveTo(x0, pad.top);
+        ctxHyst.lineTo(x0, pad.top + plotH);
+        ctxHyst.stroke();
+      }
+
+      ctxHyst.fillStyle = palette.text;
+      ctxHyst.font = 'bold 11px Inter, sans-serif';
+      ctxHyst.fillText('Desplazamiento u [mm]', pad.left + plotW / 2 - 60, pad.top + plotH + 36);
+      
+      ctxHyst.save();
+      ctxHyst.translate(16, pad.top + plotH / 2 + 40);
+      ctxHyst.rotate(-Math.PI / 2);
+      ctxHyst.fillText('Fuerza Restauradora F [kN]', 0, 0);
+      ctxHyst.restore();
+
+      // 2. Envolvente Teórica Bilineal
+      ctxHyst.save();
+      ctxHyst.strokeStyle = palette.faint;
+      ctxHyst.lineWidth = 1.5;
+      ctxHyst.setLineDash([4, 4]);
+
+      const uy = simState.fy / simState.k0;
+      const kp = simState.alpha * simState.k0;
+
+      ctxHyst.beginPath();
+      ctxHyst.moveTo(x0, y0);
+      ctxHyst.lineTo(toX(uy), toY(simState.fy));
+      ctxHyst.lineTo(toX(maxU), toY(simState.fy + kp * (maxU - uy)));
+      ctxHyst.stroke();
+
+      ctxHyst.beginPath();
+      ctxHyst.moveTo(x0, y0);
+      ctxHyst.lineTo(toX(-uy), toY(-simState.fy));
+      ctxHyst.lineTo(toX(minU), toY(-simState.fy + kp * (minU - (-uy))));
+      ctxHyst.stroke();
+      ctxHyst.restore();
+
+      // 3. Trayectoria Recorrida
+      if (simState.denseTrajectory.length > 1) {
+        const upTo = simState.currentDenseIndex;
+
+        for (let i = 0; i < upTo; i++) {
+          const p1 = simState.denseTrajectory[i];
+          const p2 = simState.denseTrajectory[i + 1];
+
+          ctxHyst.beginPath();
+          ctxHyst.moveTo(toX(p1.u), toY(p1.f));
+          ctxHyst.lineTo(toX(p2.u), toY(p2.f));
+
+          if (p2.stateType === 'plastic-tension') {
+            ctxHyst.strokeStyle = palette.plasticTensionColor;
+            ctxHyst.lineWidth = 3.0;
+          } else if (p2.stateType === 'plastic-comp') {
+            ctxHyst.strokeStyle = palette.plasticCompColor;
+            ctxHyst.lineWidth = 3.0;
+          } else if (p2.stateType === 'unloading') {
+            ctxHyst.strokeStyle = palette.unloadingColor;
+            ctxHyst.lineWidth = 2.5;
+          } else {
+            ctxHyst.strokeStyle = palette.elasticColor;
+            ctxHyst.lineWidth = 2.5;
+          }
+          ctxHyst.stroke();
+        }
+      }
+
+      // 4. Hitos Clave Numerados
+      const currentDense = simState.denseTrajectory[simState.currentDenseIndex] || simState.denseTrajectory[0];
+      simState.keyPoints.forEach((kp, idx) => {
+        const markerDenseIdx = simState.segmentMarkers[idx];
+        if (markerDenseIdx <= simState.currentDenseIndex) {
+          const kx = toX(kp.u);
+          const ky = toY(kp.f);
+
+          ctxHyst.beginPath();
+          ctxHyst.arc(kx, ky, 5, 0, Math.PI * 2);
+          ctxHyst.fillStyle = palette.bg;
+          ctxHyst.fill();
+          ctxHyst.lineWidth = 2;
+          ctxHyst.strokeStyle = (Math.abs(kp.u - 0.5) < 0.05 && idx > 0) ? palette.unloadingColor : palette.axis;
+          ctxHyst.stroke();
+
+          ctxHyst.fillStyle = palette.text;
+          ctxHyst.font = 'bold 9px JetBrains Mono, monospace';
+          ctxHyst.fillText(`${idx}`, kx + 7, ky - 6);
+        }
+      });
+
+      // 5. Línea de Descarga Elástica Proyectada hacia ur
+      if (currentDense) {
+        const curX = toX(currentDense.u);
+        const curY = toY(currentDense.f);
+        const urX = toX(currentDense.ur);
+
+        if (Math.abs(currentDense.f) > 2) {
+          ctxHyst.save();
+          ctxHyst.setLineDash([3, 3]);
+          ctxHyst.strokeStyle = palette.unloadingColor;
+          ctxHyst.lineWidth = 1.2;
+          ctxHyst.beginPath();
+          ctxHyst.moveTo(curX, curY);
+          ctxHyst.lineTo(urX, y0);
+          ctxHyst.stroke();
+
+          ctxHyst.fillStyle = palette.unloadingColor;
+          ctxHyst.beginPath();
+          ctxHyst.arc(urX, y0, 3.5, 0, Math.PI * 2);
+          ctxHyst.fill();
+          ctxHyst.font = 'bold 9px JetBrains Mono, monospace';
+          ctxHyst.fillText(`ur=${currentDense.ur.toFixed(2)}`, urX - 15, y0 + 14);
+          ctxHyst.restore();
+        }
+
+        // 6. Punto Actual
+        ctxHyst.save();
+        ctxHyst.shadowColor = isDarkTheme() ? '#06b6d4' : '#0284c7';
+        ctxHyst.shadowBlur = 10;
+        ctxHyst.beginPath();
+        ctxHyst.arc(curX, curY, 7, 0, Math.PI * 2);
+        ctxHyst.fillStyle = isDarkTheme() ? '#22d3ee' : '#0284c7';
+        ctxHyst.fill();
+        ctxHyst.lineWidth = 2.5;
+        ctxHyst.strokeStyle = palette.bg;
+        ctxHyst.stroke();
+        ctxHyst.restore();
+      }
+    }
+
+    // --- Dibujo: Canvas 2 - Oscilador Físico SDOF ---
+    function drawSdofPhysical() {
+      const palette = getCanvasPalette();
+      const { width, height } = resizeCanvasHiDPI(canvasSdof, ctxSdof);
+      
+      ctxSdof.fillStyle = palette.bg;
+      ctxSdof.fillRect(0, 0, width, height);
+
+      const curr = simState.denseTrajectory[simState.currentDenseIndex] || { u: 0, f: 0, stateType: 'elastic' };
+      
+      const groundY = height - 30;
+      const wallX = 35;
+      const massW = 55;
+      const massH = 45;
+      
+      const scaleU = 35;
+      const neutralMassX = 170;
+      const currentMassX = Math.max(wallX + 60, Math.min(width - massW - 20, neutralMassX + curr.u * scaleU));
+
+      // 1. Pared Izquierda
+      ctxSdof.fillStyle = palette.wallFill;
+      ctxSdof.fillRect(wallX - 15, 20, 15, groundY - 20);
+      ctxSdof.strokeStyle = palette.wallBorder;
+      ctxSdof.lineWidth = 2;
+      ctxSdof.strokeRect(wallX - 15, 20, 15, groundY - 20);
+
+      ctxSdof.strokeStyle = palette.wallHatch;
+      ctxSdof.lineWidth = 1;
+      for (let y = 25; y < groundY - 5; y += 8) {
+        ctxSdof.beginPath();
+        ctxSdof.moveTo(wallX - 15, y);
+        ctxSdof.lineTo(wallX - 5, y + 8);
+        ctxSdof.stroke();
+      }
+
+      // 2. Superficie de Suelo
+      ctxSdof.strokeStyle = palette.wallBorder;
+      ctxSdof.lineWidth = 2;
+      ctxSdof.beginPath();
+      ctxSdof.moveTo(wallX, groundY);
+      ctxSdof.lineTo(width - 15, groundY);
+      ctxSdof.stroke();
+
+      // 3. Resorte Helicoidal Paramétrico
+      const springY = groundY - massH / 2 - 6;
+      const springStartX = wallX;
+      const springEndX = currentMassX;
+      const springLength = springEndX - springStartX;
+      const coils = 9;
+
+      ctxSdof.save();
+      if (curr.stateType === 'plastic-tension') {
+        ctxSdof.strokeStyle = palette.plasticTensionColor;
+      } else if (curr.stateType === 'plastic-comp') {
+        ctxSdof.strokeStyle = palette.plasticCompColor;
+      } else if (curr.stateType === 'unloading') {
+        ctxSdof.strokeStyle = palette.unloadingColor;
+      } else {
+        ctxSdof.strokeStyle = palette.elasticColor;
+      }
+      ctxSdof.lineWidth = 3;
+      ctxSdof.lineCap = 'round';
+      ctxSdof.lineJoin = 'round';
+
+      ctxSdof.beginPath();
+      ctxSdof.moveTo(springStartX, springY);
+      const leadIn = 15;
+      ctxSdof.lineTo(springStartX + leadIn, springY);
+      
+      const activeLength = springLength - 2 * leadIn;
+      const coilStep = activeLength / coils;
+      const amplitude = 12;
+
+      for (let c = 0; c < coils; c++) {
+        const cx1 = springStartX + leadIn + (c + 0.25) * coilStep;
+        const cy1 = springY - amplitude;
+        const cx2 = springStartX + leadIn + (c + 0.75) * coilStep;
+        const cy2 = springY + amplitude;
+        const cx3 = springStartX + leadIn + (c + 1.0) * coilStep;
+        const cy3 = springY;
+
+        ctxSdof.lineTo(cx1, cy1);
+        ctxSdof.lineTo(cx2, cy2);
+        ctxSdof.lineTo(cx3, cy3);
+      }
+      ctxSdof.lineTo(springEndX, springY);
+      ctxSdof.stroke();
+      ctxSdof.restore();
+
+      // 4. Bloque de Masa M
+      const massY = groundY - massH - 6;
+      ctxSdof.save();
+      const grad = ctxSdof.createLinearGradient(currentMassX, massY, currentMassX + massW, massY + massH);
+      grad.addColorStop(0, palette.massGrad0);
+      grad.addColorStop(1, palette.massGrad1);
+      ctxSdof.fillStyle = grad;
+      ctxSdof.fillRect(currentMassX, massY, massW, massH);
+
+      ctxSdof.strokeStyle = palette.massBorder;
+      ctxSdof.lineWidth = 2;
+      ctxSdof.strokeRect(currentMassX, massY, massW, massH);
+
+      // Ruedas
+      ctxSdof.fillStyle = palette.faint;
+      ctxSdof.beginPath();
+      ctxSdof.arc(currentMassX + 12, groundY - 4, 4, 0, Math.PI * 2);
+      ctxSdof.arc(currentMassX + massW - 12, groundY - 4, 4, 0, Math.PI * 2);
+      ctxSdof.fill();
+
+      ctxSdof.fillStyle = palette.massText;
+      ctxSdof.font = 'bold 12px Inter, sans-serif';
+      ctxSdof.textAlign = 'center';
+      ctxSdof.fillText('Masa m', currentMassX + massW / 2, massY + massH / 2 + 4);
+      ctxSdof.restore();
+
+      // 5. Flecha de Vector de Fuerza Fs
+      if (Math.abs(curr.f) > 3) {
+        const arrowDir = -Math.sign(curr.f);
+        const arrowLen = Math.min(Math.abs(curr.f) * 0.45, 60);
+        const arrowStartX = currentMassX + massW / 2;
+        const arrowY = massY - 12;
+        const arrowEndX = arrowStartX + arrowDir * arrowLen;
+
+        ctxSdof.save();
+        ctxSdof.strokeStyle = palette.arrowColor;
+        ctxSdof.fillStyle = palette.arrowColor;
+        ctxSdof.lineWidth = 2.5;
+
+        ctxSdof.beginPath();
+        ctxSdof.moveTo(arrowStartX, arrowY);
+        ctxSdof.lineTo(arrowEndX, arrowY);
+        ctxSdof.stroke();
+
+        ctxSdof.beginPath();
+        ctxSdof.moveTo(arrowEndX, arrowY);
+        ctxSdof.lineTo(arrowEndX - arrowDir * 6, arrowY - 4);
+        ctxSdof.lineTo(arrowEndX - arrowDir * 6, arrowY + 4);
+        ctxSdof.closePath();
+        ctxSdof.fill();
+
+        ctxSdof.font = 'bold 9px JetBrains Mono, monospace';
+        ctxSdof.textAlign = 'center';
+        ctxSdof.fillText(`Fs=${curr.f.toFixed(0)} kN`, arrowStartX, arrowY - 7);
+        ctxSdof.restore();
+      }
+
+      // 6. Cota de Desplazamiento u
+      ctxSdof.strokeStyle = palette.axis;
+      ctxSdof.lineWidth = 1;
+      ctxSdof.beginPath();
+      ctxSdof.moveTo(neutralMassX + massW / 2, groundY + 12);
+      ctxSdof.lineTo(neutralMassX + massW / 2, groundY + 24);
+      ctxSdof.moveTo(currentMassX + massW / 2, groundY + 12);
+      ctxSdof.lineTo(currentMassX + massW / 2, groundY + 24);
+      ctxSdof.moveTo(neutralMassX + massW / 2, groundY + 18);
+      ctxSdof.lineTo(currentMassX + massW / 2, groundY + 18);
+      ctxSdof.stroke();
+
+      ctxSdof.fillStyle = isDarkTheme() ? '#22d3ee' : '#0284c7';
+      ctxSdof.font = 'bold 10px JetBrains Mono, monospace';
+      ctxSdof.textAlign = 'center';
+      ctxSdof.fillText(`u = ${curr.u.toFixed(2)} mm`, (neutralMassX + currentMassX + massW) / 2, groundY + 28);
+    }
+
+    // --- Dibujo: Canvas 3 - Historia Temporal u(t) y F(t) ---
+    function drawTimeHistory() {
+      const palette = getCanvasPalette();
+      const { width, height } = resizeCanvasHiDPI(canvasTime, ctxTime);
+      
+      ctxTime.fillStyle = palette.bg;
+      ctxTime.fillRect(0, 0, width, height);
+
+      const pad = { top: 20, right: 30, bottom: 25, left: 35 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      if (simState.denseTrajectory.length === 0) return;
+
+      const totalDense = simState.denseTrajectory.length;
+      
+      let maxAbsU = 1.0;
+      simState.denseTrajectory.forEach(d => {
+        if (Math.abs(d.u) > maxAbsU) maxAbsU = Math.abs(d.u);
+      });
+      maxAbsU *= 1.25;
+
+      const toX = idx => pad.left + (idx / (totalDense - 1)) * plotW;
+      const toY_U = u => pad.top + plotH / 2 - (u / maxAbsU) * (plotH / 2 - 5);
+
+      // Eje cero
+      ctxTime.strokeStyle = palette.axis;
+      ctxTime.lineWidth = 1;
+      ctxTime.beginPath();
+      ctxTime.moveTo(pad.left, pad.top + plotH / 2);
+      ctxTime.lineTo(pad.left + plotW, pad.top + plotH / 2);
+      ctxTime.stroke();
+
+      // Curva completa tenue
+      ctxTime.strokeStyle = palette.grid;
+      ctxTime.lineWidth = 1.5;
+      ctxTime.beginPath();
+      for (let i = 0; i < totalDense; i++) {
+        const x = toX(i);
+        const y = toY_U(simState.denseTrajectory[i].u);
+        if (i === 0) ctxTime.moveTo(x, y);
+        else ctxTime.lineTo(x, y);
+      }
+      ctxTime.stroke();
+
+      // Curva activa
+      const upTo = simState.currentDenseIndex;
+      ctxTime.strokeStyle = isDarkTheme() ? '#22d3ee' : '#0284c7';
+      ctxTime.lineWidth = 2.2;
+      ctxTime.beginPath();
+      for (let i = 0; i <= upTo; i++) {
+        const x = toX(i);
+        const y = toY_U(simState.denseTrajectory[i].u);
+        if (i === 0) ctxTime.moveTo(x, y);
+        else ctxTime.lineTo(x, y);
+      }
+      ctxTime.stroke();
+
+      if (upTo < totalDense) {
+        const curX = toX(upTo);
+        const curY = toY_U(simState.denseTrajectory[upTo].u);
+        ctxTime.fillStyle = isDarkTheme() ? '#22d3ee' : '#0284c7';
+        ctxTime.beginPath();
+        ctxTime.arc(curX, curY, 4, 0, Math.PI * 2);
+        ctxTime.fill();
+      }
+
+      ctxTime.fillStyle = palette.text;
+      ctxTime.font = 'bold 10px Inter, sans-serif';
+      ctxTime.fillText('u(t) [mm]', pad.left + 5, pad.top + 10);
+    }
+
+    function drawAllCanvases() {
+      drawHysteresisPlot();
+      drawSdofPhysical();
+      drawTimeHistory();
+    }
+
+    // --- Bucle de Animación ---
+    function animationLoop(timestamp) {
+      if (!simState.isPlaying) return;
+
+      if (!simState.lastTimestamp) simState.lastTimestamp = timestamp;
+      const dt = (timestamp - simState.lastTimestamp) / 1000;
+      simState.lastTimestamp = timestamp;
+
+      const stepIncrement = Math.max(1, Math.round(30 * simState.speedMultiplier * dt * 2.5));
+      simState.currentDenseIndex += stepIncrement;
+
+      if (simState.currentDenseIndex >= simState.denseTrajectory.length - 1) {
+        simState.currentDenseIndex = simState.denseTrajectory.length - 1;
+        simState.isPlaying = false;
+        btnPlay.innerHTML = '▶ Reproducir';
+      }
+
+      updateHUD();
+      drawAllCanvases();
+
+      if (simState.isPlaying) {
+        simState.animationFrameId = requestAnimationFrame(animationLoop);
+      }
+    }
+
+    function togglePlay() {
+      if (simState.isPlaying) {
+        simState.isPlaying = false;
+        btnPlay.innerHTML = '▶ Reproducir';
+        if (simState.animationFrameId) cancelAnimationFrame(simState.animationFrameId);
+      } else {
+        if (simState.currentDenseIndex >= simState.denseTrajectory.length - 1) {
+          simState.currentDenseIndex = 0;
+        }
+        simState.isPlaying = true;
+        simState.lastTimestamp = 0;
+        btnPlay.innerHTML = '⏸ Pausar';
+        simState.animationFrameId = requestAnimationFrame(animationLoop);
+      }
+    }
+
+    // --- Eventos ---
+    sliderK0.addEventListener('input', recomputeSimulation);
+    sliderFy.addEventListener('input', recomputeSimulation);
+    sliderAlpha.addEventListener('input', recomputeSimulation);
+    selectSpeed.addEventListener('change', () => {
+      simState.speedMultiplier = parseFloat(selectSpeed.value);
+    });
+
+    historyInput.addEventListener('input', () => {
+      simState.inputHistory = parseHistoryInput(historyInput.value);
+      recomputeSimulation();
+    });
+
+    btnPlay.addEventListener('click', togglePlay);
+
+    btnReset.addEventListener('click', () => {
+      simState.isPlaying = false;
+      btnPlay.innerHTML = '▶ Reproducir';
+      if (simState.animationFrameId) cancelAnimationFrame(simState.animationFrameId);
+      simState.currentDenseIndex = 0;
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    btnPrev.addEventListener('click', () => {
+      simState.isPlaying = false;
+      btnPlay.innerHTML = '▶ Reproducir';
+      let targetKey = 0;
+      for (let i = simState.segmentMarkers.length - 1; i >= 0; i--) {
+        if (simState.segmentMarkers[i] < simState.currentDenseIndex - 1) {
+          targetKey = i;
+          break;
+        }
+      }
+      simState.currentDenseIndex = simState.segmentMarkers[targetKey];
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    btnNext.addEventListener('click', () => {
+      simState.isPlaying = false;
+      btnPlay.innerHTML = '▶ Reproducir';
+      let targetKey = simState.segmentMarkers.length - 1;
+      for (let i = 0; i < simState.segmentMarkers.length; i++) {
+        if (simState.segmentMarkers[i] > simState.currentDenseIndex + 1) {
+          targetKey = i;
+          break;
+        }
+      }
+      simState.currentDenseIndex = simState.segmentMarkers[targetKey];
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    sliderStep.addEventListener('input', () => {
+      simState.isPlaying = false;
+      btnPlay.innerHTML = '▶ Reproducir';
+      const keyIdx = parseInt(sliderStep.value);
+      if (simState.segmentMarkers[keyIdx] !== undefined) {
+        simState.currentDenseIndex = simState.segmentMarkers[keyIdx];
+        updateHUD();
+        drawAllCanvases();
+      }
+    });
+
+    // Presets
+    document.getElementById('btn-preset-central').addEventListener('click', () => {
+      historyInput.value = '0, 0.5, 1.0, 2.0, 1.0, 0, 0.5';
+      sliderK0.value = 100;
+      sliderFy.value = 100;
+      sliderAlpha.value = 0.05;
+      simState.inputHistory = parseHistoryInput(historyInput.value);
+      recomputeSimulation();
+      simState.currentDenseIndex = 0;
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    document.getElementById('btn-preset-monot').addEventListener('click', () => {
+      historyInput.value = '0, 0.4, 0.8, 1.0, 1.4, 1.8, 2.2, 2.6, 3.0';
+      simState.inputHistory = parseHistoryInput(historyInput.value);
+      recomputeSimulation();
+      simState.currentDenseIndex = 0;
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    document.getElementById('btn-preset-cyclic').addEventListener('click', () => {
+      historyInput.value = '0, 0.6, 1.4, -0.8, 2.0, -1.8, 2.8, -2.5, 0';
+      simState.inputHistory = parseHistoryInput(historyInput.value);
+      recomputeSimulation();
+      simState.currentDenseIndex = 0;
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    document.getElementById('btn-preset-ep').addEventListener('click', () => {
+      sliderAlpha.value = 0.0;
+      historyInput.value = '0, 0.5, 1.2, 2.0, 1.0, 0, 0.5';
+      simState.inputHistory = parseHistoryInput(historyInput.value);
+      recomputeSimulation();
+      simState.currentDenseIndex = 0;
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    document.getElementById('btn-preset-seismic').addEventListener('click', () => {
+      historyInput.value = '0, 0.3, -0.4, 0.9, -1.2, 1.8, -1.6, 2.4, -2.2, 1.2, -0.6, 0';
+      simState.inputHistory = parseHistoryInput(historyInput.value);
+      recomputeSimulation();
+      simState.currentDenseIndex = 0;
+      updateHUD();
+      drawAllCanvases();
+    });
+
+    // Descargar PNG
+    document.getElementById('btn-download-plot').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `curva_histeresis_sdof_k0_${simState.k0}_alpha_${simState.alpha}.png`;
+      link.href = canvasHyst.toDataURL('image/png');
+      link.click();
+    });
+
+    // Preguntas Socráticas
+    document.querySelectorAll('.socratic-question').forEach(header => {
+      header.addEventListener('click', () => {
+        const item = header.parentElement;
+        item.classList.toggle('open');
+      });
+    });
+
+    // Botón de Alternancia de Tema
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = isDarkTheme();
+      applyTheme(isDark ? 'light' : 'dark');
+    });
+
+    // Inicialización al cargar la ventana
+    window.addEventListener('load', () => {
+      // Cargar preferencia guardada o usar Modo Claro por defecto para el aula
+      const savedTheme = localStorage.getItem('nl_course_theme') || 'light';
+      applyTheme(savedTheme);
+
+      recomputeSimulation();
+
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    });
+
+    window.addEventListener('resize', drawAllCanvases);
+  </script>
+</body>
+</html>

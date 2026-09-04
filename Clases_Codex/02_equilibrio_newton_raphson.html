@@ -1,0 +1,2795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 02: El Equilibrio Iterativo y Newton-Raphson | Análisis No Lineal</title>
+  
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES DE COLOR Y TEMAS (MODO CLARO POR DEFECTO / MODO OSCURO)
+       ========================================================================== */
+    :root {
+      /* MODO CLARO (Óptimo para proyección en aulas y salones) */
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #7c3aed;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 35%, #7c3aed 100%);
+      
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --blue-400: #2563eb;
+      --blue-500: #1d4ed8;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --rose-400: #e11d48;
+      --rose-500: #be123c;
+      --purple-400: #7c3aed;
+      --purple-500: #6d28d9;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.2);
+    }
+
+    /* MODO OSCURO */
+    body.dark-theme {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: #162032;
+      --bg-card-hover: #1e2c45;
+      --border-subtle: #1f2d47;
+      --border-accent: #c084fc;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(17, 24, 39, 0.95);
+      --hero-bg: linear-gradient(135deg, rgba(22, 32, 50, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 40%, #c084fc 100%);
+
+      --cyan-400: #22d3ee;
+      --cyan-500: #06b6d4;
+      --blue-400: #60a5fa;
+      --blue-500: #3b82f6;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --purple-400: #c084fc;
+      --purple-500: #a855f7;
+
+      --canvas-bg: #0d131f;
+      --canvas-grid: #1e293b;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(168, 85, 247, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--purple-500);
+    }
+
+    /* Header y Navegación */
+    header {
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--purple-500), var(--blue-500));
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      list-style: none;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    .nav-btn.active {
+      color: var(--purple-400);
+      background: rgba(124, 58, 237, 0.1);
+      border-color: rgba(124, 58, 237, 0.3);
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+      margin-left: 0.5rem;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      color: var(--text-main);
+    }
+
+    /* Hero Banner */
+    .hero {
+      max-width: 1440px;
+      margin: 2rem auto 1.5rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .hero-box {
+      background: var(--hero-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2.2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--purple-400);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-title {
+      font-size: 2.3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-quote {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--purple-400);
+      border-left: 3px solid var(--purple-500);
+      padding-left: 1rem;
+      margin: 0.75rem 0 1.25rem 0;
+      font-style: italic;
+    }
+
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 980px;
+      line-height: 1.6;
+    }
+
+    /* Layout Principal */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem 1.5rem;
+    }
+
+    .grid-lab {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 1120px) {
+      .grid-lab {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
+
+    /* Controles */
+    .control-group {
+      margin-bottom: 1.1rem;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.35rem;
+    }
+
+    .control-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-val {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--purple-400);
+      background: rgba(124, 58, 237, 0.1);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid rgba(124, 58, 237, 0.25);
+    }
+
+    .slider-input {
+      width: 100%;
+      height: 5px;
+      background: var(--border-subtle);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--purple-400);
+      border: 2px solid var(--bg-surface);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+      transition: transform 0.1s ease;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      margin-top: 0.2rem;
+      font-family: var(--font-mono);
+    }
+
+    .story-tab-bar {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.5rem;
+    }
+
+    .story-tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .story-tab-btn.active {
+      background: rgba(124, 58, 237, 0.15);
+      border-color: rgba(124, 58, 237, 0.4);
+      color: var(--purple-400);
+    }
+
+    .presets-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .preset-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      padding: 0.32rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-weight: 500;
+    }
+
+    .preset-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .preset-btn.highlight {
+      border-color: var(--purple-500);
+      color: var(--purple-400);
+      background: rgba(124, 58, 237, 0.08);
+      font-weight: 600;
+    }
+
+    .method-selector {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg-card);
+      padding: 0.3rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 1.1rem;
+    }
+
+    .method-btn {
+      flex: 1;
+      padding: 0.45rem 0.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .method-btn.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-accent);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .iter-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.5rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: var(--purple-500);
+      border-color: var(--purple-500);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: var(--purple-400);
+      border-color: var(--purple-400);
+      box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--cyan-500);
+      border-color: var(--cyan-500);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .btn-secondary:hover {
+      background: var(--cyan-400);
+      border-color: var(--cyan-400);
+      box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .telemetry-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.55rem 0.7rem;
+    }
+
+    .telemetry-title {
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.15rem;
+    }
+
+    .telemetry-value {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .telemetry-unit {
+      font-size: 0.72rem;
+      font-weight: normal;
+      color: var(--text-muted);
+      margin-left: 0.2rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.6rem;
+      width: 100%;
+      justify-content: center;
+      letter-spacing: 0.02em;
+    }
+
+    .status-badge.converged {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald-400);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .status-badge.iterating {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--amber-400);
+      border: 1px solid rgba(217, 119, 6, 0.35);
+    }
+
+    .status-badge.diverged {
+      background: rgba(225, 29, 72, 0.15);
+      color: var(--rose-400);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .viz-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .canvas-overlay-info {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: var(--header-bg);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(8px);
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Inspector Matricial HUD */
+    .matrix-display-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-main);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .matrix-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+
+    .matrix-title {
+      font-size: 0.72rem;
+      color: var(--purple-400);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+
+    .matrix-values {
+      line-height: 1.5;
+    }
+
+    /* NUEVO: Tarjeta de Desglose Numérico Detallado Paso a Paso */
+    .matrix-breakdown-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--purple-500);
+      border-radius: 10px;
+      padding: 1.15rem;
+      margin-top: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .breakdown-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .breakdown-step-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--purple-400);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .breakdown-step-calc {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    .breakdown-step-note {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      font-style: italic;
+    }
+
+    /* Badges de Elementos Físicos en Desglose Matricial */
+    .elem-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.12rem 0.42rem;
+      border-radius: 4px;
+      font-family: var(--font-sans);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      vertical-align: middle;
+      line-height: 1.2;
+    }
+    .elem-badge-1 {
+      background: rgba(14, 165, 233, 0.12);
+      color: #0284c7;
+      border: 1px solid rgba(14, 165, 233, 0.35);
+    }
+    [data-theme="dark"] .elem-badge-1 {
+      background: rgba(56, 189, 248, 0.18);
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .elem-badge-2 {
+      background: rgba(244, 63, 94, 0.12);
+      color: #e11d48;
+      border: 1px solid rgba(244, 63, 94, 0.35);
+    }
+    [data-theme="dark"] .elem-badge-2 {
+      background: rgba(251, 113, 133, 0.18);
+      color: #fb7185;
+      border-color: rgba(251, 113, 133, 0.4);
+    }
+    .elem-badge-node {
+      background: rgba(168, 85, 247, 0.12);
+      color: #7c3aed;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+    }
+    [data-theme="dark"] .elem-badge-node {
+      background: rgba(192, 132, 252, 0.18);
+      color: #c084fc;
+      border-color: rgba(192, 132, 252, 0.4);
+    }
+
+    .grid-1d-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .grid-1d-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Visualizador Matemático de Ecuaciones Matriciales */
+    .matrix-eq-visual {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      box-shadow: var(--shadow-sm);
+      margin: 0.25rem 0 0.45rem 0;
+    }
+    .matrix-bracket-box {
+      position: relative;
+      padding: 0.25rem 0.5rem;
+      display: inline-flex;
+      border-left: 2px solid var(--text-main);
+      border-right: 2px solid var(--text-main);
+      border-radius: 4px;
+    }
+    .matrix-bracket-box::before, .matrix-bracket-box::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      width: 5px;
+      height: 2px;
+      background: var(--text-main);
+    }
+    .matrix-bracket-box::before { top: 0; }
+    .matrix-bracket-box::after { bottom: 0; }
+    .matrix-bracket-right-hook::before, .matrix-bracket-right-hook::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      width: 5px;
+      height: 2px;
+      background: var(--text-main);
+    }
+    .matrix-bracket-right-hook::before { top: 0; }
+    .matrix-bracket-right-hook::after { bottom: 0; }
+    .matrix-grid-2x2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(52px, auto));
+      gap: 0.3rem 0.65rem;
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .matrix-grid-2x1 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.3rem;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .matrix-eq-op {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin: 0 0.15rem;
+    }
+    .breakdown-step-calc .katex-display {
+      margin: 0.35rem 0 0.45rem 0 !important;
+      text-align: left !important;
+    }
+    .breakdown-step-calc .katex {
+      font-size: 0.96em !important;
+    }
+
+    /* Tabla de Historial de Iteraciones */
+    .iter-table-wrapper {
+      max-height: 220px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      margin-top: 1rem;
+    }
+
+    .iter-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    .iter-table th {
+      background: var(--bg-card);
+      color: var(--text-main);
+      padding: 0.5rem 0.65rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .iter-table td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      background: var(--bg-surface);
+    }
+
+    .iter-table tr.current-row td {
+      background: rgba(124, 58, 237, 0.12);
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    /* Secciones Teóricas */
+    .theory-section {
+      margin-top: 3.5rem;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 2.5rem;
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-tag {
+      font-family: var(--font-mono);
+      color: var(--purple-400);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .section-heading {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-top: 0.3rem;
+    }
+
+    .theory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .theory-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.6rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .theory-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .theory-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theory-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .math-callout {
+      background: var(--bg-card);
+      border-left: 3px solid var(--purple-500);
+      padding: 0.85rem 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+      overflow-x: auto;
+      color: var(--text-main);
+    }
+
+    .socratic-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .socratic-item:hover {
+      border-color: var(--border-accent);
+    }
+
+    .socratic-question {
+      padding: 1.1rem 1.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-main);
+      user-select: none;
+    }
+
+    .socratic-question:hover {
+      color: var(--purple-400);
+    }
+
+    .socratic-chevron {
+      transition: transform 0.2s ease;
+      color: var(--text-faint);
+    }
+
+    .socratic-item.open .socratic-chevron {
+      transform: rotate(180deg);
+      color: var(--purple-400);
+    }
+
+    .socratic-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .socratic-item.open .socratic-answer {
+      max-height: 450px;
+      padding: 1.2rem 1.4rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      padding: 2.5rem 1.5rem;
+      color: var(--text-faint);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--purple-400);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado / Barra Superior -->
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-badge">Clase 02</span>
+        <span class="brand-title">Análisis No Lineal de Estructuras</span>
+      </div>
+      <nav style="display: flex; align-items: center;">
+        <ul class="nav-links">
+          <li><a href="#laboratorio" class="nav-btn active">🏢 Edificio 2-DOF</a></li>
+          <li><a href="#desglose-seccion" class="nav-btn">🔍 Desglose Matricial</a></li>
+          <li><a href="#intuicion-1d" class="nav-btn">🎯 Intuición 1D</a></li>
+          <li><a href="#teoria" class="nav-btn">📖 Teoría & Matrices</a></li>
+          <li><a href="#socratico" class="nav-btn">💡 Preguntas de Clase</a></li>
+        </ul>
+        <button id="theme-toggle" class="theme-toggle-btn" title="Alternar entre modo claro y oscuro">
+          <span id="theme-icon">🌙</span> <span id="theme-label">Modo Oscuro</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <div class="hero">
+    <div class="hero-box">
+      <div class="hero-tag">
+        <span>⚙️ El Corazón Numérico del Análisis No Lineal</span>
+      </div>
+      <h1 class="hero-title">El Equilibrio Iterativo: Newton-Raphson</h1>
+      <div class="hero-quote">
+        "Un análisis no lineal no obtiene la respuesta de una vez. La persigue corrigiendo el residuo de desequilibrio paso a paso."
+      </div>
+      <p class="hero-desc">
+        En un problema no lineal, aplicar una carga lateral \(\mathbf{P}\) genera una fuerza interna resistente \(\mathbf{F}_{\text{int}}(\mathbf{u})\) que ya no es proporcional a los desplazamientos. 
+        Aparece el <strong>vector residuo de desequilibrio</strong> \(\mathbf{r} = \mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u})\). En este laboratorio interactivo exploramos cómo el método de 
+        <strong>Newton-Raphson</strong> ensambla la matriz de rigidez tangente \(\mathbf{K}_t\), resuelve el sistema de corrección \(\mathbf{K}_t \delta \mathbf{u} = \mathbf{r}\) y extingue el desequilibrio en un <strong>edificio cortante de 2 pisos (2-DOF)</strong>.
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenedor Principal del Laboratorio -->
+  <main class="container" id="laboratorio">
+    <div class="grid-lab">
+      
+      <!-- Columna Izquierda: Configuración del Edificio y Cargas -->
+      <aside class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🏢 Parámetros del Edificio (2-DOF)</div>
+            <div class="card-subtitle">Entrepisos con Resortes Bilineales</div>
+          </div>
+        </div>
+
+        <!-- Selector de Pestaña de Piso -->
+        <div class="story-tab-bar">
+          <button class="story-tab-btn active" id="tab-story1">Piso 1 (Base)</button>
+          <button class="story-tab-btn" id="tab-story2">Piso 2 (Cubierta)</button>
+        </div>
+
+        <!-- Controles Piso 1 -->
+        <div id="controls-story1">
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Rigidez Inicial Piso 1 (\(K_{01}\))</span>
+              <span class="control-val" id="val-k01">100.0 kN/mm</span>
+            </div>
+            <input type="range" id="slider-k01" class="slider-input" min="30" max="250" step="5" value="100">
+            <div class="slider-limits"><span>30 kN/mm</span><span>250 kN/mm</span></div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Fuerza de Fluencia Piso 1 (\(F_{y1}\))</span>
+              <span class="control-val" id="val-fy1">100.0 kN</span>
+            </div>
+            <input type="range" id="slider-fy1" class="slider-input" min="30" max="250" step="5" value="100">
+            <div class="slider-limits"><span>30 kN</span><span>250 kN</span></div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Pendiente Post-fluencia Piso 1 (\(\alpha_1\))</span>
+              <span class="control-val" id="val-alpha1">0.05 (5%)</span>
+            </div>
+            <input type="range" id="slider-alpha1" class="slider-input" min="0.0" max="0.30" step="0.01" value="0.05">
+            <div class="slider-limits"><span>\(\alpha=0\) (Perfecto)</span><span>\(\alpha=0.30\)</span></div>
+          </div>
+        </div>
+
+        <!-- Controles Piso 2 -->
+        <div id="controls-story2" style="display: none;">
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Rigidez Inicial Piso 2 (\(K_{02}\))</span>
+              <span class="control-val" id="val-k02">80.0 kN/mm</span>
+            </div>
+            <input type="range" id="slider-k02" class="slider-input" min="30" max="250" step="5" value="80">
+            <div class="slider-limits"><span>30 kN/mm</span><span>250 kN/mm</span></div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Fuerza de Fluencia Piso 2 (\(F_{y2}\))</span>
+              <span class="control-val" id="val-fy2">90.0 kN</span>
+            </div>
+            <input type="range" id="slider-fy2" class="slider-input" min="30" max="250" step="5" value="90">
+            <div class="slider-limits"><span>30 kN</span><span>250 kN</span></div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Pendiente Post-fluencia Piso 2 (\(\alpha_2\))</span>
+              <span class="control-val" id="val-alpha2">0.05 (5%)</span>
+            </div>
+            <input type="range" id="slider-alpha2" class="slider-input" min="0.0" max="0.30" step="0.01" value="0.05">
+            <div class="slider-limits"><span>\(\alpha=0\) (Perfecto)</span><span>\(\alpha=0.30\)</span></div>
+          </div>
+        </div>
+
+        <!-- Cargas Laterales Aplicadas -->
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem; margin-top: 0.75rem;">
+          <div class="control-label-row">
+            <span class="control-label">Cargas Laterales \(\mathbf{P} = [P_1, P_2]^T\)</span>
+            <span class="card-subtitle">Fuerzas externas en nodos</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.35rem;">
+            <div>
+              <div class="control-label-row">
+                <span style="font-size: 0.75rem; color: var(--text-faint);">Nivel 1 (\(P_1\))</span>
+                <span class="control-val" id="val-p1">60 kN</span>
+              </div>
+              <input type="range" id="slider-p1" class="slider-input" min="0" max="200" step="5" value="60">
+            </div>
+            <div>
+              <div class="control-label-row">
+                <span style="font-size: 0.75rem; color: var(--text-faint);">Nivel 2 (\(P_2\))</span>
+                <span class="control-val" id="val-p2">110 kN</span>
+              </div>
+              <input type="range" id="slider-p2" class="slider-input" min="0" max="200" step="5" value="110">
+            </div>
+          </div>
+
+          <!-- Presets Pedagógicos de Carga -->
+          <div class="presets-container">
+            <button class="preset-btn highlight" id="btn-preset-triangular">⭐ Sísmico Triangular</button>
+            <button class="preset-btn" id="btn-preset-softstory">⚠️ Piso Blando Inducido</button>
+            <button class="preset-btn" id="btn-preset-elastic">Elástico Moderado</button>
+            <button class="preset-btn" id="btn-preset-bothplastic">Doble Plastificación</button>
+          </div>
+        </div>
+
+        <!-- Selector de Algoritmo de Solución -->
+        <div style="margin-top: 0.5rem;">
+          <div class="control-label-row" style="margin-bottom: 0.3rem;">
+            <span class="control-label">Esquema Numérico</span>
+            <span style="font-size: 0.72rem; color: var(--text-faint);">Evolución de \(\mathbf{K}_t\)</span>
+          </div>
+          <div class="method-selector">
+            <button class="method-btn active" id="btn-method-standard">Newton-Raphson Estándar (Full \(\mathbf{K}_t\))</button>
+            <button class="method-btn" id="btn-method-modified">Newton-Raphson Modificado (\(\mathbf{K}_0\))</button>
+          </div>
+        </div>
+
+        <!-- Barra de Herramientas de Iteración -->
+        <div class="iter-toolbar">
+          <button class="btn-action btn-primary" id="btn-iter-step">⏭ Iterar 1 Paso</button>
+          <button class="btn-action btn-secondary" id="btn-solve-all">⚡ Auto-Converger</button>
+          <button class="btn-action" id="btn-reset-iter">🔄 Reiniciar</button>
+          <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-faint); margin-left: auto;" id="lbl-iter-counter">
+            Iter: 0 / 20
+          </div>
+        </div>
+
+        <!-- Panel de Telemetría HUD -->
+        <div class="telemetry-grid">
+          <div class="telemetry-item">
+            <div class="telemetry-title">Desplazamiento Piso 1 (\(u_1\))</div>
+            <div class="telemetry-value" id="hud-u1">0.00 <span class="telemetry-unit">mm</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-title">Desplazamiento Piso 2 (\(u_2\))</div>
+            <div class="telemetry-value" id="hud-u2">0.00 <span class="telemetry-unit">mm</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-title">Norma Residuo \(\|\mathbf{r}\|_2\)</div>
+            <div class="telemetry-value" id="hud-norm-r" style="color: var(--amber-400);">170.0 <span class="telemetry-unit">kN</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-title">Norma Corrección \(\|\delta \mathbf{u}\|_2\)</div>
+            <div class="telemetry-value" id="hud-norm-du">0.00 <span class="telemetry-unit">mm</span></div>
+          </div>
+        </div>
+
+        <!-- Chip de Estado de Convergencia -->
+        <div id="status-chip" class="status-badge iterating">
+          <span class="status-dot"></span>
+          <span id="status-text">Desequilibrio Activo: Se requiere iterar</span>
+        </div>
+
+      </aside>
+
+      <!-- Columna Derecha: Gráficas Canvas y Representación Física -->
+      <div class="viz-column">
+        
+        <!-- Canvas 1: Animación Física del Edificio 2-DOF -->
+        <div class="card" style="padding: 1rem 1rem 0.5rem 1rem;">
+          <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.4rem;">
+            <div class="card-title">🏢 Respuesta Física del Edificio (2 Pisos)</div>
+            <div style="display: flex; gap: 0.6rem; align-items: center; font-size: 0.75rem; font-family: var(--font-mono);">
+              <span style="color: var(--blue-400);">■ Fuerza P</span>
+              <span style="color: var(--emerald-400);">■ Resistente Fint</span>
+              <span style="color: var(--amber-400);">■ Residuo r</span>
+            </div>
+          </div>
+          <div class="canvas-wrapper" style="height: 280px;">
+            <canvas id="canvas-building"></canvas>
+            <div class="canvas-overlay-info" id="overlay-building-info">Iteración: 0</div>
+          </div>
+        </div>
+
+        <!-- Canvas 2 y 3: Gráficas de Cortante vs Deriva por Piso -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          
+          <div class="card" style="padding: 0.85rem;">
+            <div class="card-header" style="margin-bottom: 0.4rem; padding-bottom: 0.3rem;">
+              <div class="card-title" style="font-size: 0.9rem;">Piso 1: Cortante \(V_1\) vs Deriva \(\Delta_1\)</div>
+              <span id="badge-story1-state" style="font-size: 0.72rem; color: var(--emerald-400); font-family: var(--font-mono);">Elástico</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 180px;">
+              <canvas id="canvas-story1"></canvas>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 0.85rem;">
+            <div class="card-header" style="margin-bottom: 0.4rem; padding-bottom: 0.3rem;">
+              <div class="card-title" style="font-size: 0.9rem;">Piso 2: Cortante \(V_2\) vs Deriva \(\Delta_2\)</div>
+              <span id="badge-story2-state" style="font-size: 0.72rem; color: var(--emerald-400); font-family: var(--font-mono);">Elástico</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 180px;">
+              <canvas id="canvas-story2"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Inspector Matricial en Tiempo Real -->
+        <div class="card" style="padding: 1rem;">
+          <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.4rem;">
+            <div class="card-title" style="font-size: 0.95rem;">📐 Inspector Matricial de la Iteración Actual</div>
+            <span style="font-size: 0.75rem; color: var(--text-faint); font-family: var(--font-mono);">\(\mathbf{K}_t \delta \mathbf{u} = \mathbf{r}\)</span>
+          </div>
+          
+          <div class="matrix-display-box">
+            <div class="matrix-block">
+              <div class="matrix-title">Rigidez Tangente \(\mathbf{K}_t\) [kN/mm]</div>
+              <div class="matrix-values" id="matrix-kt-disp">
+                [ 180.0,  -80.0 ]<br>
+                [ -80.0,   80.0 ]
+              </div>
+              <div style="font-size: 0.7rem; color: var(--text-faint); margin-top: 0.25rem;">
+                det(\(\mathbf{K}_t\)) = <span id="val-det-kt" style="color: var(--cyan-400);">8000</span>
+              </div>
+            </div>
+
+            <div class="matrix-block">
+              <div class="matrix-title">Vector Residuo \(\mathbf{r}\) [kN]</div>
+              <div class="matrix-values" id="matrix-r-disp">
+                r1 = +60.0 kN<br>
+                r2 = +110.0 kN
+              </div>
+              <div style="font-size: 0.7rem; color: var(--text-faint); margin-top: 0.25rem;">
+                \(\|\mathbf{r}\|_2\) = <span id="val-norm-r-disp" style="color: var(--amber-400);">125.3 kN</span>
+              </div>
+            </div>
+
+            <div class="matrix-block">
+              <div class="matrix-title">Corrección \(\delta \mathbf{u}\) [mm]</div>
+              <div class="matrix-values" id="matrix-du-disp">
+                \(\delta u_1\) = +1.700 mm<br>
+                \(\delta u_2\) = +3.075 mm
+              </div>
+              <div style="font-size: 0.7rem; color: var(--text-faint); margin-top: 0.25rem;">
+                \(\delta u_1 = \frac{r_1+r_2}{k_{t1}}\)
+              </div>
+            </div>
+          </div>
+
+          <!-- NUEVO: Desglose Numérico Detallado de Cada Operación -->
+          <div class="matrix-breakdown-card" id="desglose-seccion">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
+              <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--purple-400); display: flex; align-items: center; gap: 0.4rem;">
+                <span>🔍</span> Desglose Operacional Explícito (Paso a Paso de la Iteración)
+              </h4>
+              <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted);" id="lbl-breakdown-iter">Iteración 0</span>
+            </div>
+
+            <!-- Paso 1: Derivas y Cortantes -->
+            <div class="breakdown-step">
+              <div class="breakdown-step-title">1️⃣ Derivas y Fuerzas Resistentes de Entrepiso:</div>
+              <div class="breakdown-step-calc" id="step-calc-shears">
+                <div style="margin-bottom:0.45rem;">
+                  <span class="elem-badge elem-badge-1">Resorte Piso 1</span>
+                  Deriva &Delta;<sub>1</sub> = u<sub>1</sub> = <strong>0.000 mm</strong> (u<sub>y1</sub> = 1.00 mm) &rarr; Cortante V<sub>1</sub> = <strong>0.00 kN</strong>
+                  [Régimen: <span style="color:var(--emerald-400); font-weight:bold;">Elástico</span> | Rigidez Tangente k<sub>t1</sub> = <strong>100.0 kN/mm</strong>]
+                </div>
+                <div>
+                  <span class="elem-badge elem-badge-2">Resorte Piso 2</span>
+                  Deriva &Delta;<sub>2</sub> = u<sub>2</sub> - u<sub>1</sub> = <strong>0.000 mm</strong> (u<sub>y2</sub> = 1.00 mm) &rarr; Cortante V<sub>2</sub> = <strong>0.00 kN</strong>
+                  [Régimen: <span style="color:var(--emerald-400); font-weight:bold;">Elástico</span> | Rigidez Tangente k<sub>t2</sub> = <strong>80.0 kN/mm</strong>]
+                </div>
+              </div>
+              <div class="breakdown-step-note">
+                * Cada elemento evalúa su estado constitutivo (elástico o post-fluencia) a partir de su deriva cinemática &Delta;<sub>j</sub>.
+              </div>
+            </div>
+
+            <!-- Paso 2: Fuerzas Internas en Nodos y Residuo -->
+            <div class="breakdown-step">
+              <div class="breakdown-step-title">2️⃣ Fuerzas Internas Nodales y Vector de Desequilibrio (Residuo \(\mathbf{r}\)):</div>
+              <div class="breakdown-step-calc" id="step-calc-residuals">
+                <div style="margin-bottom:0.45rem;">
+                  <span class="elem-badge elem-badge-node">Nodo 1 (Nivel 1)</span>
+                  Fuerza Interna: F<sub>int,1</sub> = <span class="elem-badge elem-badge-1" style="font-size:0.62rem; padding:1px 4px;">V<sub>1</sub></span> - <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">V<sub>2</sub></span> = 0.00 - 0.00 = <strong>0.00 kN</strong><br>
+                  &emsp;&rarr; <strong>Residuo Nodal r<sub>1</sub></strong> = P<sub>1</sub> - F<sub>int,1</sub> = 60.0 - 0.00 = <strong style="color:var(--amber-400); font-size:0.9rem;">+60.00 kN</strong>
+                </div>
+                <div style="margin-bottom:0.45rem;">
+                  <span class="elem-badge elem-badge-node">Nodo 2 (Nivel 2)</span>
+                  Fuerza Interna: F<sub>int,2</sub> = <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">V<sub>2</sub></span> = <strong>0.00 kN</strong><br>
+                  &emsp;&rarr; <strong>Residuo Nodal r<sub>2</sub></strong> = P<sub>2</sub> - F<sub>int,2</sub> = 110.0 - 0.00 = <strong style="color:var(--amber-400); font-size:0.9rem;">+110.00 kN</strong>
+                </div>
+                <div style="color:var(--text-muted); font-size:0.75rem; border-top:1px dashed var(--border-subtle); padding-top:0.35rem;">
+                  Norma Euclídea del Residuo: ||<strong>r</strong>||<sub>2</sub> = &radic;[(60.00)&sup2; + (110.00)&sup2;] = <strong style="color:var(--amber-400);">125.300 kN</strong> (Tol = 0.5 kN)
+                </div>
+              </div>
+              <div class="breakdown-step-note">
+                * El residuo \(\mathbf{r}\) cuantifica el desequilibrio de fuerzas nodales que debe anularse mediante iteraciones cinemáticas.
+              </div>
+            </div>
+
+            <!-- Paso 3: Ensamblaje de Matriz Tangente -->
+            <div class="breakdown-step">
+              <div class="breakdown-step-title">3️⃣ Ensamblaje Explícito de la Matriz Tangente \(\mathbf{K}_t\):</div>
+              <div class="breakdown-step-calc" id="step-calc-stiffness">
+                <div style="margin-bottom:0.35rem;">
+                  <strong>Término K<sub>11</sub></strong> (Conexión a Resorte 1 y Resorte 2): <span class="elem-badge elem-badge-1" style="font-size:0.62rem; padding:1px 4px;">k<sub>t1</sub></span> + <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = 100.0 + 80.0 = <strong>180.0 kN/mm</strong>
+                </div>
+                <div style="margin-bottom:0.35rem;">
+                  <strong>Término K<sub>12</sub> = K<sub>21</sub></strong> (Acoplamiento mutuo por Resorte 2): -<span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = <strong>-80.0 kN/mm</strong>
+                </div>
+                <div style="margin-bottom:0.35rem;">
+                  <strong>Término K<sub>22</sub></strong> (Conexión única a Resorte 2): <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = <strong>80.0 kN/mm</strong>
+                </div>
+                <div style="color:var(--text-muted); font-size:0.75rem; border-top:1px dashed var(--border-subtle); padding-top:0.35rem;">
+                  <strong>Determinante:</strong> det(<strong>K</strong><sub>t</sub>) = k<sub>t1</sub> &times; k<sub>t2</sub> = 100.0 &times; 80.0 = <strong>8000.0</strong>
+                </div>
+              </div>
+              <div class="breakdown-step-note">
+                * Cada elemento estructural aporta su rigidez tangente a los grados de libertad nodales correspondientes.
+              </div>
+            </div>
+
+            <!-- Paso 4: Solución del Sistema Lineal -->
+            <div class="breakdown-step">
+              <div class="breakdown-step-title">4️⃣ Solución del Sistema \(\mathbf{K}_t \delta \mathbf{u} = \mathbf{r}\) (Corrección Física):</div>
+              <div class="breakdown-step-calc" id="step-calc-solve">
+                <div style="margin: 0.25rem 0 0.45rem 0;">
+                  <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.2rem;">Ecuación Matricial en Forma Algebraica:</div>
+                  <div class="matrix-eq-visual">
+                    <div class="matrix-bracket-box matrix-bracket-right-hook">
+                      <div class="matrix-grid-2x2">
+                        <span>180.0</span><span>-80.0</span>
+                        <span>-80.0</span><span>80.0</span>
+                      </div>
+                    </div>
+                    <span class="matrix-eq-op">&sdot;</span>
+                    <div class="matrix-bracket-box matrix-bracket-right-hook">
+                      <div class="matrix-grid-2x1">
+                        <span style="color:var(--cyan-400); font-weight:bold;">&delta;u<sub>1</sub></span>
+                        <span style="color:var(--cyan-400); font-weight:bold;">&delta;u<sub>2</sub></span>
+                      </div>
+                    </div>
+                    <span class="matrix-eq-op">=</span>
+                    <div class="matrix-bracket-box matrix-bracket-right-hook">
+                      <div class="matrix-grid-2x1">
+                        <span style="color:var(--amber-400); font-weight:bold;">+60.00</span>
+                        <span style="color:var(--amber-400); font-weight:bold;">+110.00</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-bottom:0.4rem;">
+                  <strong>Corrección Nivel 1 (&delta;u<sub>1</sub>):</strong> El Resorte 1 absorbe el cortante desequilibrado total sobre la base (r<sub>1</sub> + r<sub>2</sub>):<br>
+                  &emsp;&delta;u<sub>1</sub> = (r<sub>1</sub> + r<sub>2</sub>) / <span class="elem-badge elem-badge-1" style="font-size:0.62rem; padding:1px 4px;">k<sub>t1</sub></span> = (60.00 + 110.00) / 100.0 = <strong style="color:var(--cyan-400); font-size:0.9rem;">+1.700 mm</strong>
+                </div>
+                <div style="margin-bottom:0.4rem;">
+                  <strong>Corrección Nivel 2 (&delta;u<sub>2</sub>):</strong> Desplazamiento del Nivel 1 más deformación relativa del Resorte 2 ante r<sub>2</sub>:<br>
+                  &emsp;&delta;u<sub>2</sub> = &delta;u<sub>1</sub> + r<sub>2</sub> / <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = 1.700 + (110.00 / 80.0) = <strong style="color:var(--cyan-400); font-size:0.9rem;">+3.075 mm</strong>
+                </div>
+                <div style="color:var(--text-main); font-size:0.8rem; border-top:1px dashed var(--border-subtle); padding-top:0.35rem;">
+                  <strong>Actualización Cinemática:</strong>
+                  u<sub>1</sub><sup>(1)</sup> = 0.000 + 1.700 = <strong style="color:var(--purple-400);">1.700 mm</strong> &nbsp;|&nbsp;
+                  u<sub>2</sub><sup>(1)</sup> = 0.000 + 3.075 = <strong style="color:var(--purple-400);">3.075 mm</strong>
+                </div>
+              </div>
+              <div class="breakdown-step-note">
+                * Físicamente: \(\delta u_1\) absorbe el desequilibrio total sobre la base; \(\delta u_2\) suma la flexibilidad relativa del entrepiso superior.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Historial de Iteraciones Tabla -->
+          <div class="iter-table-wrapper">
+            <table class="iter-table" id="table-iterations">
+              <thead>
+                <tr>
+                  <th style="text-align: center;">Iter \(i\)</th>
+                  <th>\(u_1\) [mm]</th>
+                  <th>\(u_2\) [mm]</th>
+                  <th>\(\Delta_1\) [mm]</th>
+                  <th>\(\Delta_2\) [mm]</th>
+                  <th>\(V_1\) [kN]</th>
+                  <th>\(V_2\) [kN]</th>
+                  <th>\(\|\mathbf{r}\|_2\) [kN]</th>
+                  <th>\(\|\delta \mathbf{u}\|_2\) [mm]</th>
+                  <th style="text-align: center;">Piso 1</th>
+                  <th style="text-align: center;">Piso 2</th>
+                </tr>
+              </thead>
+              <tbody id="table-iterations-body">
+                <!-- Se llena dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Módulo Adicional: Intuición Geométrica 1-DOF Mejorada y con Autoescala -->
+    <section class="theory-section" id="intuicion-1d">
+      <div class="section-header">
+        <div class="section-tag">Fundamento Visual Interactivo</div>
+        <h2 class="section-heading">1. La Intuición Geométrica en 1 Grado de Libertad</h2>
+      </div>
+
+      <div class="grid-1d-layout">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="font-size: 1rem;">🎯 Mini-Simulador 1-DOF</div>
+            <span class="card-subtitle">Geometría de Newton-Raphson</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Observa cómo la recta tangente calcula el residuo vertical \(R = P - F_{\text{int}}\) y proyecta el salto horizontal \(\delta u = R / K_t\) hacia la curva.
+          </p>
+
+          <!-- Controles interactivos del mini-simulador 1D -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Carga Objetivo (\(P\))</span>
+              <span class="control-val" id="val-1d-p">130.0 kN</span>
+            </div>
+            <input type="range" id="slider-1d-p" class="slider-input" min="60" max="180" step="5" value="130">
+            <div class="slider-limits"><span>60 kN</span><span>180 kN</span></div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-label">Pendiente Post-fluencia (\(\alpha\))</span>
+              <span class="control-val" id="val-1d-alpha">0.20 (20%)</span>
+            </div>
+            <input type="range" id="slider-1d-alpha" class="slider-input" min="0.08" max="0.40" step="0.02" value="0.20">
+            <div class="slider-limits"><span>\(\alpha=0.08\)</span><span>\(\alpha=0.40\)</span></div>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.85rem;">
+            <button class="btn-action btn-primary" id="btn-1d-step">Paso Newton 1D</button>
+            <button class="btn-action" id="btn-1d-reset">Reiniciar 1D</button>
+          </div>
+
+          <div style="background: var(--bg-card); padding: 0.75rem; border-radius: 6px; font-size: 0.8rem; font-family: var(--font-mono); border: 1px solid var(--border-subtle);">
+            <div>Estado 1D: <span id="lbl-1d-step" style="color: var(--purple-400); font-weight: bold;">Iteración 0</span></div>
+            <div>Residuo Vertical: <span id="lbl-1d-res" style="color: var(--amber-400); font-weight: bold;">R = 130.0 kN</span></div>
+            <div>Salto Tangente: <span id="lbl-1d-du" style="color: var(--cyan-400); font-weight: bold;">&delta;u = 1.30 mm</span></div>
+            <div style="font-size: 0.72rem; color: var(--text-faint); margin-top: 0.25rem;">
+              <span id="lbl-1d-ueq-calc">Desplazamiento Teórico: \(u_{eq} = 1.0 + (130-100)/20 = 2.50\text{ mm}\) (Autoescala activa)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper" style="height: 340px;">
+          <canvas id="canvas-1d-nr"></canvas>
+          <div class="canvas-overlay-info" id="overlay-1d-info">1-DOF Newton-Raphson</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Módulo Teórico II: Formulación y Matrices -->
+    <section class="theory-section" id="teoria">
+      <div class="section-header">
+        <div class="section-tag">Formulación Matemática Rigurosa</div>
+        <h2 class="section-heading">2. Ecuaciones de Equilibrio y la Matriz Jacobiana</h2>
+      </div>
+
+      <div class="theory-grid">
+        
+        <div class="theory-card">
+          <h3>Ecuación Residual No Lineal</h3>
+          <p>
+            Para un sistema estructural de \(N\) grados de libertad, el equilibrio estático no lineal exige que la suma de fuerzas aplicadas \(\mathbf{P}\) y fuerzas resistentes internas \(\mathbf{F}_{\text{int}}(\mathbf{u})\) esté balanceada:
+          </p>
+          <div class="math-callout">
+            \[\mathbf{r}(\mathbf{u}) = \mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}\]
+          </div>
+          <p>
+            Al aproximar \(\mathbf{r}(\mathbf{u} + \delta \mathbf{u})\) mediante una serie de Taylor de primer orden alrededor del estado actual \(\mathbf{u}^{(i)}\):
+          </p>
+          <div class="math-callout">
+            \[\mathbf{r}(\mathbf{u}^{(i)} + \delta \mathbf{u}) \approx \mathbf{r}(\mathbf{u}^{(i)}) + \frac{\partial \mathbf{r}}{\partial \mathbf{u}} \delta \mathbf{u} = \mathbf{0}\]
+          </div>
+          <p>
+            Dado que \(\frac{\partial \mathbf{r}}{\partial \mathbf{u}} = -\frac{\partial \mathbf{F}_{\text{int}}}{\partial \mathbf{u}} = -\mathbf{K}_t\), se deduce la ecuación fundamental de corrección:
+          </p>
+          <div class="math-callout">
+            \[\mathbf{K}_t^{(i)} \delta \mathbf{u}^{(i)} = \mathbf{r}^{(i)}\]
+          </div>
+        </div>
+
+        <div class="theory-card">
+          <h3>Estructura del Edificio 2-DOF</h3>
+          <p>
+            En nuestro edificio de dos niveles a cortante, el cortante de cada entrepiso depende exclusivamente de su deriva \(\Delta_j\):
+          </p>
+          <div class="math-callout">
+            \[\Delta_1 = u_1, \qquad \Delta_2 = u_2 - u_1\]
+            \[\mathbf{F}_{\text{int}}(\mathbf{u}) = \begin{bmatrix} V_1(\Delta_1) - V_2(\Delta_2) \\ V_2(\Delta_2) \end{bmatrix}\]
+          </div>
+          <p>
+            Derivando respecto a \([u_1, u_2]^T\), la matriz de rigidez tangente resulta ser:
+          </p>
+          <div class="math-callout">
+            \[\mathbf{K}_t = \begin{bmatrix} k_{t1} + k_{t2} & -k_{t2} \\ -k_{t2} & k_{t2} \end{bmatrix}\]
+          </div>
+          <p>
+            Su determinante es extraordinariamente elegante: \(\det(\mathbf{K}_t) = k_{t1} k_{t2}\). La solución explícita al sistema de corrección demuestra la física del problema:
+          </p>
+          <div class="math-callout">
+            \[\delta u_1 = \frac{r_1 + r_2}{k_{t1}}, \qquad \delta u_2 = \delta u_1 + \frac{r_2}{k_{t2}}\]
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Comparación Algorítmica: Estándar vs Modificado -->
+      <div class="theory-card" style="margin-top: 1rem;">
+        <h3>Comparación: Newton-Raphson Estándar vs. Modificado</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+          <div style="border-left: 2px solid var(--purple-500); padding-left: 1rem;">
+            <h4 style="color: var(--purple-400); margin-bottom: 0.5rem;">Newton-Raphson Estándar (Full Newton)</h4>
+            <ul style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; padding-left: 1rem;">
+              <li>Actualiza la matriz de rigidez tangente \(\mathbf{K}_t^{(i)}\) en <strong>cada iteración interna</strong>.</li>
+              <li>Posee <strong>convergencia cuadrática</strong> cerca de la raíz (el error se eleva al cuadrado en cada paso).</li>
+              <li>Requiere ensamblar e invertir la matriz en cada iteración (computacionalmente costoso en modelos con millones de DOF).</li>
+            </ul>
+          </div>
+          <div style="border-left: 2px solid var(--cyan-500); padding-left: 1rem;">
+            <h4 style="color: var(--cyan-400); margin-bottom: 0.5rem;">Newton-Raphson Modificado (Initial Stiffness)</h4>
+            <ul style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; padding-left: 1rem;">
+              <li>Mantiene fija la matriz elástica inicial \(\mathbf{K}_0\) (o la tangente al inicio del incremento).</li>
+              <li>Posee <strong>convergencia lineal</strong> (requiere sensiblemente más iteraciones para la misma tolerancia).</li>
+              <li>Solo factoriza la matriz una vez por paso, reduciendo el coste de inversión.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Módulo Socrático: Preguntas para el Aula -->
+    <section class="theory-section" id="socratico">
+      <div class="section-header">
+        <div class="section-tag">Debate Conceptual</div>
+        <h2 class="section-heading">3. Preguntas Socráticas para el Aula de Clase</h2>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>1. ¿Por qué la corrección del piso 1 depende de la suma de ambos residuos: \(\delta u_1 = (r_1 + r_2) / k_{t1}\)?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          Físicamente, el Piso 1 sostiene el peso y las fuerzas de toda la estructura situada por encima de él. Por equilibrio estático global, el cortante en la base debe equilibrar la totalidad de las fuerzas laterales aplicadas (\(V_b = P_1 + P_2\)). En consecuencia, cualquier desequilibrio en el piso 2 (\(r_2\)) debe transmitirse a través del piso 1 hacia la cimentación. Si el piso 1 plastifica (\(k_{t1} \to \alpha_1 K_{01}\)), su rigidez se reduce drásticamente y un pequeño desequilibrio total \((r_1 + r_2)\) produce un gigantesco desplazamiento \(\delta u_1\).
+        </div>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>2. ¿Qué ocurre con el algoritmo si un entrepiso tiene comportamiento elastoplástico perfecto (\(\alpha = 0\)) y la carga supera la capacidad?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          Si \(\alpha = 0\), la rigidez tangente post-fluencia es \(k_t = 0\). En ese instante, \(\det(\mathbf{K}_t) = k_{t1} k_{t2} = 0\), lo que significa que la matriz de rigidez se vuelve <strong>singular</strong> e imposible de invertir. El algoritmo diverge y falla por indeterminación numérica. Esta es la razón matemática fundamental por la cual los análisis bajo **control de carga puro** no pueden superar puntos de colapso o capturar ramas de ablandamiento, haciendo indispensable el uso de métodos de **control de desplazamiento** o de **longitud de arco (Arc-Length)**.
+        </div>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>3. En el caso de "Piso Blando", ¿por qué el Piso 2 se desplaza casi como un cuerpo rígido?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          Cuando el Piso 1 plastifica fuertemente (\(F_{y1}\) alcanzada) mientras el Piso 2 se mantiene en rango elástico (\(k_{t2} = K_{02}\)), casi toda la demanda de deformación inelástica se concentra en la base. Como \(\delta u_2 = \delta u_1 + r_2 / k_{t2}\) y \(k_{t2}\) es muy rígido, la deriva adicional del piso 2 (\(\Delta_2\)) cambia muy poco: el nivel superior simplemente "viaja" montado sobre las grandes deformaciones del piso inferior plastificado.
+        </div>
+      </div>
+
+      <div class="socratic-item">
+        <div class="socratic-question">
+          <span>4. ¿Por qué los programas comerciales usan tolerancias de convergencia basadas en la norma vectorial \(\|\mathbf{r}\|_2 < \epsilon\)?</span>
+          <span class="socratic-chevron">▼</span>
+        </div>
+        <div class="socratic-answer">
+          En una estructura tridimensional con miles de nodos y grados de libertad, los errores de equilibrio ocurren en direcciones espaciales distintas. La norma euclidiana \(\|\mathbf{r}\|_2 = \sqrt{\sum r_j^2}\) provee una medida escalar única y homogénea de la magnitud total del desequilibrio físico en toda la edificación. Si la norma es menor que una tolerancia admisible (por ejemplo \(10^{-3}\) veces la carga total aplicada), se garantiza que la estructura satisface el equilibrio estático de acuerdo a los estándares de ingeniería.
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 1440px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong>Curso de Análisis No Lineal de Estructuras</strong> | Clase 02: Equilibrio y Newton-Raphson
+      </div>
+      <div>
+        Diseñado para docencia universitaria de posgrado en ingeniería estructural.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lógica de Simulación y Visualización en JavaScript -->
+  <script>
+    /**
+     * Motor de Newton-Raphson para Edificio Cortante de 2 Grados de Libertad (2-DOF)
+     */
+
+    // --- Control de Tema (Modo Claro / Modo Oscuro) ---
+    function isDarkTheme() {
+      return document.body.classList.contains('dark-theme');
+    }
+
+    function applyTheme(theme) {
+      const themeIcon = document.getElementById('theme-icon');
+      const themeLabel = document.getElementById('theme-label');
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'Modo Claro';
+      } else {
+        document.body.classList.remove('dark-theme');
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Modo Oscuro';
+      }
+      localStorage.setItem('nl_course_theme', theme);
+      drawAllVisualizations();
+    }
+
+    function getCanvasPalette() {
+      const dark = isDarkTheme();
+      return {
+        bg: dark ? '#0d131f' : '#ffffff',
+        grid: dark ? '#1e293b' : '#e2e8f0',
+        axis: dark ? '#475569' : '#64748b',
+        text: dark ? '#94a3b8' : '#334155',
+        faint: dark ? '#64748b' : '#94a3b8',
+        groundFill: dark ? '#1e293b' : '#f1f5f9',
+        groundBorder: dark ? '#475569' : '#cbd5e1',
+        groundHatch: dark ? '#334155' : '#cbd5e1',
+        slabFill: dark ? '#1e293b' : '#f8fafc',
+        slabBorder: dark ? '#38bdf8' : '#0284c7',
+        slabText: dark ? '#f8fafc' : '#0f172a',
+        arrowP: dark ? '#60a5fa' : '#2563eb',
+        arrowFint: dark ? '#34d399' : '#059669',
+        arrowR: dark ? '#fbbf24' : '#d97706',
+        colElastic: dark ? '#10b981' : '#059669',
+        colPlastic: dark ? '#f43f5e' : '#e11d48'
+      };
+    }
+
+    // --- Estado Global del Laboratorio ---
+    const labState = {
+      k01: 100.0,
+      fy1: 100.0,
+      alpha1: 0.05,
+      k02: 80.0,
+      fy2: 90.0,
+      alpha2: 0.05,
+      p1: 60.0,
+      p2: 110.0,
+      method: 'standard',
+      tolerance: 1e-3,
+      maxIterations: 25,
+      currentIterIndex: 0,
+      iterationHistory: [],
+      isConverged: false,
+
+      // Mini-simulador 1D (con pendiente post-fluencia del 20% para que nunca se salga de márgenes)
+      state1D: {
+        k0: 100,
+        fy: 100,
+        alpha: 0.20,
+        P: 130,
+        u: 0,
+        iter: 0,
+        history: []
+      }
+    };
+
+    // --- Función Constitutiva Bilineal para un Entrepiso ---
+    function evaluateStorySpring(delta, k0, fy, alpha) {
+      const uy = fy / k0;
+      const kp = alpha * k0;
+      const absDelta = Math.abs(delta);
+
+      if (absDelta <= uy) {
+        return {
+          V: k0 * delta,
+          kt: k0,
+          state: 'Elástico'
+        };
+      } else {
+        const s = Math.sign(delta);
+        const plasticDelta = absDelta - uy;
+        const V = s * (fy + kp * plasticDelta);
+        return {
+          V: V,
+          kt: kp,
+          state: 'Plástico'
+        };
+      }
+    }
+
+    // --- Solver Completo de Newton-Raphson para 2-DOF ---
+    function runCompleteNewtonRaphson() {
+      const history = [];
+      let u1 = 0.0;
+      let u2 = 0.0;
+      let converged = false;
+
+      for (let i = 0; i <= labState.maxIterations; i++) {
+        const d1 = u1;
+        const d2 = u2 - u1;
+
+        const s1 = evaluateStorySpring(d1, labState.k01, labState.fy1, labState.alpha1);
+        const s2 = evaluateStorySpring(d2, labState.k02, labState.fy2, labState.alpha2);
+
+        const Fint1 = s1.V - s2.V;
+        const Fint2 = s2.V;
+
+        const r1 = labState.p1 - Fint1;
+        const r2 = labState.p2 - Fint2;
+        const normR = Math.sqrt(r1 * r1 + r2 * r2);
+
+        const kt1 = (labState.method === 'modified') ? labState.k01 : s1.kt;
+        const kt2 = (labState.method === 'modified') ? labState.k02 : s2.kt;
+
+        const detKt = kt1 * kt2;
+        let du1 = 0, du2 = 0, normDU = 0;
+
+        if (Math.abs(detKt) < 1e-6) {
+          history.push({
+            iter: i, u1, u2, d1, d2, V1: s1.V, V2: s2.V,
+            Fint1, Fint2, r1, r2, normR, kt1, kt2, detKt,
+            du1: 0, du2: 0, normDU: 0,
+            state1: s1.state, state2: s2.state,
+            converged: false, singular: true
+          });
+          break;
+        }
+
+        du1 = (r1 + r2) / kt1;
+        du2 = du1 + (r2 / kt2);
+        normDU = Math.sqrt(du1 * du1 + du2 * du2);
+
+        const isNowConverged = (normR <= labState.tolerance) || (i > 0 && normDU <= 1e-5);
+
+        history.push({
+          iter: i, u1, u2, d1, d2, V1: s1.V, V2: s2.V,
+          Fint1, Fint2, r1, r2, normR, kt1, kt2, detKt,
+          du1, du2, normDU,
+          state1: s1.state, state2: s2.state,
+          converged: isNowConverged, singular: false
+        });
+
+        if (isNowConverged) {
+          converged = true;
+          break;
+        }
+
+        u1 += du1;
+        u2 += du2;
+      }
+
+      labState.iterationHistory = history;
+      labState.isConverged = converged;
+      labState.currentIterIndex = 0;
+    }
+
+    // --- Elementos del DOM ---
+    const sliderK01 = document.getElementById('slider-k01');
+    const sliderFy1 = document.getElementById('slider-fy1');
+    const sliderAlpha1 = document.getElementById('slider-alpha1');
+    const sliderK02 = document.getElementById('slider-k02');
+    const sliderFy2 = document.getElementById('slider-fy2');
+    const sliderAlpha2 = document.getElementById('slider-alpha2');
+    const sliderP1 = document.getElementById('slider-p1');
+    const sliderP2 = document.getElementById('slider-p2');
+
+    const valK01 = document.getElementById('val-k01');
+    const valFy1 = document.getElementById('val-fy1');
+    const valAlpha1 = document.getElementById('val-alpha1');
+    const valK02 = document.getElementById('val-k02');
+    const valFy2 = document.getElementById('val-fy2');
+    const valAlpha2 = document.getElementById('val-alpha2');
+    const valP1 = document.getElementById('val-p1');
+    const valP2 = document.getElementById('val-p2');
+
+    const tabStory1 = document.getElementById('tab-story1');
+    const tabStory2 = document.getElementById('tab-story2');
+    const controlsStory1 = document.getElementById('controls-story1');
+    const controlsStory2 = document.getElementById('controls-story2');
+
+    const btnMethodStd = document.getElementById('btn-method-standard');
+    const btnMethodMod = document.getElementById('btn-method-modified');
+
+    const btnIterStep = document.getElementById('btn-iter-step');
+    const btnSolveAll = document.getElementById('btn-solve-all');
+    const btnResetIter = document.getElementById('btn-reset-iter');
+    const lblIterCounter = document.getElementById('lbl-iter-counter');
+
+    const hudU1 = document.getElementById('hud-u1');
+    const hudU2 = document.getElementById('hud-u2');
+    const hudNormR = document.getElementById('hud-norm-r');
+    const hudNormDU = document.getElementById('hud-norm-du');
+    const statusChip = document.getElementById('status-chip');
+    const statusText = document.getElementById('status-text');
+
+    const matrixKtDisp = document.getElementById('matrix-kt-disp');
+    const matrixRDisp = document.getElementById('matrix-r-disp');
+    const matrixDUDisp = document.getElementById('matrix-du-disp');
+    const valDetKt = document.getElementById('val-det-kt');
+    const valNormRDisp = document.getElementById('val-norm-r-disp');
+    const tableIterBody = document.getElementById('table-iterations-body');
+
+    // Elementos de Desglose Numérico Detallado
+    const lblBreakdownIter = document.getElementById('lbl-breakdown-iter');
+    const stepCalcShears = document.getElementById('step-calc-shears');
+    const stepCalcResiduals = document.getElementById('step-calc-residuals');
+    const stepCalcStiffness = document.getElementById('step-calc-stiffness');
+    const stepCalcSolve = document.getElementById('step-calc-solve');
+
+    const badgeStory1 = document.getElementById('badge-story1-state');
+    const badgeStory2 = document.getElementById('badge-story2-state');
+    const overlayBuildingInfo = document.getElementById('overlay-building-info');
+
+    // Canvas
+    const canvasBuilding = document.getElementById('canvas-building');
+    const ctxBuilding = canvasBuilding.getContext('2d');
+    const canvasStory1 = document.getElementById('canvas-story1');
+    const ctxStory1 = canvasStory1.getContext('2d');
+    const canvasStory2 = document.getElementById('canvas-story2');
+    const ctxStory2 = canvasStory2.getContext('2d');
+    const canvas1D = document.getElementById('canvas-1d-nr');
+    const ctx1D = canvas1D.getContext('2d');
+
+    // Mini-Simulador 1D sliders
+    const slider1DP = document.getElementById('slider-1d-p');
+    const slider1DAlpha = document.getElementById('slider-1d-alpha');
+    const val1DP = document.getElementById('val-1d-p');
+    const val1DAlpha = document.getElementById('val-1d-alpha');
+
+    function resizeCanvasHiDPI(canvas, ctx) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const displayWidth = Math.floor(rect.width);
+      const displayHeight = Math.floor(rect.height);
+
+      if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+      }
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+      return { width: displayWidth, height: displayHeight };
+    }
+
+    function syncInputsAndRecompute() {
+      labState.k01 = parseFloat(sliderK01.value);
+      labState.fy1 = parseFloat(sliderFy1.value);
+      labState.alpha1 = parseFloat(sliderAlpha1.value);
+      labState.k02 = parseFloat(sliderK02.value);
+      labState.fy2 = parseFloat(sliderFy2.value);
+      labState.alpha2 = parseFloat(sliderAlpha2.value);
+      labState.p1 = parseFloat(sliderP1.value);
+      labState.p2 = parseFloat(sliderP2.value);
+
+      valK01.textContent = `${labState.k01.toFixed(1)} kN/mm`;
+      valFy1.textContent = `${labState.fy1.toFixed(1)} kN`;
+      valAlpha1.textContent = `${labState.alpha1.toFixed(2)} (${Math.round(labState.alpha1 * 100)}%)`;
+      valK02.textContent = `${labState.k02.toFixed(1)} kN/mm`;
+      valFy2.textContent = `${labState.fy2.toFixed(1)} kN`;
+      valAlpha2.textContent = `${labState.alpha2.toFixed(2)} (${Math.round(labState.alpha2 * 100)}%)`;
+      valP1.textContent = `${labState.p1.toFixed(0)} kN`;
+      valP2.textContent = `${labState.p2.toFixed(0)} kN`;
+
+      runCompleteNewtonRaphson();
+      updateHUDAndMatrices();
+      renderIterationTable();
+      drawAllVisualizations();
+    }
+
+    // --- Renderizado Dinámico de la Ecuación Matricial (KaTeX con Fallback CSS) ---
+    function renderDynamicMatrixEquation(k11, k12, k22, r1, r2) {
+      const r1Str = (r1 >= 0 ? '+' : '') + r1.toFixed(2);
+      const r2Str = (r2 >= 0 ? '+' : '') + r2.toFixed(2);
+      const tex = `\\begin{bmatrix} ${k11} & ${k12} \\\\ ${k12} & ${k22} \\end{bmatrix} \\begin{bmatrix} \\delta u_1 \\\\ \\delta u_2 \\end{bmatrix} = \\begin{bmatrix} ${r1Str} \\\\ ${r2Str} \\end{bmatrix}`;
+
+      if (typeof window !== 'undefined' && window.katex && typeof window.katex.renderToString === 'function') {
+        try {
+          return `
+            <div style="margin: 0.25rem 0 0.45rem 0; overflow-x: auto;">
+              <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.15rem;">Ecuación Matricial en Forma Algebraica:</div>
+              <div style="font-size: 0.95rem;">${window.katex.renderToString(tex, { displayMode: true, throwOnError: false })}</div>
+            </div>
+          `;
+        } catch(e) {
+          console.warn('Error KaTeX renderToString:', e);
+        }
+      }
+
+      return `
+        <div style="margin: 0.25rem 0 0.45rem 0;">
+          <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.2rem;">Ecuación Matricial en Forma Algebraica:</div>
+          <div class="matrix-eq-visual">
+            <div class="matrix-bracket-box matrix-bracket-right-hook">
+              <div class="matrix-grid-2x2">
+                <span>${k11}</span><span>${k12}</span>
+                <span>${k12}</span><span>${k22}</span>
+              </div>
+            </div>
+            <span class="matrix-eq-op">&sdot;</span>
+            <div class="matrix-bracket-box matrix-bracket-right-hook">
+              <div class="matrix-grid-2x1">
+                <span style="color:var(--cyan-400); font-weight:bold;">&delta;u<sub>1</sub></span>
+                <span style="color:var(--cyan-400); font-weight:bold;">&delta;u<sub>2</sub></span>
+              </div>
+            </div>
+            <span class="matrix-eq-op">=</span>
+            <div class="matrix-bracket-box matrix-bracket-right-hook">
+              <div class="matrix-grid-2x1">
+                <span style="color:var(--amber-400); font-weight:bold;">${r1Str}</span>
+                <span style="color:var(--amber-400); font-weight:bold;">${r2Str}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- Actualización de HUD, Inspector Matricial y Desglose Detallado ---
+    function updateHUDAndMatrices() {
+      const curr = labState.iterationHistory[labState.currentIterIndex] || labState.iterationHistory[0];
+      if (!curr) return;
+
+      hudU1.innerHTML = `${curr.u1.toFixed(3)} <span class="telemetry-unit">mm</span>`;
+      hudU2.innerHTML = `${curr.u2.toFixed(3)} <span class="telemetry-unit">mm</span>`;
+      hudNormR.innerHTML = `${curr.normR.toFixed(2)} <span class="telemetry-unit">kN</span>`;
+      hudNormDU.innerHTML = `${curr.normDU.toFixed(3)} <span class="telemetry-unit">mm</span>`;
+
+      lblIterCounter.textContent = `Iter: ${curr.iter} / ${labState.iterationHistory.length - 1}`;
+      overlayBuildingInfo.textContent = `Iteración ${curr.iter} | ||r|| = ${curr.normR.toFixed(2)} kN`;
+
+      const k11 = (curr.kt1 + curr.kt2).toFixed(1);
+      const k12 = (-curr.kt2).toFixed(1);
+      const k22 = (curr.kt2).toFixed(1);
+      matrixKtDisp.innerHTML = `[ ${k11.padStart(6)}, ${k12.padStart(6)} ]<br>[ ${k12.padStart(6)}, ${k22.padStart(6)} ]`;
+      valDetKt.textContent = curr.detKt.toFixed(0);
+
+      matrixRDisp.innerHTML = `r1 = ${curr.r1 >= 0 ? '+' : ''}${curr.r1.toFixed(2)} kN<br>r2 = ${curr.r2 >= 0 ? '+' : ''}${curr.r2.toFixed(2)} kN`;
+      valNormRDisp.textContent = `${curr.normR.toFixed(2)} kN`;
+
+      matrixDUDisp.innerHTML = `&delta;u1 = ${curr.du1 >= 0 ? '+' : ''}${curr.du1.toFixed(3)} mm<br>&delta;u2 = ${curr.du2 >= 0 ? '+' : ''}${curr.du2.toFixed(3)} mm`;
+
+      badgeStory1.textContent = curr.state1;
+      badgeStory1.style.color = (curr.state1 === 'Plástico') ? 'var(--rose-400)' : 'var(--emerald-400)';
+      badgeStory2.textContent = curr.state2;
+      badgeStory2.style.color = (curr.state2 === 'Plástico') ? 'var(--rose-400)' : 'var(--emerald-400)';
+
+      statusChip.className = 'status-badge';
+      if (curr.converged) {
+        statusChip.classList.add('converged');
+        statusText.textContent = `🟢 ¡Equilibrio Alcanzado! Convergencia en ${curr.iter} iteraciones`;
+      } else if (curr.singular) {
+        statusChip.classList.add('diverged');
+        statusText.textContent = '🔴 Matriz Singular: Estructura en Colapso';
+      } else {
+        statusChip.classList.add('iterating');
+        statusText.textContent = `🟡 Iterando (Desequilibrio Activo: ||r|| = ${curr.normR.toFixed(2)} kN)`;
+      }
+
+      // ACTUALIZAR DESGLOSE OPERACIONAL DETALLADO
+      lblBreakdownIter.textContent = `Iteración ${curr.iter} de ${labState.iterationHistory.length - 1}`;
+      
+      const uy1 = (labState.fy1 / labState.k01).toFixed(2);
+      const uy2 = (labState.fy2 / labState.k02).toFixed(2);
+      const nextU1 = (curr.u1 + curr.du1).toFixed(3);
+      const nextU2 = (curr.u2 + curr.du2).toFixed(3);
+
+      stepCalcShears.innerHTML = `
+        <div style="margin-bottom:0.45rem;">
+          <span class="elem-badge elem-badge-1">Resorte Piso 1</span>
+          Deriva &Delta;<sub>1</sub> = u<sub>1</sub> = <strong>${curr.d1.toFixed(3)} mm</strong> (u<sub>y1</sub> = ${uy1} mm) &rarr; Cortante V<sub>1</sub> = <strong>${curr.V1.toFixed(2)} kN</strong>
+          [Régimen: <span style="color:${curr.state1==='Plástico'?'var(--rose-400)':'var(--emerald-400)'}; font-weight:bold;">${curr.state1}</span> | Rigidez Tangente k<sub>t1</sub> = <strong>${curr.kt1.toFixed(1)} kN/mm</strong>]
+        </div>
+        <div>
+          <span class="elem-badge elem-badge-2">Resorte Piso 2</span>
+          Deriva &Delta;<sub>2</sub> = u<sub>2</sub> - u<sub>1</sub> = <strong>${curr.d2.toFixed(3)} mm</strong> (u<sub>y2</sub> = ${uy2} mm) &rarr; Cortante V<sub>2</sub> = <strong>${curr.V2.toFixed(2)} kN</strong>
+          [Régimen: <span style="color:${curr.state2==='Plástico'?'var(--rose-400)':'var(--emerald-400)'}; font-weight:bold;">${curr.state2}</span> | Rigidez Tangente k<sub>t2</sub> = <strong>${curr.kt2.toFixed(1)} kN/mm</strong>]
+        </div>
+      `;
+
+      stepCalcResiduals.innerHTML = `
+        <div style="margin-bottom:0.45rem;">
+          <span class="elem-badge elem-badge-node">Nodo 1 (Nivel 1)</span>
+          Fuerza Interna: F<sub>int,1</sub> = <span class="elem-badge elem-badge-1" style="font-size:0.62rem; padding:1px 4px;">V<sub>1</sub></span> - <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">V<sub>2</sub></span> = ${curr.V1.toFixed(2)} - (${curr.V2.toFixed(2)}) = <strong>${curr.Fint1.toFixed(2)} kN</strong><br>
+          &emsp;&rarr; <strong>Residuo Nodal r<sub>1</sub></strong> = P<sub>1</sub> - F<sub>int,1</sub> = ${labState.p1.toFixed(1)} - (${curr.Fint1.toFixed(2)}) = <strong style="color:var(--amber-400); font-size:0.9rem;">${curr.r1 >= 0 ? '+' : ''}${curr.r1.toFixed(2)} kN</strong>
+        </div>
+        <div style="margin-bottom:0.45rem;">
+          <span class="elem-badge elem-badge-node">Nodo 2 (Nivel 2)</span>
+          Fuerza Interna: F<sub>int,2</sub> = <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">V<sub>2</sub></span> = <strong>${curr.V2.toFixed(2)} kN</strong><br>
+          &emsp;&rarr; <strong>Residuo Nodal r<sub>2</sub></strong> = P<sub>2</sub> - F<sub>int,2</sub> = ${labState.p2.toFixed(1)} - (${curr.Fint2.toFixed(2)}) = <strong style="color:var(--amber-400); font-size:0.9rem;">${curr.r2 >= 0 ? '+' : ''}${curr.r2.toFixed(2)} kN</strong>
+        </div>
+        <div style="color:var(--text-muted); font-size:0.75rem; border-top:1px dashed var(--border-subtle); padding-top:0.35rem;">
+          Norma Euclídea del Residuo: ||<strong>r</strong>||<sub>2</sub> = &radic;[(${curr.r1.toFixed(2)})&sup2; + (${curr.r2.toFixed(2)})&sup2;] = <strong style="color:${curr.normR <= labState.tolerance ? 'var(--emerald-400)' : 'var(--amber-400)'};">${curr.normR.toFixed(3)} kN</strong> (Tol = ${labState.tolerance} kN)
+        </div>
+      `;
+
+      stepCalcStiffness.innerHTML = `
+        <div style="margin-bottom:0.35rem;">
+          <strong>Término K<sub>11</sub></strong> (Conexión a Resorte 1 y Resorte 2): <span class="elem-badge elem-badge-1" style="font-size:0.62rem; padding:1px 4px;">k<sub>t1</sub></span> + <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = ${curr.kt1.toFixed(1)} + ${curr.kt2.toFixed(1)} = <strong>${k11} kN/mm</strong>
+        </div>
+        <div style="margin-bottom:0.35rem;">
+          <strong>Término K<sub>12</sub> = K<sub>21</sub></strong> (Acoplamiento mutuo por Resorte 2): -<span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = <strong>${k12} kN/mm</strong>
+        </div>
+        <div style="margin-bottom:0.35rem;">
+          <strong>Término K<sub>22</sub></strong> (Conexión única a Resorte 2): <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = <strong>${k22} kN/mm</strong>
+        </div>
+        <div style="color:var(--text-muted); font-size:0.75rem; border-top:1px dashed var(--border-subtle); padding-top:0.35rem;">
+          <strong>Determinante:</strong> det(<strong>K</strong><sub>t</sub>) = k<sub>t1</sub> &times; k<sub>t2</sub> = ${curr.kt1.toFixed(1)} &times; ${curr.kt2.toFixed(1)} = <strong>${curr.detKt.toFixed(1)}</strong>
+          ${curr.detKt < 1 ? '<span style="color:var(--rose-400); font-weight:bold; margin-left:0.5rem;">⚠️ Matriz cuasi-singular (Pérdida de capacidad portante)</span>' : ''}
+        </div>
+      `;
+
+      stepCalcSolve.innerHTML = `
+        ${renderDynamicMatrixEquation(k11, k12, k22, curr.r1, curr.r2)}
+        <div style="margin-bottom:0.4rem;">
+          <strong>Corrección Nivel 1 (&delta;u<sub>1</sub>):</strong> El Resorte 1 absorbe el cortante desequilibrado total sobre la base (r<sub>1</sub> + r<sub>2</sub>):<br>
+          &emsp;&delta;u<sub>1</sub> = (r<sub>1</sub> + r<sub>2</sub>) / <span class="elem-badge elem-badge-1" style="font-size:0.62rem; padding:1px 4px;">k<sub>t1</sub></span> = [(${curr.r1.toFixed(2)}) + (${curr.r2.toFixed(2)})] / ${curr.kt1.toFixed(1)} = (${(curr.r1 + curr.r2).toFixed(2)}) / ${curr.kt1.toFixed(1)} = <strong style="color:var(--cyan-400); font-size:0.9rem;">${curr.du1 >= 0 ? '+' : ''}${curr.du1.toFixed(3)} mm</strong>
+        </div>
+        <div style="margin-bottom:0.4rem;">
+          <strong>Corrección Nivel 2 (&delta;u<sub>2</sub>):</strong> Desplazamiento del Nivel 1 más deformación relativa del Resorte 2 ante r<sub>2</sub>:<br>
+          &emsp;&delta;u<sub>2</sub> = &delta;u<sub>1</sub> + r<sub>2</sub> / <span class="elem-badge elem-badge-2" style="font-size:0.62rem; padding:1px 4px;">k<sub>t2</sub></span> = ${curr.du1.toFixed(3)} + [(${curr.r2.toFixed(2)}) / ${curr.kt2.toFixed(1)}] = ${curr.du1.toFixed(3)} + (${(curr.r2 / curr.kt2).toFixed(3)}) = <strong style="color:var(--cyan-400); font-size:0.9rem;">${curr.du2 >= 0 ? '+' : ''}${curr.du2.toFixed(3)} mm</strong>
+        </div>
+        <div style="color:var(--text-main); font-size:0.8rem; border-top:1px dashed var(--border-subtle); padding-top:0.35rem;">
+          <strong>Actualización Cinemática:</strong>
+          u<sub>1</sub><sup>(i+1)</sup> = ${curr.u1.toFixed(3)} + (${curr.du1.toFixed(3)}) = <strong style="color:var(--purple-400);">${nextU1} mm</strong> &nbsp;|&nbsp;
+          u<sub>2</sub><sup>(i+1)</sup> = ${curr.u2.toFixed(3)} + (${curr.du2.toFixed(3)}) = <strong style="color:var(--purple-400);">${nextU2} mm</strong>
+        </div>
+      `;
+    }
+
+    function renderIterationTable() {
+      tableIterBody.innerHTML = '';
+      labState.iterationHistory.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        if (idx === labState.currentIterIndex) tr.classList.add('current-row');
+        tr.style.cursor = 'pointer';
+        tr.title = `Clic para ver desglose numérico detallado de la Iteración ${row.iter}`;
+        
+        tr.addEventListener('click', () => {
+          labState.currentIterIndex = idx;
+          updateHUDAndMatrices();
+          renderIterationTable();
+          drawAllVisualizations();
+        });
+        
+        tr.innerHTML = `
+          <td style="text-align: center; font-weight: bold;">${row.iter}</td>
+          <td>${row.u1.toFixed(3)}</td>
+          <td>${row.u2.toFixed(3)}</td>
+          <td>${row.d1.toFixed(3)}</td>
+          <td>${row.d2.toFixed(3)}</td>
+          <td>${row.V1.toFixed(1)}</td>
+          <td>${row.V2.toFixed(1)}</td>
+          <td style="color: ${row.normR < labState.tolerance ? 'var(--emerald-400)' : 'var(--amber-400)'}">${row.normR.toFixed(2)}</td>
+          <td>${row.normDU.toFixed(3)}</td>
+          <td style="text-align:center; color:${row.state1 === 'Plástico' ? 'var(--rose-400)' : 'var(--emerald-400)'}">${row.state1}</td>
+          <td style="text-align:center; color:${row.state2 === 'Plástico' ? 'var(--rose-400)' : 'var(--emerald-400)'}">${row.state2}</td>
+        `;
+        tableIterBody.appendChild(tr);
+      });
+    }
+
+    // --- Dibujo: Canvas 1 - Edificio Físico 2-DOF Animado ---
+    function drawBuildingPhysical() {
+      const palette = getCanvasPalette();
+      const { width, height } = resizeCanvasHiDPI(canvasBuilding, ctxBuilding);
+      
+      ctxBuilding.fillStyle = palette.bg;
+      ctxBuilding.fillRect(0, 0, width, height);
+
+      const curr = labState.iterationHistory[labState.currentIterIndex] || labState.iterationHistory[0];
+      if (!curr) return;
+
+      const baseX = width * 0.30;
+      const groundY = height - 35;
+      const storyH = 95;
+      const slabW = 120;
+      const slabH = 18;
+      const colThick = 8;
+
+      const maxU = Math.max(Math.abs(curr.u2), 4.0);
+      const scaleU = Math.min(22, (width * 0.35) / maxU);
+
+      const x0 = baseX;
+      const x1 = baseX + curr.u1 * scaleU;
+      const x2 = baseX + curr.u2 * scaleU;
+
+      const y0 = groundY;
+      const y1 = groundY - storyH;
+      const y2 = groundY - 2 * storyH;
+
+      // Cimentación
+      ctxBuilding.fillStyle = palette.groundFill;
+      ctxBuilding.fillRect(x0 - slabW / 2 - 25, y0, slabW + 50, 15);
+      ctxBuilding.strokeStyle = palette.groundBorder;
+      ctxBuilding.lineWidth = 2;
+      ctxBuilding.strokeRect(x0 - slabW / 2 - 25, y0, slabW + 50, 15);
+
+      ctxBuilding.strokeStyle = palette.groundHatch;
+      ctxBuilding.lineWidth = 1;
+      for (let x = x0 - slabW / 2 - 20; x < x0 + slabW / 2 + 20; x += 10) {
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(x, y0 + 15);
+        ctxBuilding.lineTo(x + 8, y0 + 25);
+        ctxBuilding.stroke();
+      }
+
+      // Columnas Piso 1
+      const colColor1 = (curr.state1 === 'Plástico') ? palette.colPlastic : palette.colElastic;
+      ctxBuilding.save();
+      ctxBuilding.strokeStyle = colColor1;
+      ctxBuilding.lineWidth = colThick;
+      ctxBuilding.lineCap = 'round';
+
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(x0 - slabW / 2 + 15, y0);
+      ctxBuilding.lineTo(x1 - slabW / 2 + 15, y1 + slabH);
+      ctxBuilding.stroke();
+
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(x0 + slabW / 2 - 15, y0);
+      ctxBuilding.lineTo(x1 + slabW / 2 - 15, y1 + slabH);
+      ctxBuilding.stroke();
+      ctxBuilding.restore();
+
+      // Losa Piso 1
+      ctxBuilding.fillStyle = palette.slabFill;
+      ctxBuilding.fillRect(x1 - slabW / 2, y1, slabW, slabH);
+      ctxBuilding.strokeStyle = palette.slabBorder;
+      ctxBuilding.lineWidth = 2;
+      ctxBuilding.strokeRect(x1 - slabW / 2, y1, slabW, slabH);
+
+      ctxBuilding.fillStyle = palette.slabText;
+      ctxBuilding.font = 'bold 10px Inter, sans-serif';
+      ctxBuilding.textAlign = 'center';
+      ctxBuilding.fillText(`Piso 1 (u1 = ${curr.u1.toFixed(2)} mm)`, x1, y1 + 12);
+
+      // Columnas Piso 2
+      const colColor2 = (curr.state2 === 'Plástico') ? palette.colPlastic : palette.colElastic;
+      ctxBuilding.save();
+      ctxBuilding.strokeStyle = colColor2;
+      ctxBuilding.lineWidth = colThick;
+      ctxBuilding.lineCap = 'round';
+
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(x1 - slabW / 2 + 15, y1);
+      ctxBuilding.lineTo(x2 - slabW / 2 + 15, y2 + slabH);
+      ctxBuilding.stroke();
+
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(x1 + slabW / 2 - 15, y1);
+      ctxBuilding.lineTo(x2 + slabW / 2 - 15, y2 + slabH);
+      ctxBuilding.stroke();
+      ctxBuilding.restore();
+
+      // Losa Piso 2
+      ctxBuilding.fillStyle = palette.slabFill;
+      ctxBuilding.fillRect(x2 - slabW / 2, y2, slabW, slabH);
+      ctxBuilding.strokeStyle = palette.slabBorder;
+      ctxBuilding.lineWidth = 2;
+      ctxBuilding.strokeRect(x2 - slabW / 2, y2, slabW, slabH);
+
+      ctxBuilding.fillStyle = palette.slabText;
+      ctxBuilding.font = 'bold 10px Inter, sans-serif';
+      ctxBuilding.textAlign = 'center';
+      ctxBuilding.fillText(`Piso 2 (u2 = ${curr.u2.toFixed(2)} mm)`, x2, y2 + 12);
+
+      // Flechas de Fuerzas
+      function drawArrow(startX, startY, len, color, label, isUp = false) {
+        if (Math.abs(len) < 4) return;
+        const endX = startX + len;
+        ctxBuilding.save();
+        ctxBuilding.strokeStyle = color;
+        ctxBuilding.fillStyle = color;
+        ctxBuilding.lineWidth = 2.5;
+
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(startX, startY);
+        ctxBuilding.lineTo(endX, startY);
+        ctxBuilding.stroke();
+
+        const headDir = Math.sign(len);
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(endX, startY);
+        ctxBuilding.lineTo(endX - headDir * 6, startY - 4);
+        ctxBuilding.lineTo(endX - headDir * 6, startY + 4);
+        ctxBuilding.closePath();
+        ctxBuilding.fill();
+
+        ctxBuilding.font = 'bold 9px JetBrains Mono, monospace';
+        ctxBuilding.textAlign = headDir > 0 ? 'left' : 'right';
+        ctxBuilding.fillText(label, endX + headDir * 4, startY - (isUp ? 4 : -11));
+        ctxBuilding.restore();
+      }
+
+      const forceScale = 0.45;
+      drawArrow(x2 + slabW / 2, y2 + 5, labState.p2 * forceScale, palette.arrowP, `P2=${labState.p2}kN`, true);
+      drawArrow(x2 + slabW / 2, y2 + 14, -curr.Fint2 * forceScale, palette.arrowFint, `Fint2=${curr.Fint2.toFixed(0)}kN`, false);
+      if (Math.abs(curr.r2) > 1.5) {
+        drawArrow(x2 + slabW / 2 + 10, y2 - 6, curr.r2 * forceScale, palette.arrowR, `r2=${curr.r2.toFixed(1)}kN`, true);
+      }
+
+      drawArrow(x1 + slabW / 2, y1 + 5, labState.p1 * forceScale, palette.arrowP, `P1=${labState.p1}kN`, true);
+      drawArrow(x1 + slabW / 2, y1 + 14, -curr.Fint1 * forceScale, palette.arrowFint, `Fint1=${curr.Fint1.toFixed(0)}kN`, false);
+      if (Math.abs(curr.r1) > 1.5) {
+        drawArrow(x1 + slabW / 2 + 10, y1 - 6, curr.r1 * forceScale, palette.arrowR, `r1=${curr.r1.toFixed(1)}kN`, true);
+      }
+
+      ctxBuilding.save();
+      ctxBuilding.setLineDash([3, 3]);
+      ctxBuilding.strokeStyle = palette.grid;
+      ctxBuilding.lineWidth = 1;
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(baseX, groundY + 10);
+      ctxBuilding.lineTo(baseX, y2 - 20);
+      ctxBuilding.stroke();
+      ctxBuilding.restore();
+    }
+
+    // --- Dibujo: Canvas 2 & 3 - Curvas Cortante vs Deriva por Piso ---
+    function drawStoryHysteresis(canvas, ctx, storyNum, currentDelta, currentV, k0, fy, alpha, state) {
+      const palette = getCanvasPalette();
+      const { width, height } = resizeCanvasHiDPI(canvas, ctx);
+      
+      ctx.fillStyle = palette.bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const pad = { top: 20, right: 20, bottom: 30, left: 45 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      const uy = fy / k0;
+      const maxDelta = Math.max(Math.abs(currentDelta) * 1.35, uy * 2.5, 3.0);
+      const maxV = Math.max(fy * 1.4, Math.abs(currentV) * 1.35, 120);
+
+      const toX = d => pad.left + (d / maxDelta) * (plotW / 2) + plotW / 2;
+      const toY = v => pad.top + ((maxV - v) / (2 * maxV)) * plotH;
+
+      ctx.strokeStyle = palette.axis;
+      ctx.lineWidth = 1;
+      const x0 = toX(0);
+      const y0 = toY(0);
+
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y0);
+      ctx.lineTo(pad.left + plotW, y0);
+      ctx.moveTo(x0, pad.top);
+      ctx.lineTo(x0, pad.top + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = palette.text;
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.fillText(`&Delta;${storyNum} [mm]`, pad.left + plotW - 40, y0 + 12);
+      ctx.fillText(`V${storyNum}`, pad.left + 5, pad.top + 10);
+
+      // Curva Constitutiva Bilineal
+      ctx.strokeStyle = palette.faint;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      const kp = alpha * k0;
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(toX(uy), toY(fy));
+      ctx.lineTo(toX(maxDelta), toY(fy + kp * (maxDelta - uy)));
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(toX(-uy), toY(-fy));
+      ctx.lineTo(toX(-maxDelta), toY(-fy + kp * (-maxDelta - (-uy))));
+      ctx.stroke();
+
+      // Trayectoria de iteraciones
+      ctx.strokeStyle = isDarkTheme() ? 'rgba(192, 132, 252, 0.4)' : 'rgba(124, 58, 237, 0.4)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      for (let i = 0; i <= labState.currentIterIndex; i++) {
+        const item = labState.iterationHistory[i];
+        const dVal = (storyNum === 1) ? item.d1 : item.d2;
+        const vVal = (storyNum === 1) ? item.V1 : item.V2;
+        if (i === 0) ctx.moveTo(toX(dVal), toY(vVal));
+        else ctx.lineTo(toX(dVal), toY(vVal));
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Recta Tangente
+      const kt = (state === 'Plástico' && labState.method === 'standard') ? kp : k0;
+      ctx.strokeStyle = palette.arrowR;
+      ctx.lineWidth = 1.5;
+      const tanSpan = maxDelta * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(toX(currentDelta - tanSpan), toY(currentV - kt * tanSpan));
+      ctx.lineTo(toX(currentDelta + tanSpan), toY(currentV + kt * tanSpan));
+      ctx.stroke();
+
+      // Punto actual
+      const curX = toX(currentDelta);
+      const curY = toY(currentV);
+      ctx.fillStyle = (state === 'Plástico') ? palette.colPlastic : palette.colElastic;
+      ctx.beginPath();
+      ctx.arc(curX, curY, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = palette.bg;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = palette.text;
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.fillText(`(${currentDelta.toFixed(2)}, ${currentV.toFixed(0)})`, curX + 7, curY - 5);
+    }
+
+    // --- Dibujo: Canvas 4 - Mini-Simulador 1-DOF CON AUTOESCALA Y SIN DESBORDAMIENTO ---
+    function draw1DNewtonRaphson() {
+      const palette = getCanvasPalette();
+      const { width, height } = resizeCanvasHiDPI(canvas1D, ctx1D);
+      
+      ctx1D.fillStyle = palette.bg;
+      ctx1D.fillRect(0, 0, width, height);
+
+      const pad = { top: 30, right: 45, bottom: 40, left: 60 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      const s1d = labState.state1D;
+      const uy = s1d.fy / s1d.k0;
+      const kp = s1d.alpha * s1d.k0;
+
+      // AUTO-ESCALA DINÁMICA: Calcula los límites para que los saltos NUNCA se salgan de margen
+      let maxObservedU = Math.max(s1d.u, uy * 2.2, 3.0);
+      s1d.history.forEach(h => {
+        if (h.u > maxObservedU) maxObservedU = h.u;
+        if (h.nextU > maxObservedU) maxObservedU = h.nextU;
+      });
+      // Añadir margen del 20%
+      const maxU = maxObservedU * 1.25;
+      const maxF = Math.max(s1d.P * 1.25, s1d.fy * 1.35, 160);
+
+      const toX = u => pad.left + (u / maxU) * plotW;
+      const toY = f => pad.top + ((maxF - f) / maxF) * plotH;
+
+      // Ejes
+      ctx1D.strokeStyle = palette.axis;
+      ctx1D.lineWidth = 1.5;
+      ctx1D.beginPath();
+      ctx1D.moveTo(pad.left, toY(0));
+      ctx1D.lineTo(pad.left + plotW, toY(0));
+      ctx1D.moveTo(toX(0), pad.top);
+      ctx1D.lineTo(toX(0), pad.top + plotH);
+      ctx1D.stroke();
+
+      // Títulos de ejes
+      ctx1D.fillStyle = palette.text;
+      ctx1D.font = 'bold 10px Inter, sans-serif';
+      ctx1D.fillText('Desplazamiento u [mm]', pad.left + plotW / 2 - 55, pad.top + plotH + 30);
+      
+      ctx1D.save();
+      ctx1D.translate(16, pad.top + plotH / 2 + 20);
+      ctx1D.rotate(-Math.PI / 2);
+      ctx1D.fillText('Fuerza F [kN]', 0, 0);
+      ctx1D.restore();
+
+      // Cuadrícula y marcas
+      ctx1D.strokeStyle = palette.grid;
+      ctx1D.lineWidth = 1;
+      ctx1D.fillStyle = palette.faint;
+      ctx1D.font = '9px JetBrains Mono, monospace';
+
+      const uStep = maxU > 5 ? 2.0 : (maxU > 2.5 ? 1.0 : 0.5);
+      for (let u = uStep; u <= maxU; u += uStep) {
+        const x = toX(u);
+        ctx1D.beginPath();
+        ctx1D.moveTo(x, pad.top);
+        ctx1D.lineTo(x, pad.top + plotH);
+        ctx1D.stroke();
+        ctx1D.fillText(u.toFixed(1), x - 8, pad.top + plotH + 15);
+      }
+
+      // Curva Constitutiva Real
+      ctx1D.strokeStyle = palette.axis;
+      ctx1D.lineWidth = 2.2;
+      ctx1D.beginPath();
+      ctx1D.moveTo(toX(0), toY(0));
+      ctx1D.lineTo(toX(uy), toY(s1d.fy));
+      ctx1D.lineTo(toX(maxU), toY(s1d.fy + kp * (maxU - uy)));
+      ctx1D.stroke();
+
+      // Marca de Fluencia
+      ctx1D.fillStyle = palette.faint;
+      ctx1D.beginPath();
+      ctx1D.arc(toX(uy), toY(s1d.fy), 3.5, 0, Math.PI * 2);
+      ctx1D.fill();
+      ctx1D.fillText(`(uy=${uy.toFixed(1)}, Fy=${s1d.fy})`, toX(uy) + 6, toY(s1d.fy) - 5);
+
+      // Línea Objetivo P
+      ctx1D.strokeStyle = palette.arrowP;
+      ctx1D.lineWidth = 1.5;
+      ctx1D.setLineDash([4, 4]);
+      ctx1D.beginPath();
+      ctx1D.moveTo(pad.left, toY(s1d.P));
+      ctx1D.lineTo(pad.left + plotW, toY(s1d.P));
+      ctx1D.stroke();
+      ctx1D.setLineDash([]);
+
+      ctx1D.fillStyle = palette.arrowP;
+      ctx1D.font = 'bold 10px JetBrains Mono, monospace';
+      ctx1D.fillText(`Carga Objetivo P = ${s1d.P} kN`, pad.left + 15, toY(s1d.P) - 6);
+
+      // Dibujar Pasos de Newton-Raphson 1D
+      s1d.history.forEach((h) => {
+        const x_u = toX(h.u);
+        const y_f = toY(h.f);
+        const y_P = toY(s1d.P);
+        const x_next = toX(h.nextU);
+
+        // Línea vertical de residuo R = P - Fint
+        ctx1D.strokeStyle = palette.arrowR;
+        ctx1D.lineWidth = 1.6;
+        ctx1D.setLineDash([2, 2]);
+        ctx1D.beginPath();
+        ctx1D.moveTo(x_u, y_f);
+        ctx1D.lineTo(x_u, y_P);
+        ctx1D.stroke();
+
+        // Línea tangente hacia el siguiente punto
+        ctx1D.strokeStyle = isDarkTheme() ? '#c084fc' : '#7c3aed';
+        ctx1D.lineWidth = 2.2;
+        ctx1D.setLineDash([]);
+        ctx1D.beginPath();
+        ctx1D.moveTo(x_u, y_f);
+        ctx1D.lineTo(x_next, y_P);
+        ctx1D.stroke();
+
+        // Punto en la curva
+        ctx1D.fillStyle = palette.colElastic;
+        ctx1D.beginPath();
+        ctx1D.arc(x_u, y_f, 4.5, 0, Math.PI * 2);
+        ctx1D.fill();
+        ctx1D.strokeStyle = palette.bg;
+        ctx1D.lineWidth = 1.5;
+        ctx1D.stroke();
+
+        ctx1D.fillStyle = palette.text;
+        ctx1D.font = 'bold 9px JetBrains Mono, monospace';
+        ctx1D.fillText(`i=${h.iter}`, x_u + 6, y_f + 14);
+      });
+
+      // Punto Actual de la última iteración
+      const curX = toX(s1d.u);
+      let curF = 0;
+      if (s1d.u <= uy) curF = s1d.k0 * s1d.u;
+      else curF = s1d.fy + kp * (s1d.u - uy);
+      
+      const curY = toY(curF);
+      ctx1D.fillStyle = isDarkTheme() ? '#22d3ee' : '#0284c7';
+      ctx1D.beginPath();
+      ctx1D.arc(curX, curY, 6, 0, Math.PI * 2);
+      ctx1D.fill();
+      ctx1D.strokeStyle = '#fff';
+      ctx1D.lineWidth = 2;
+      ctx1D.stroke();
+    }
+
+    function drawAllVisualizations() {
+      drawBuildingPhysical();
+      
+      const curr = labState.iterationHistory[labState.currentIterIndex] || labState.iterationHistory[0];
+      if (curr) {
+        drawStoryHysteresis(canvasStory1, ctxStory1, 1, curr.d1, curr.V1, labState.k01, labState.fy1, labState.alpha1, curr.state1);
+        drawStoryHysteresis(canvasStory2, ctxStory2, 2, curr.d2, curr.V2, labState.k02, labState.fy2, labState.alpha2, curr.state2);
+      }
+      
+      draw1DNewtonRaphson();
+    }
+
+    // --- Lógica del Mini-Simulador 1D ---
+    function reset1D() {
+      const s1d = labState.state1D;
+      s1d.u = 0;
+      s1d.iter = 0;
+      s1d.history = [];
+      document.getElementById('lbl-1d-step').textContent = 'Iteración 0';
+      document.getElementById('lbl-1d-res').textContent = `R = ${s1d.P.toFixed(1)} kN`;
+      document.getElementById('lbl-1d-du').textContent = `δu = ${(s1d.P / s1d.k0).toFixed(2)} mm`;
+
+      const uy = s1d.fy / s1d.k0;
+      const kp = s1d.alpha * s1d.k0;
+      const ueq = s1d.P <= s1d.fy ? (s1d.P / s1d.k0) : (uy + (s1d.P - s1d.fy) / kp);
+      const lblUeq = document.getElementById('lbl-1d-ueq-calc');
+      if (lblUeq) {
+        lblUeq.innerHTML = `Desplazamiento Teórico: u<sub>eq</sub> = ${uy.toFixed(2)} + (${s1d.P.toFixed(1)} - ${s1d.fy.toFixed(0)}) / ${kp.toFixed(1)} = <strong>${ueq.toFixed(2)} mm</strong> (Autoescala activa)`;
+      }
+
+      draw1DNewtonRaphson();
+    }
+
+    function step1D() {
+      const s1d = labState.state1D;
+      const uy = s1d.fy / s1d.k0;
+      const kp = s1d.alpha * s1d.k0;
+
+      let f_curr = 0, kt_curr = s1d.k0;
+      if (s1d.u <= uy) {
+        f_curr = s1d.k0 * s1d.u;
+        kt_curr = s1d.k0;
+      } else {
+        f_curr = s1d.fy + kp * (s1d.u - uy);
+        kt_curr = kp;
+      }
+
+      const R = s1d.P - f_curr;
+      if (Math.abs(R) < 0.1 || s1d.iter >= 8) return;
+
+      const du = R / kt_curr;
+      const nextU = s1d.u + du;
+
+      s1d.history.push({
+        iter: s1d.iter,
+        u: s1d.u,
+        f: f_curr,
+        R: R,
+        kt: kt_curr,
+        du: du,
+        nextU: nextU
+      });
+
+      s1d.u = nextU;
+      s1d.iter++;
+
+      document.getElementById('lbl-1d-step').textContent = `Iteración ${s1d.iter}`;
+      document.getElementById('lbl-1d-res').textContent = `R = ${R.toFixed(1)} kN`;
+      document.getElementById('lbl-1d-du').textContent = `δu = ${du.toFixed(2)} mm`;
+
+      draw1DNewtonRaphson();
+    }
+
+    // --- Eventos ---
+    [sliderK01, sliderFy1, sliderAlpha1, sliderK02, sliderFy2, sliderAlpha2, sliderP1, sliderP2].forEach(sl => {
+      sl.addEventListener('input', syncInputsAndRecompute);
+    });
+
+    tabStory1.addEventListener('click', () => {
+      tabStory1.classList.add('active');
+      tabStory2.classList.remove('active');
+      controlsStory1.style.display = 'block';
+      controlsStory2.style.display = 'none';
+    });
+
+    tabStory2.addEventListener('click', () => {
+      tabStory2.classList.add('active');
+      tabStory1.classList.remove('active');
+      controlsStory2.style.display = 'block';
+      controlsStory1.style.display = 'none';
+    });
+
+    btnMethodStd.addEventListener('click', () => {
+      labState.method = 'standard';
+      btnMethodStd.classList.add('active');
+      btnMethodMod.classList.remove('active');
+      syncInputsAndRecompute();
+    });
+
+    btnMethodMod.addEventListener('click', () => {
+      labState.method = 'modified';
+      btnMethodMod.classList.add('active');
+      btnMethodStd.classList.remove('active');
+      syncInputsAndRecompute();
+    });
+
+    btnIterStep.addEventListener('click', () => {
+      if (labState.currentIterIndex < labState.iterationHistory.length - 1) {
+        labState.currentIterIndex++;
+        updateHUDAndMatrices();
+        renderIterationTable();
+        drawAllVisualizations();
+      }
+    });
+
+    btnSolveAll.addEventListener('click', () => {
+      labState.currentIterIndex = labState.iterationHistory.length - 1;
+      updateHUDAndMatrices();
+      renderIterationTable();
+      drawAllVisualizations();
+    });
+
+    btnResetIter.addEventListener('click', () => {
+      labState.currentIterIndex = 0;
+      updateHUDAndMatrices();
+      renderIterationTable();
+      drawAllVisualizations();
+    });
+
+    // Presets Edificio
+    document.getElementById('btn-preset-triangular').addEventListener('click', () => {
+      sliderP1.value = 60;
+      sliderP2.value = 120;
+      sliderFy1.value = 100;
+      sliderFy2.value = 90;
+      syncInputsAndRecompute();
+    });
+
+    document.getElementById('btn-preset-softstory').addEventListener('click', () => {
+      sliderFy1.value = 70;
+      sliderFy2.value = 160;
+      sliderP1.value = 50;
+      sliderP2.value = 90;
+      syncInputsAndRecompute();
+    });
+
+    document.getElementById('btn-preset-elastic').addEventListener('click', () => {
+      sliderP1.value = 25;
+      sliderP2.value = 35;
+      sliderFy1.value = 120;
+      sliderFy2.value = 100;
+      syncInputsAndRecompute();
+    });
+
+    document.getElementById('btn-preset-bothplastic').addEventListener('click', () => {
+      sliderP1.value = 80;
+      sliderP2.value = 110;
+      sliderFy1.value = 75;
+      sliderFy2.value = 80;
+      syncInputsAndRecompute();
+    });
+
+    // Eventos Mini-Simulador 1D
+    slider1DP.addEventListener('input', () => {
+      labState.state1D.P = parseFloat(slider1DP.value);
+      val1DP.textContent = `${labState.state1D.P.toFixed(1)} kN`;
+      reset1D();
+    });
+
+    slider1DAlpha.addEventListener('input', () => {
+      labState.state1D.alpha = parseFloat(slider1DAlpha.value);
+      val1DAlpha.textContent = `${labState.state1D.alpha.toFixed(2)} (${Math.round(labState.state1D.alpha * 100)}%)`;
+      reset1D();
+    });
+
+    document.getElementById('btn-1d-step').addEventListener('click', step1D);
+    document.getElementById('btn-1d-reset').addEventListener('click', reset1D);
+
+    document.querySelectorAll('.socratic-question').forEach(header => {
+      header.addEventListener('click', () => {
+        const item = header.parentElement;
+        item.classList.toggle('open');
+      });
+    });
+
+    // Botón de alternancia de tema
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = isDarkTheme();
+      applyTheme(isDark ? 'light' : 'dark');
+    });
+
+    window.addEventListener('load', () => {
+      const savedTheme = localStorage.getItem('nl_course_theme') || 'light';
+      applyTheme(savedTheme);
+
+      syncInputsAndRecompute();
+      reset1D();
+
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    });
+
+    window.addEventListener('resize', drawAllVisualizations);
+  </script>
+</body>
+</html>
