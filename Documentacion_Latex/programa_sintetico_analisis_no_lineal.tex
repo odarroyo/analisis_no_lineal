@@ -1,0 +1,261 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ==============================================================================
+% PAQUETES FUNDAMENTALES Y CONFIGURACIÓN TIPOGRÁFICA
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[margin=1.75cm, top=1.75cm, bottom=1.75cm, headheight=14pt]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{float}
+
+% ==============================================================================
+% PALETA INSTITUCIONAL UIS
+% ==============================================================================
+\definecolor{uisdark}{HTML}{1A1D20}
+\definecolor{uispurple}{HTML}{3D2B56}
+\definecolor{uisblue}{HTML}{0D47A1}
+\definecolor{uisborder}{HTML}{CBD5E1}
+\definecolor{uisgray}{HTML}{64748B}
+
+% ==============================================================================
+% HIPERVÍNCULOS
+% ==============================================================================
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=uispurple,
+    citecolor=uisblue,
+    urlcolor=uispurple,
+    pdftitle={Programa Sintético: Análisis No Lineal de Estructuras},
+    pdfauthor={Prof. Orlando Arroyo, Ph.D. - UIS},
+    pdfsubject={Programa Sintético - Posgrados},
+    pdfkeywords={Análisis No Lineal, OpenSeesPy, Moodle UIS, Pushover, Método N2}
+}
+
+% ==============================================================================
+% ENCABEZADOS Y PIES DE PÁGINA
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{uisgray}\textsf{Análisis No Lineal de Estructuras}}
+\fancyhead[R]{\small\color{uisgray}\textsf{Programa Sintético}}
+\fancyfoot[L]{\small\color{uisgray}\textsf{Escuela de Ingeniería Civil}}
+\fancyfoot[C]{\small\color{uisgray}\textsf{Posgrados}}
+\fancyfoot[R]{\small\color{uisgray}\textsf{Pág. \thepage\ de \pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% ==============================================================================
+% COMIENZO DEL DOCUMENTO
+% ==============================================================================
+\begin{document}
+
+% ==============================================================================
+% PÁGINA 1: IDENTIDAD INSTITUCIONAL, ECOSISTEMA Y OBJETIVOS FORMATIVOS
+% ==============================================================================
+\enlargethispage{1.5\baselineskip}
+
+\begin{center}
+    {\scshape\Large Universidad Industrial de Santander}\\[0.05cm]
+    {\large Escuela de Ingeniería Civil}\\[0.04cm]
+    {\normalsize\bfseries Posgrados}\\[0.12cm]
+    {\color{uispurple}\hrule height 1.8pt}\vspace{0.12cm}
+    
+    {\huge\bfseries\color{uisdark} Análisis No Lineal de Estructuras}\\[0.08cm]
+    {\large\bfseries\color{uispurple} Programa Sintético y Guía de Contenidos}\\[0.12cm]
+    
+    {\color{uispurple}\hrule height 1.0pt}\vspace{0.14cm}
+    
+    \small
+    \begin{tabularx}{\textwidth}{@{} l X l X @{}}
+        \textbf{Profesor:} & Prof. Orlando Arroyo, Ph.D. & \textbf{Periodo:} & Semestre Académico \\
+        \textbf{Nivel:} & Posgrados & \textbf{Modalidad:} & Teórico-Práctica Computacional \\
+        \textbf{Software:} & OpenSeesPy (\texttt{openseespy}) & \textbf{Plataforma:} & Moodle UIS
+    \end{tabularx}
+\end{center}
+
+\vspace{0.02cm}
+
+\section{Descripción General y Ecosistema Digital}
+
+La asignatura de \textbf{Análisis No Lineal de Estructuras} aborda los principios mecánicos, formulaciones matemáticas y herramientas computacionales necesarias para modelar y evaluar la respuesta inelástica y la capacidad sismorresistente de estructuras de concreto reforzado ante sismos severos, superando las simplificaciones del análisis elástico tradicional.
+
+El desarrollo del curso se articula mediante el siguiente ecosistema de herramientas digitales oficiales:
+
+\begin{enumerate}[leftmargin=16pt, topsep=1.5pt, itemsep=2pt, parsep=0pt, label=\textbf{\arabic*.}]
+    \item \textbf{Plataforma Web Interactiva del Curso (Landing Page):} \newline
+    \href{https://odarroyo.github.io/analisis_no_lineal/}{\small\texttt{https://odarroyo.github.io/analisis\_no\_lineal/}} \newline
+    {\small Laboratorios numéricos interactivos: simulaciones de dependencia de trayectoria (\textit{path-dependence}), residuo de desequilibrio $\mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}$, algoritmos de Newton-Raphson e inspección matricial paso a paso.}
+
+    \item \textbf{Portal Complementario de Concreto Reforzado:} \newline
+    \href{https://odarroyo.github.io/curso_concreto_reforzado/}{\small\texttt{https://odarroyo.github.io/curso\_concreto\_reforzado/}} \newline
+    {\small Recursos técnicos sobre diseño sísmico seccional, análisis momento-curvatura ($M-\phi$), diagramas de interacción $P-M$ y detallamiento dúctil seccional.}
+
+    \item \textbf{Entorno Computacional Oficial --- OpenSeesPy:} \newline
+    {\small Modelación numérica en Python mediante la biblioteca \textbf{OpenSeesPy} (\texttt{openseespy}), con soporte de librerías científicas (\texttt{NumPy}, \texttt{SciPy}, \texttt{Matplotlib}, \texttt{opsvis}, \texttt{vfo}) para resolución no lineal y posprocesamiento.}
+
+    \item \textbf{Aula Virtual Institucional (Moodle UIS):} \newline
+    {\small Espacio oficial para la gestión académica, foros técnicos y recepción de entregables del proyecto semestral y evaluaciones.}
+\end{enumerate}
+
+\vspace{0.05cm}
+
+\section{Objetivos Formativos}
+
+\subsection{Objetivo General}
+Capacitar al estudiante de posgrado en los fundamentos mecánicos, algoritmos numéricos de equilibrio y técnicas avanzadas de modelado inelástico de estructuras de concreto reforzado en \textbf{OpenSeesPy}, orientados a la evaluación sismorresistente basada en desempeño.
+
+\subsection{Objetivos Específicos}
+\begin{itemize}[leftmargin=16pt, topsep=1pt, itemsep=1.2pt, parsep=0pt]
+    \item Comprender los principios matemáticos del equilibrio inelástico, la dependencia de trayectoria y la convergencia de algoritmos iterativos (Newton-Raphson, control de desplazamiento).
+    \item Caracterizar y modelar fuentes de no linealidad geométrica ($P-\Delta$, $P-\delta$, corotacional) y material (concreto confinado y acero con efecto Bauschinger).
+    \item Formular e implementar modelos para pórticos (plasticidad concentrada y fibras) y muros estructurales (láminas multicapa, macroelementos MVLEM y SFI-MVLEM).
+    \item Aplicar el análisis Pushover multimodal y el Método N2 Modificado para determinar el punto de desempeño y verificar estados límite (ASCE/SEI 41 y Eurocódigo 8).
+\end{itemize}
+
+\clearpage
+
+% ==============================================================================
+% PÁGINA 2: CONTENIDOS TEMÁTICOS (LISTADO SINTÉTICO)
+% ==============================================================================
+
+\section{Contenidos Temáticos (Listado Sintético)}
+
+A continuación se presenta el listado sintético de los 7 contenidos estructurados para la asignatura:
+
+\begin{enumerate}[leftmargin=18pt, topsep=2pt, itemsep=3.5pt, parsep=0pt, label=\textbf{\arabic*.}]
+    \item \textbf{¿Qué es el análisis no lineal?}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=1pt]
+        \item Principios del comportamiento inelástico y dependencia de trayectoria (\textit{path-dependence}).
+        \item No conmutatividad de combinaciones de carga y pérdida del principio de superposición.
+        \item Formulación de la ecuación de equilibrio residual: $\mathbf{r}(\mathbf{u}) = \mathbf{P} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}$.
+        \item Algoritmos iterativos de Newton-Raphson (estándar, modificado y BFGS).
+        \item Criterios y tolerancias de convergencia (fuerza, desplazamiento y energía).
+        \item Estrategias de control de carga, control de desplazamiento y longitud de arco.
+    \end{itemize}
+
+    \item \textbf{Tipos de análisis estructural: Lineal vs. No lineal, Estático vs. Dinámico}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=1pt]
+        \item Clasificación: Lineal estático (ELF), modal espectral, estático no lineal (pushover) y dinámico no lineal paso a paso (NL-THA).
+        \item Hipótesis fundamentales, costos computacionales y límites de aplicabilidad.
+        \item Significado físico y limitaciones del factor de reducción de fuerza por ductilidad $R$.
+        \item Criterios normativos de selección del método (NSR-10, ASCE 7, Eurocódigo 8).
+    \end{itemize}
+
+    \item \textbf{Fuentes de no linealidad}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=1pt]
+        \item \textbf{3.1 No linealidad de material:} Tracción, fluencia del refuerzo, aplastamiento del concreto, ablandamiento (\textit{softening}), pérdida de adherencia y degradación cíclica.
+        \item \textbf{3.2 No linealidad geométrica:} Efectos de segundo orden $P-\Delta$ y $P-\delta$, matriz de rigidez geométrica $\mathbf{K}_G$ y transformaciones geométricas en OpenSeesPy (Lineal, $P-\Delta$, Corotacional).
+        \item \textbf{3.3 Modelos no lineales de materiales:} Modelos uniaxiales de concreto confinado y no confinado de Mander (\texttt{Concrete01}, \texttt{Concrete02}) y modelo de Menegotto-Pinto para acero de refuerzo (\texttt{Steel02}).
+    \end{itemize}
+
+    \item \textbf{Formulaciones no lineales para elementos de pórticos de concreto reforzado}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=1pt]
+        \item \textbf{4.1 Modelos de plasticidad concentrada:} Rótulas plásticas de longitud nula ($M-\theta$), longitud de plastificación $L_p$ y leyes histeréticas con deterioro cíclico tipo IMK (\texttt{ModIMKPinching}).
+        \item \textbf{4.2 Modelos de fibras:} Discretización seccional en fibras, elementos basados en desplazamientos (\texttt{dispBeamColumn}) vs. basados en fuerzas (\texttt{forceBeamColumn}) con regularización de energía.
+    \end{itemize}
+
+    \item \textbf{Formulaciones para elementos de edificios de muros}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=1pt]
+        \item \textbf{5.1 Formulaciones Shell Multilayer:} Elementos finitos laminares multicapa 2D con capas ortótropas bajo teoría de campo de compresión modificada (MCFT).
+        \item \textbf{5.2 Formulación de fibras:} Modelo de columna ancha (\textit{wide column}) y discretización en fibras.
+        \item \textbf{5.3 Formulaciones de MVLEM y SFI-MVLEM:} Macroelemento de múltiples líneas verticales (MVLEM) y macroelemento con interacción corte-flexión (SFI-MVLEM) en OpenSeesPy.
+    \end{itemize}
+
+    \item \textbf{Análisis pushover (estático no lineal)}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=1pt]
+        \item Aplicación secuencial de cargas de gravedad y empuje lateral bajo control de desplazamiento.
+        \item Patrones de carga lateral (uniforme, triangular, modal) y curva de capacidad ($V_b$ vs. $\Delta_{\text{techo}}$).
+        \item Transformación cinemática al oscilador equivalente SDOF ($\Gamma$, $M^*$) e identificación del mecanismo de colapso.
+    \end{itemize}
+
+    \item \textbf{Método N2 modificado}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=1pt]
+        \item Formulación en el plano aceleración-desplazamiento (ADRS: $S_a - S_d$) y bilinealización por energía.
+        \item Factor de reducción inelástica $R_\mu$ y cálculo del Punto de Desempeño $d^*$.
+        \item Extensión modificada para efectos de modos superiores y torsión acoplada.
+        \item Verificación de estados límite de desempeño (IO, LS, CP) según ASCE/SEI 41-17 y Eurocódigo 8.
+    \end{itemize}
+\end{enumerate}
+
+\clearpage
+
+% ==============================================================================
+% PÁGINA 3: METODOLOGÍA, EVALUACIÓN Y BIBLIOGRAFÍA
+% ==============================================================================
+
+\section{Metodología de Enseñanza y Esquema de Evaluación}
+
+La metodología combina exposiciones conceptuales de fundamentación teórico-mecánica con sesiones prácticas guiadas de programación y modelación no lineal en \textbf{OpenSeesPy}. La plataforma \textbf{Moodle UIS} centraliza el seguimiento académico, foros y gestión de entregables.
+
+El sistema de evaluación se articula en torno a un \textbf{Proyecto Práctico de Modelación No Lineal} desarrollado en dos entregas consecutivas que concentran el \textbf{90\%} de la calificación final, complementado por un \textbf{Quiz Final} conceptual correspondiente al \textbf{10\%}.
+
+\vspace{0.10cm}
+
+\begin{table}[H]
+\centering
+\caption{Esquema oficial de evaluación de la asignatura (Posgrados).}
+\label{tab:evaluacion_sintetica}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{l X c c}
+\toprule
+\textbf{Actividad Evaluativa} & \textbf{Alcance, Enfoque y Entregables en Moodle UIS} & \textbf{Porcentaje} & \textbf{Semanas} \\
+\midrule
+\textbf{Proyecto: Entrega 1} & 
+\textbf{Modelación Constitutiva Seccional y de Componentes en OpenSeesPy:} \newline
+Calibración de leyes no lineales de concreto (Mander) y acero (Menegotto-Pinto). Modelación comparativa de pórticos (plasticidad concentrada vs. fibras) y muros (MVLEM / SFI-MVLEM) con validación experimental. & 
+\textbf{45\%} & Sem. 8--9 \\
+\midrule
+\textbf{Proyecto: Entrega 2} & 
+\textbf{Modelo Estructural Global, Pushover y Método N2 Modificado:} \newline
+Ensamblaje del modelo inelástico completo en OpenSeesPy. Análisis pushover multimodal, curva de capacidad, transformación ADRS, punto de desempeño con N2 modificado y evaluación de estados límite (ASCE 41 / Eurocódigo 8). & 
+\textbf{45\%} & Sem. 15--16 \\
+\midrule
+\textbf{Quiz Final} & 
+\textbf{Evaluación Conceptual de Fundamentos y Algoritmos:} \newline
+Prueba individual sobre principios matemáticos del análisis inelástico, residuo de equilibrio, algoritmos de Newton-Raphson, matrices tangentes, convergencia y modelos de elementos finitos. & 
+\textbf{10\%} & Sem. 16 \\
+\midrule
+\textbf{Total} & \textbf{Evaluación Integral de la Asignatura} & \textbf{100\%} & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\vspace{0.05cm}
+
+\section{Bibliografía Principal}
+
+\begingroup
+\footnotesize
+\begin{enumerate}[leftmargin=16pt, topsep=1pt, itemsep=0.8pt, parsep=0pt, label={[\arabic*]}]
+    \item \textbf{Chopra, A. K. (2020).} \textit{Dynamics of Structures: Theory and Applications to Earthquake Engineering}. 5th Edition, Pearson Education.
+    \item \textbf{Priestley, M. J. N., Calvi, G. M., \& Kowalsky, M. J. (2007).} \textit{Displacement-Based Seismic Design of Structures}. IUSS Press, Pavia, Italy.
+    \item \textbf{Powell, G. H. (2010).} \textit{Nonlinear Analysis of Structures for Seismic Design}. Computers and Structures Inc., Berkeley, CA.
+    \item \textbf{Fajfar, P. (2000).} ``A Nonlinear Analysis Method for Performance-Based Seismic Design''. \textit{Earthquake Spectra}, 16(3), 573--592.
+    \item \textbf{Kolozvari, K., Orakcal, K., \& Wallace, J. W. (2015).} ``Modeling of Cyclic Shear-Flexure Interaction in RC Structural Walls. I: Theory''. \textit{Journal of Structural Engineering}, 141(5), 04014135.
+    \item \textbf{Mander, J. B., Priestley, M. J. N., \& Park, R. (1988).} ``Theoretical Stress-Strain Model for Confined Concrete''. \textit{Journal of Structural Engineering}, 114(8), 1804--1826.
+    \item \textbf{Menegotto, M., \& Pinto, P. E. (1973).} ``Method of analysis for cyclically loaded RC frames including changes in geometry and non-elastic behavior of elements''. \textit{IABSE Symposium}, Lisbon.
+    \item \textbf{ASCE/SEI 41-17 (2017).} \textit{Seismic Evaluation and Retrofit of Existing Buildings}. American Society of Civil Engineers, Reston, VA.
+    \item \textbf{Eurocode 8 (EN 1998-1) (2004).} \textit{Design of structures for earthquake resistance}. CEN, Bruselas.
+    \item \textbf{OpenSees Documentation Team (2024).} \textit{OpenSeesPy Command Manual}. \url{https://openseespydoc.readthedocs.io/}
+\end{enumerate}
+\endgroup
+
+\vspace{0.20cm}
+\begin{center}
+    {\color{uispurple}\hrule height 1.2pt}\vspace{0.08cm}
+    {\footnotesize\color{uisgray} Universidad Industrial de Santander --- Escuela de Ingeniería Civil --- Posgrados --- Bucaramanga, Colombia}
+\end{center}
+
+\end{document}

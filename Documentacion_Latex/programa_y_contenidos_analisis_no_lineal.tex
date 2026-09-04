@@ -457,8 +457,8 @@ Los muros estructurales (\textit{shear walls}) rigen el comportamiento de edific
 \centering
 \begin{tikzpicture}[scale=0.95, >=Stealth]
     % Viga rígida superior
-    \fill[uisdark!80] (-2.8,3.2) rectangle (2.8,3.5);
-    \node[above, font=\scriptsize\bfseries, uisdark] at (0,3.55) {Viga Rígida de Piso Superior};
+    \fill[uisdark!80] (-2.8,3.9) rectangle (2.8,4.2);
+    \node[above, font=\scriptsize\bfseries, uisdark] at (0,4.25) {Viga Rígida de Piso Superior};
 
     % Viga rígida inferior
     \fill[uisdark!80] (-2.8,0) rectangle (2.8,0.3);
@@ -466,20 +466,20 @@ Los muros estructurales (\textit{shear walls}) rigen el comportamiento de edific
 
     % Macroelementos verticales
     \foreach \x in {-2.2, -1.1, 0, 1.1, 2.2} {
-        \draw[line width=1.5pt, uisblue] (\x, 0.3) -- (\x, 3.2);
-        \fill[uisblue] (\x, 1.75) circle (2.5pt);
+        \draw[line width=1.5pt, uisblue] (\x, 0.3) -- (\x, 3.9);
+        \fill[uisblue] (\x, 2.1) circle (2.5pt);
     }
-    \node[left, font=\scriptsize, uisblue] at (-2.2, 1.75) {Elemento Borde};
-    \node[right, font=\scriptsize, uisblue] at (2.2, 1.75) {Elemento Borde};
-    \node[above, font=\scriptsize, uisdark] at (0, 1.9) {Macrofibras Axiales 2D};
+    \node[left, font=\scriptsize, uisblue] at (-2.2, 3.1) {Elemento Borde};
+    \node[right, font=\scriptsize, uisblue] at (2.2, 3.1) {Elemento Borde};
+    \node[above, font=\scriptsize, uisdark] at (0, 2.6) {Macrofibras Axiales 2D};
 
     % Resorte de corte acoplado (SFI-MVLEM)
-    \draw[decorate, decoration={zigzag, segment length=4, amplitude=3}, line width=1.2pt, uisrose] (-0.8, 1.75) -- (0.8, 1.75);
-    \node[below, font=\scriptsize\bfseries, uisrose] at (0, 1.6) {Acoplamiento Corte-Flexión (SFI)};
+    \draw[decorate, decoration={zigzag, segment length=4.5, amplitude=3.5}, line width=1.3pt, uisrose] (-1.0, 1.7) -- (1.0, 1.7);
+    \node[below=2pt, font=\scriptsize\bfseries, uisrose] at (0, 1.6) {Acoplamiento Corte-Flexión (SFI)};
 
     % Flechas cinemáticas
-    \draw[->, thick, uisamber] (2.9, 3.35) -- (3.8, 3.35) node[right, font=\scriptsize\bfseries] {Corte $V$, Deriva $\Delta$};
-    \draw[->, thick, uispurple] (0, 3.6) -- (0, 4.3) node[above, font=\scriptsize\bfseries] {Carga Axial $P$};
+    \draw[->, thick, uisamber] (2.9, 4.05) -- (3.9, 4.05) node[right, font=\scriptsize\bfseries] {Corte $V$, Deriva $\Delta$};
+    \draw[->, thick, uispurple] (0, 4.3) -- (0, 5.0) node[above, font=\scriptsize\bfseries] {Carga Axial $P$};
 \end{tikzpicture}
 \caption{Formulación del macroelemento bidimensional de interacción corte-flexión SFI-MVLEM.}
 \label{fig:sfi_mvlem}
@@ -582,11 +582,11 @@ El \textbf{Método N2}, formulado originalmente por el Prof. Peter Fajfar (Unive
     \fill[uisrose] (PP) circle (3.5pt);
     \draw[dotted, thick, uisrose] (3.8,0) -- (PP);
     \node[below, font=\small\bfseries, uisrose] at (3.8,0) {$d^*$ (Objetivo)};
-    \node[above=4pt, font=\small\bfseries, uisdark] at (PP) {Punto de Desempeño};
+    \node[above right=3pt, font=\small\bfseries, uisdark] at (PP) {Punto de Desempeño};
 
     % Periodo elástico
-    \draw[uisdark, thick] (0,0) -- (2.5, 4.06);
-    \node[above left, font=\scriptsize, uisdark] at (2.0, 3.3) {Periodo $T^*$};
+    \draw[uisdark, thick] (0,0) -- (2.2, 3.57);
+    \node[above left, font=\scriptsize, uisdark] at (1.4, 2.27) {Periodo $T^*$};
 \end{tikzpicture}
 \caption{Determinación gráfica del Punto de Desempeño mediante el Método N2 en formato ADRS.}
 \label{fig:adrs_n2}
@@ -599,8 +599,8 @@ El \textbf{Método N2}, formulado originalmente por el Prof. Peter Fajfar (Unive
 
 La asignatura combina el rigor analítico de las clases magistrales con sesiones prácticas intensivas de programación de elementos finitos no lineales en Python utilizando \textbf{OpenSeesPy}.
 
-\begin{table}[htbp]
-\centering
+\vspace{0.3cm}
+\noindent\textbf{\color{uispurple}Cuadro 2: Esquema de evaluación y talleres prácticos del curso.}\\[4pt]
 \small
 \setlength{\tabcolsep}{6pt}
 \renewcommand{\arraystretch}{1.25}
@@ -615,9 +615,7 @@ La asignatura combina el rigor analítico de las clases magistrales con sesiones
 \textbf{Proyecto Final Aplicado} & Evaluación sísmica por desempeño de una edificación real de mediana altura mediante análisis Pushover y Método N2 Modificado. & 30\% & Sem. 15--16 \\
 \bottomrule
 \end{tabularx}
-\caption{Esquema de evaluación ponderada del curso.}
-\label{tab:evaluation}
-\end{table}
+\vspace{0.3cm}
 
 % ==============================================================================
 % SECCIÓN 5: REFERENCIAS BIBLIOGRÁFICAS
