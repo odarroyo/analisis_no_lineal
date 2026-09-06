@@ -724,25 +724,29 @@
           </div>
           <h3 class="class-title">Análisis Estático No Lineal: Pushover</h3>
           <p class="class-desc">
-            Estudia la capacidad resistente y ductilidad global de un edificio cortante de 2 pisos (2-DOF) sometido a un patrón lateral triangular (\(1/3, 2/3\)) proporcional a la altura mediante control por desplazamiento.
+            Estudia la capacidad resistente, ductilidad global y degradación post-pico de un edificio cortante 2-DOF mediante control por desplazamiento, incorporando leyes constitutivas trilineales completas con ablandamiento (softening).
           </p>
 
           <ul class="feature-list">
             <li class="feature-item">
               <span class="feature-icon">✓</span>
-              <span>Patrón de cargas proporcional a la altura: \(F_1 = \lambda/3\), \(F_2 = 2\lambda/3\) con \(\lambda\) como incógnita.</span>
+              <span>Patrón lateral proporcional a la altura (\(F_1 = \lambda/3\), \(F_2 = 2\lambda/3\)) con control por desplazamiento \(\Delta u_2\).</span>
             </li>
             <li class="feature-item">
               <span class="feature-icon">✓</span>
-              <span>Algoritmo de control por desplazamiento: incrementos \(\Delta u_2\) y Newton-Raphson con restricción cinemática.</span>
+              <span>Leyes constitutivas trilineales por entrepiso: elástica, endurecimiento (\(\alpha_1 k_0\)) y ablandamiento descendente (\(k_t < 0\)) hasta meseta residual.</span>
             </li>
             <li class="feature-item">
               <span class="feature-icon">✓</span>
-              <span>Curva de capacidad en tiempo real: Cortante basal \(V_b\) vs. Desplazamiento de techo \(u_2\).</span>
+              <span>Curva de capacidad pushover en tiempo real con rama descendente (\(K_{\text{push}} < 0\)) y puntos de estado sin divergencia numérica.</span>
             </li>
             <li class="feature-item">
               <span class="feature-icon">✓</span>
-              <span>Visualización de plastificación secuencial por entrepiso, deformación estructural y desglose matricial interactivo.</span>
+              <span>Mecanismos de piso blando vs. piso alto: concentración de daño en el entrepiso crítico y descarga elástica del piso no degradado.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Inspector matricial interactivo demostrando el equilibrio exacto con matriz tangente \([\mathbf{K}_t]\) indefinida y \(\det(\mathbf{K}_t) < 0\).</span>
             </li>
           </ul>
         </div>

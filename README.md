@@ -34,12 +34,15 @@ Plataforma educativa y conjunto de laboratorios computacionales interactivos dis
   * **Mini-Simulador 1D Interactivo:** Intuición geométrica de las tangentes y residuos con autoescala dinámica (sin desbordamientos visuales) y control de pendiente post-fluencia.
 
 ### 3. [Clase 03 — Análisis Estático No Lineal: Pushover](https://odarroyo.github.io/analisis_no_lineal/03_analisis_pushover.html)
-* **Objetivo:** Determinar la curva de capacidad resistente y la ductilidad global de una estructura sometida a un patrón de cargas laterales triangular proporcional a la altura mediante control por desplazamiento.
+* **Objetivo:** Determinar la curva de capacidad resistente, ductilidad global y degradación post-pico de una edificación sometida a un patrón de cargas laterales triangular mediante control por desplazamiento, con leyes constitutivas trilineales completas.
 * **Características:**
-  * Edificio cortante de 2 pisos (2-DOF) sometido a un vector de fuerzas laterales proporcionales $F_1 = \lambda/3$, $F_2 = 2\lambda/3$ donde el factor de carga $\lambda$ es una incógnita del equilibrio.
-  * **Algoritmo de Control por Desplazamiento:** Incrementos secuenciales de desplazamiento objetivo en el techo $\Delta u_2$ y resolución iterativa de $\lambda$ y $u_1$ con Newton-Raphson bajo restricción cinemática.
-  * **Curva de Capacidad Pushover en Tiempo Real:** Gráfica interactiva de cortante basal $V_b$ vs. desplazamiento de techo $u_2$ con puntos de estado marcados paso a paso.
-  * **Inspector Matricial y Secuencia de Plastificación:** Desglose interactivo de las ecuaciones ampliadas, determinación del estado elasto-plástico por entrepiso y visualización física de la estructura deformada.
+  * Edificio cortante de 2 pisos (2-DOF) sometido a un vector de fuerzas proporcionales $F_1 = \lambda/3$, $F_2 = 2\lambda/3$ donde el factor de carga $\lambda$ es una incógnita del equilibrio.
+  * **Algoritmo de Control por Desplazamiento:** Incrementos secuenciales de desplazamiento de techo $\Delta u_2$ y resolución iterativa de $\lambda$ y $u_1$ con Newton-Raphson bajo restricción cinemática.
+  * **Leyes Constitutivas Trilineales con Ablandamiento:** Rama 1 (Elástica), Rama 2 (Endurecimiento) hasta desplazamiento pico $\Delta_p$, y Rama 3 (Ablandamiento descendente $k_t < 0$) hasta resistencia residual $F_{\text{res}}$.
+  * **Curva de Capacidad con Rama Descendente ($K_{\text{push}} < 0$):** Demostración interactiva de superación de puntos límite y descenso ordenado por la rama de degradación sin divergencia numérica.
+  * **Mecanismos de Colapso (Piso Blando vs. Piso Alto):** Concentración severa de deformaciones en el entrepiso degradado mientras los pisos no críticos experimentan descarga elástica reversible.
+  * **Inspector Matricial y Desglose Operacional:** Visualización en vivo del equilibrio exacto ($\mathbf{P} - \mathbf{F}_{\text{int}} = \mathbf{0}$) aun cuando la matriz tangente $[\mathbf{K}_t]$ es indefinida y $\det(\mathbf{K}_t) < 0$.
+  * **Controles Compactos:** Interfaz con sección de propiedades colapsable para ubicar el control de avance directamente al lado de la curva pushover.
 
 ---
 
