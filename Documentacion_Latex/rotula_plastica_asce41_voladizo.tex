@@ -1,0 +1,732 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ==============================================================================
+% PAQUETES DE CONFIGURACIÓN Y TIPOGRAFÍA
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot,es-noshorthands]{babel}
+\usepackage[margin=2.2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{microtype}
+\usepackage{booktabs,array,tabularx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,patterns,calc,positioning,decorations.pathmorphing,shapes.geometric,babel}
+\usepackage[skins,breakable]{tcolorbox}
+\usepackage{hyperref}
+
+% ==============================================================================
+% PALETA DE COLORES INSTITUCIONAL Y PEDAGÓGICA (TEMA ESMERALDA / UIS)
+% ==============================================================================
+\definecolor{uisgreen}{RGB}{5, 150, 105}       % Color principal Clase 04
+\definecolor{uisgreenlight}{RGB}{236, 253, 245}
+\definecolor{uisblue}{RGB}{2, 132, 199}
+\definecolor{uispurple}{RGB}{109, 40, 217}
+\definecolor{uisamber}{RGB}{217, 119, 6}
+\definecolor{uisrose}{RGB}{220, 38, 38}
+\definecolor{uisdark}{RGB}{15, 23, 42}
+\definecolor{uisgray}{RGB}{100, 116, 139}
+\definecolor{uislightbg}{RGB}{248, 250, 252}
+\definecolor{uisboxborder}{RGB}{203, 213, 225}
+
+% ==============================================================================
+% HIPERVÍNCULOS
+% ==============================================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=uisgreen,
+    citecolor=uisblue,
+    urlcolor=uisgreen,
+    pdftitle={La Rotula Plastica ASCE 41 en Columna en Voladizo - Teoria y Ejemplo Numerico},
+    pdfauthor={Prof. Orlando Arroyo - Universidad Industrial de Santander}
+}
+
+% ==============================================================================
+% ENCABEZADOS Y PIES DE PÁGINA (FANCYHDR)
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{\color{uisgreen}Análisis No Lineal de Estructuras} | Posgrado en Ing. Estructural}
+\fancyhead[R]{\small\color{uisgray}Universidad Industrial de Santander}
+\fancyfoot[L]{\small\color{uisgray}Prof. Orlando Arroyo}
+\fancyfoot[C]{\small\color{uisgray}Material Docente de Cátedra --- Clase 04}
+\fancyfoot[R]{\small\color{uisdark}\thepage\ / \pageref{LastPage}}
+
+% ==============================================================================
+% CAJAS DESTACADAS (TCOLORBOX)
+% ==============================================================================
+\newtcolorbox{conceptbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uislightbg,
+    colframe=uisgreen,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    sharp corners=downhill,
+    arc=4mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt,
+    shadow={2pt}{-2pt}{0pt}{black!10}
+}
+
+\newtcolorbox{stepbox}[1][]{
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=uisblue,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+\newtcolorbox{alertbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uisrose!5,
+    colframe=uisrose,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+\newtcolorbox{examplebox}[1][]{
+    enhanced,
+    breakable,
+    colback=uisamber!5,
+    colframe=uisamber,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+% ==============================================================================
+% DOCUMENTO PRINCIPAL
+% ==============================================================================
+\begin{document}
+
+% --- PORTADA / ENCABEZADO TITULAR ---
+\begin{center}
+    {\scshape\Large Universidad Industrial de Santander}\\[0.2cm]
+    {\large Escuela de Ingeniería Civil --- Posgrado en Ingeniería Estructural}\\[0.35cm]
+    {\color{uisgreen}\hrule height 2pt}\vspace{0.4cm}
+    {\huge\bfseries\color{uisdark} Mecánica de la Rótula Plástica Concentrada (ASCE 41)}\\[0.25cm]
+    {\Large\bfseries\color{uisgreen} Acoplamiento en Serie, Control por Desplazamiento y Fenómeno de Descarga Elástica (\textit{Springback}) en Columna en Voladizo}\\[0.35cm]
+    {\color{uisgreen}\hrule height 1pt}\vspace{0.35cm}
+    {\textbf{Autor:} Prof. Orlando Arroyo}\quad\textbullet\quad
+    {\textbf{Asignatura:} Análisis No Lineal de Estructuras}\quad\textbullet\quad
+    {\textbf{Versión:} Documentación Técnica Canónica (2026)}
+\end{center}
+
+\vspace{0.25cm}
+
+\begin{abstract}
+\noindent El presente documento desarrolla de manera rigurosa los fundamentos físicos, cinemáticos y constitutivos de una \textbf{rótula plástica concentrada} según los lineamientos de las normas \textbf{ASCE/SEI 41-17} y \textbf{ASCE/SEI 41-23}, aplicada al caso fundamental de una columna en voladizo (\textit{cantilever}) de sección rectangular ($b \times d$) y longitud $L$. Se modela la disipación inelástica mediante un resorte rotacional no lineal ubicado a una distancia representativa del $5\%$ de la altura ($x_h = 0.05 L$), acoplado en serie con el fuste elástico continuo del elemento. Se deduce formalmente la relación de flexibilidad combinada y se explica en detalle el algoritmo matemático para determinar la fuerza lateral cortante $V$ correspondiente a un desplazamiento objetivo impuesto $\Delta$ en el marco de un análisis estático no lineal (\textit{Pushover}). Asimismo, se demuestra matemática y físicamente el fenómeno de \textbf{descarga elástica} (\textit{springback}) del fuste durante la etapa de ablandamiento post-pico (\textit{softening}) de la rótula. Finalmente, se presentan cuatro pasos de cálculo numérico manual paso a paso con verificación exacta del equilibrio seccional.
+\end{abstract}
+
+\vspace{0.35cm}
+
+% ==============================================================================
+% SECCIÓN 1: INTRODUCCIÓN Y MODELO DE PLASTICIDAD CONCENTRADA
+% ==============================================================================
+\section{Introducción y Modelo de Plasticidad Concentrada}
+
+En el análisis inelástico de pórticos y elementos estructurales sometidos a acciones sísmicas severas, la disipación de energía por flexión se concentra en regiones finitas denominadas \textbf{zonas de rótula plástica}. Existen dos grandes enfoques computacionales para capturar este fenómeno:
+\begin{enumerate}
+    \item \textbf{Plasticidad Distribuida (\textit{Distributed Plasticity / Fiber Elements}):} El elemento se discretiza longitudinalmente en puntos de integración transversalmente divididos en fibras unidimensionales con relaciones constitutivas $\sigma - \varepsilon$ no lineales. Aunque es riguroso, exige un costo computacional elevado y es propenso a problemas de localización de deformaciones dependientes de la malla si no se aplican técnicas de regularización energética.
+    \item \textbf{Plasticidad Concentrada (\textit{Lumped / Concentrated Plasticity}):} Toda la deformación inelástica se idealiza en un \textbf{resorte rotacional de longitud cero} con una ley momento-rotación ($M_h - \theta_h$) precalibrada, mientras que el resto del elemento se mantiene con comportamiento elástico lineal. Este enfoque es la base fundamental de la evaluación basada en desempeño estipulada en los estándares ASCE 41.
+\end{enumerate}
+
+\begin{conceptbox}[¿Por qué ubicar la rótula plástica a $x_h = 0.05 L$? Fundamento Físico]
+En una columna en voladizo empotrada en la base y cargada lateralmente en la punta superior, el diagrama de momentos flectores es máximo en la base ($x=0$) y decrece linealmente hacia la punta ($x=L$). La zona de plastificación real del hormigón y fluencia del acero se extiende sobre una longitud finita $L_p$, comúnmente estimada mediante la fórmula semi-empírica de Paulay y Priestley (1992):
+\begin{equation}
+L_p \approx 0.08 L + 0.022 d_b f_y \approx 0.40 d \text{ a } 0.50 d \approx 0.10 L
+\end{equation}
+donde $d$ es el peralte de la sección y $d_b$ el diámetro del refuerzo longitudinal. La curvatura plástica real $\phi_p(x)$ se distribuye sobre este tramo. La cinemática equivalente de un resorte rotacional concentrado exige que la rotación plástica total $\theta_p = \int_0^{L_p} \phi_p(x) dx$ actúe en el \textbf{centroide del diagrama de curvatura inelástica}, el cual se sitúa aproximadamente en el punto medio de la zona plastificada:
+\begin{equation}
+x_h = \frac{L_p}{2} \approx 0.05 L
+\end{equation}
+Ubicar el resorte rotacional exactamente al $5\%$ de la altura captura con alta fidelidad la rotación de cuerpo rígido que experimenta la porción superior del elemento, dejando un brazo de palanca libre hacia la carga en la punta de:
+\begin{equation}
+h_{\text{lever}} = L - x_h = L - 0.05 L = 0.95 L
+\end{equation}
+\end{conceptbox}
+
+% --- FIGURA 1: DIAGRAMA TIKZ DE LA COLUMNA EN VOLADIZO ---
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.15, >=Stealth]
+    % Sistema de coordenadas
+    \coordinate (Base) at (0,0);
+    \coordinate (Hinge) at (0,0.5);
+    \coordinate (Top) at (0,5.5);
+    
+    % Empotramiento en la base
+    \draw[thick, fill=gray!30] (-1.2,-0.3) rectangle (1.2,0);
+    \draw[thick] (-1.2,0) -- (1.2,0);
+    \foreach \x in {-1.0,-0.7,...,1.0} {
+        \draw[thick] (\x,-0.3) -- (\x-0.2,-0.55);
+    }
+    
+    % Columna no deformada (eje de referencia)
+    \draw[dashed, color=uisgray, line width=1.2pt] (0,0) -- (0,5.5);
+    
+    % Tramo inferior (base a rótula)
+    \draw[line width=4pt, color=uisblue] (0,0) -- (0,0.5);
+    
+    % Resorte rotacional en 0.05 L
+    \draw[color=uisgreen, fill=uisgreen!20, line width=1.5pt] (0,0.5) circle (0.28cm);
+    \draw[color=uisgreen, line width=1.8pt] (-0.12,0.42) arc (200:520:0.16);
+    \node[right=8pt of Hinge, font=\footnotesize\sffamily] {\textbf{\color{uisgreen}Rótula ASCE 41} ($x_h = 0.05 L$)};
+    
+    % Fuste deformado (curvado elásticamente + rotación de cuerpo rígido)
+    \draw[line width=4pt, color=uisblue] 
+        (0,0.5) to[out=86, in=-92] (1.3,5.5);
+    
+    % Carga lateral V en la punta
+    \draw[->, color=uisrose, line width=2.5pt] (2.4,5.5) -- (1.35,5.5);
+    \node[right=3pt, font=\large\bfseries\color{uisrose}] at (2.4,5.5) {$V$};
+    
+    % Cotas de desplazamiento en la punta
+    \draw[dashed, color=uisgray] (0,5.5) -- (0,6.2);
+    \draw[dashed, color=uisgray] (1.3,5.5) -- (1.3,6.2);
+    \draw[<->, thick, color=uisdark] (0,6.0) -- (1.3,6.0);
+    \node[above, font=\small\bfseries\color{uisdark}] at (0.65,6.0) {$\Delta = \Delta_{\text{el}} + \Delta_{\theta}$};
+    
+    % Cotas verticales
+    \draw[<->, thick, color=uisdark] (-1.6,0) -- (-1.6,0.5);
+    \node[left, font=\footnotesize] at (-1.6,0.25) {$x_h = 0.05 L$};
+    
+    \draw[<->, thick, color=uisdark] (-1.6,0.5) -- (-1.6,5.5);
+    \node[left, font=\footnotesize] at (-1.6,3.0) {$h_{\text{lever}} = 0.95 L$};
+    
+    \draw[<->, thick, color=uisdark] (-2.5,0) -- (-2.5,5.5);
+    \node[left, font=\small\bfseries] at (-2.5,2.75) {$L$};
+    
+    % Sección transversal inset
+    \begin{scope}[shift={(4.0,2.2)}]
+        \draw[thick, fill=gray!15] (-0.9,-1.2) rectangle (0.9,1.2);
+        \draw[<->, thick] (-0.9,-1.45) -- (0.9,-1.45);
+        \node[below, font=\footnotesize] at (0,-1.45) {Base $b$};
+        \draw[<->, thick] (1.15,-1.2) -- (1.15,1.2);
+        \node[right, font=\footnotesize] at (1.15,0) {Peralte $d$};
+        % Barras de refuerzo
+        \foreach \px/\py in {-0.65/-0.95, 0.65/-0.95, -0.65/0.95, 0.65/0.95, -0.65/0, 0.65/0} {
+            \fill[uisdark] (\px,\py) circle (0.09);
+        }
+        \node[font=\footnotesize\sffamily\bfseries, color=uisdark] at (0,1.55) {Sección de Columna};
+        \node[font=\scriptsize, color=uisgray] at (0,-1.85) {$I = \frac{1}{12} b d^3$};
+    \end{scope}
+\end{tikzpicture}
+\caption{Esquema mecánico de la columna en voladizo con rótula plástica concentrada al $5\%$ de $L$ y sección rectangular de concreto armado.}
+\label{fig:columna_esquema}
+\end{figure}
+
+% ==============================================================================
+% SECCIÓN 2: CURVA CONSTITUTIVA ASCE 41 DE LA RÓTULA
+% ==============================================================================
+\section{Curva Constitutiva de la Rótula según ASCE 41}
+
+La respuesta momento-rotación ($M_h - \theta_h$) del resorte concentrado sigue la curva envolvente generalizada (\textit{backbone curve}) definida en los capítulos de evaluación sísmica no lineal de la norma ASCE/SEI 41-17 y ASCE/SEI 41-23.
+
+% --- FIGURA 2: CURVA ASCE 41 TIKZ ---
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.1, >=Stealth]
+    % Ejes coordenados
+    \draw[->, thick, color=uisdark] (-0.3,0) -- (9.5,0) node[right, font=\small\bfseries] {$\theta_h$ (rad)};
+    \draw[->, thick, color=uisdark] (0,-0.3) -- (0,5.5) node[above, font=\small\bfseries] {$M_h$ (kN$\cdot$m)};
+    
+    % Coordenadas de los puntos ASCE 41
+    \coordinate (A) at (0,0);
+    \coordinate (B) at (1.5,3.2);
+    \coordinate (C) at (4.5,4.2);
+    \coordinate (D) at (5.0,0.85);
+    \coordinate (E) at (8.0,0.85);
+    \coordinate (F) at (8.8,0.1);
+    
+    % Umbrales IO, LS, CP
+    \coordinate (IO) at (2.25, 0);
+    \coordinate (LS) at (3.75, 0);
+    \coordinate (CP) at (6.25, 0);
+    
+    % Líneas verticales de desempeño
+    \draw[dashed, color=uisblue, line width=1pt] (2.25,0) -- (2.25,3.45) node[above, font=\footnotesize\bfseries, color=uisblue] {IO};
+    \draw[dashed, color=uisamber, line width=1pt] (3.75,0) -- (3.75,3.95) node[above, font=\footnotesize\bfseries, color=uisamber] {LS};
+    \draw[dashed, color=uisrose, line width=1pt] (6.25,0) -- (6.25,1.2) node[above, font=\footnotesize\bfseries, color=uisrose] {CP};
+    
+    % Trazado de la curva troncal
+    \draw[line width=2pt, color=uisgreen] (A) -- (B);
+    \draw[line width=2pt, color=uisamber] (B) -- (C);
+    \draw[line width=2pt, color=uisrose] (C) -- (D);
+    \draw[line width=2pt, color=uispurple] (D) -- (E);
+    \draw[line width=1.5pt, color=uisgray, dashed] (E) -- (F);
+    
+    % Puntos destacados
+    \foreach \p/\pos in {A/below left, B/above left, C/above, D/below left, E/above right} {
+        \fill[uisdark] (\p) circle (2.8pt);
+        \node[\pos, font=\bfseries\sffamily] at (\p) {\p};
+    }
+    
+    % Líneas de referencia horizontales
+    \draw[dotted, thick, color=uisgray] (0,3.2) node[left, font=\footnotesize] {$M_y$} -- (B);
+    \draw[dotted, thick, color=uisgray] (0,4.2) node[left, font=\footnotesize] {$M_u = Q_y M_y$} -- (C);
+    \draw[dotted, thick, color=uisgray] (0,0.85) node[left, font=\footnotesize] {$M_r = c M_y$} -- (D);
+    
+    % Cotas de rotación ASCE
+    \draw[<->, thick, color=uisdark] (1.5,-0.6) -- (4.5,-0.6);
+    \node[below, font=\footnotesize] at (3.0,-0.6) {Parámetro $a$};
+    
+    \draw[<->, thick, color=uisdark] (1.5,-1.3) -- (8.0,-1.3);
+    \node[below, font=\footnotesize] at (4.75,-1.3) {Parámetro $b$};
+    
+    \draw[dotted, color=uisgray] (1.5,0) -- (1.5,-1.5);
+    \draw[dotted, color=uisgray] (4.5,0) -- (4.5,-0.8);
+    \draw[dotted, color=uisgray] (8.0,0) -- (8.0,-1.5);
+    
+    % Etiquetas de tramos
+    \node[font=\scriptsize\color{uisgreen}, rotate=42] at (0.8,2.0) {Elástico ($k_{\theta,0}$)};
+    \node[font=\scriptsize\color{uisamber}, rotate=14] at (3.0,3.95) {Endurecimiento};
+    \node[font=\scriptsize\color{uisrose}, rotate=-78] at (4.9,2.6) {Ablandamiento ($k_t < 0$)};
+    \node[font=\scriptsize\color{uispurple}] at (6.5,1.15) {Meseta Residual ($c M_y$)};
+\end{tikzpicture}
+\caption{Curva troncal generalizada momento-rotación de ASCE 41 con identificación de puntos canónicos A, B, C, D, E y niveles de desempeño sísmico (IO, LS, CP).}
+\label{fig:curva_asce41}
+\end{figure}
+
+Los cinco puntos canónicos que gobiernan la respuesta inelástica son:
+\begin{itemize}
+    \item \textbf{Punto A $(0, 0)$:} Origen no deformado ni cargado.
+    \item \textbf{Punto B $(\theta_y, M_y)$:} Inicio de la fluencia del refuerzo longitudinal a tracción y agrietamiento severo. La rigidez rotacional elástica inicial del resorte es:
+    \begin{equation}
+    k_{\theta,0} = \frac{M_y}{\theta_y}
+    \end{equation}
+    \item \textbf{Punto C $(\theta_u, M_u)$:} Capacidad máxima a flexión (\textit{capping point}). La rotación es $\theta_u = \theta_y + a$, donde $a$ es la capacidad de rotación plástica antes de iniciar la degradación. La sobre-resistencia se modela como $M_u = Q_y M_y$ (típicamente $Q_y \approx 1.10 - 1.20$).
+    \item \textbf{Punto D $(\theta_r, M_r)$:} Inicio de la meseta residual tras una caída pronunciada de resistencia (ablandamiento post-pico con rigidez tangente negativa $k_t < 0$). La resistencia residual es $M_r = c \cdot M_y$ (para columnas con falla dúctil a flexión, $c \approx 0.20$).
+    \item \textbf{Punto E $(\theta_e, M_r)$:} Límite último de deformación plástica $\theta_e = \theta_y + b$, más allá del cual ocurre pérdida total de soporte de cargas de gravedad ($M_h \to 0$, colapso seccional).
+\end{itemize}
+
+% ==============================================================================
+% SECCIÓN 3: ACOPLAMIENTO CINEMÁTICO Y ECUACIONES DE EQUILIBRIO
+% ==============================================================================
+\section{Cinemática del Sistema en Serie y Equilibrio Estático}
+
+El sistema columna-rótula constituye un \textbf{ensamblaje mecánico en serie} compuesto por:
+\begin{enumerate}
+    \item Un elemento continuo de flexión elástica con módulo de elasticidad $E$ e inercia gruesa $I = \frac{1}{12} b d^3$.
+    \item Un resorte rotacional concentrado de momento $M_h$ y giro relativo $\theta_h$ en $x = x_h = 0.05 L$.
+\end{enumerate}
+
+\subsection{Flexibilidad Combinada en Serie}
+Al aplicar una carga horizontal $V$ en la punta superior de la columna, el desplazamiento lateral total en la punta $\Delta$ es la suma de dos flexibilidades cinemáticas:
+\begin{equation}
+\Delta = \Delta_{\text{el}} + \Delta_{\theta}
+\label{eq:delta_suma}
+\end{equation}
+donde:
+\begin{itemize}
+    \item $\Delta_{\text{el}}$ es la deflexión puramente elástica debida a la curvatura continua del fuste:
+    \begin{equation}
+    \Delta_{\text{el}} = \frac{V L^3}{3 E I}
+    \label{eq:delta_el}
+    \end{equation}
+    \item $\Delta_{\theta}$ es la componente de desplazamiento originada por la rotación $\theta_h$ en el resorte, la cual genera una rotación de cuerpo rígido sobre la porción superior de longitud $0.95 L$:
+    \begin{equation}
+    \Delta_{\theta} = \theta_h \cdot (L - x_h) = \theta_h \cdot (0.95 L)
+    \label{eq:delta_theta}
+    \end{equation}
+\end{itemize}
+
+\subsection{Equilibrio Seccional y Diagrama de Cuerpo Libre}
+Aislamos la porción superior de la columna realizando un corte transversal exactamente en el resorte rotacional ($x = x_h = 0.05 L$). Por equilibrio estático del sólido libre:
+\begin{equation}
+\sum M_{\text{rótula}} = 0 \implies V \cdot (0.95 L) - M_h = 0
+\end{equation}
+Por consiguiente, la fuerza cortante lateral $V$ y el momento flector interno en la rótula $M_h$ están vinculados de manera unívoca por:
+\begin{equation}
+V = \frac{M_h}{0.95 L} \iff M_h = V \cdot (0.95 L)
+\label{eq:equilibrio_vh}
+\end{equation}
+
+El momento en la base empotrada ($x = 0$) tiene un brazo de palanca igual a la altura total $L$:
+\begin{equation}
+M_{\text{base}} = V \cdot L = \frac{M_h}{0.95 L} \cdot L = \frac{M_h}{0.95} \approx 1.0526 \cdot M_h
+\label{eq:mbase}
+\end{equation}
+Nótese que el momento basal es siempre un $5.26\%$ superior al momento que solicita a la rótula plástica, lo cual coincide exactamente con la diferencia de brazos mecánicos ($L$ vs. $0.95 L$).
+
+% ==============================================================================
+% SECCIÓN 4: DETERMINACIÓN DEL CORTANTE BAJO CONTROL DE DESPLAZAMIENTO
+% ==============================================================================
+\section{Determinación del Cortante Lateral \texorpdfstring{$V$}{V} para un Desplazamiento \texorpdfstring{$\Delta$}{Delta}}
+
+\begin{conceptbox}[Planteamiento del Problema Inverso]
+En un análisis Pushover convencional, la variable independiente que se incrementa monótonamente es el \textbf{desplazamiento en la punta} $\Delta$. Por tanto, el problema fundamental consiste en responder:
+\begin{center}
+    \textit{Dado un desplazamiento lateral impuesto $\Delta^*$, ¿cuál es el cortante lateral equilibrado $V^*$?}
+\end{center}
+\end{conceptbox}
+
+\subsection{Derivación de la Ecuación Fundamental de Compatibilidad}
+Sustituyendo la relación de equilibrio \eqref{eq:equilibrio_vh} en la componente elástica \eqref{eq:delta_el}:
+\begin{equation}
+\Delta_{\text{el}} = \frac{\left(\frac{M_h(\theta_h)}{0.95 L}\right) L^3}{3 E I} = \frac{M_h(\theta_h) L^2}{3 \times 0.95 E I} = \frac{M_h(\theta_h) L^2}{2.85 E I}
+\end{equation}
+Reemplazando en la expresión cinemática total \eqref{eq:delta_suma}:
+\begin{equation}
+\Delta(\theta_h) = \frac{M_h(\theta_h) L^2}{2.85 E I} + 0.95 L \cdot \theta_h
+\label{eq:delta_fundamental}
+\end{equation}
+
+Esta ecuación relaciona directamente el desplazamiento total impuesto $\Delta$ con la rotación interna del resorte $\theta_h$, donde $M_h(\theta_h)$ es la función constitutiva no lineal ASCE 41 detallada en la Sección~2.
+
+\subsection{Algoritmo Numérico de Solución}
+Para cualquier incremento de desplazamiento impuesto $\Delta^*$, se plantea la función residuo cinemático:
+\begin{equation}
+g(\theta_h) = \frac{M_h(\theta_h) L^2}{2.85 E I} + 0.95 L \cdot \theta_h - \Delta^* = 0
+\label{eq:residuo_cinematico}
+\end{equation}
+
+\begin{stepbox}[Pasos del Algoritmo de Determinación de Cortante]
+\begin{enumerate}
+    \item \textbf{Entrada:} Desplazamiento objetivo $\Delta^*$, geometría ($L, b, d$), material ($E, f'_c$) y parámetros ASCE 41 ($M_y, \theta_y, a, Q_y, c, b$).
+    \item \textbf{Búsqueda de Raíz:} Se resuelve $g(\theta_h) = 0$ para encontrar $\theta_h^*$. Dado que en secciones de columnas físicas la rigidez flexural del fuste es finita y positiva, la función $g(\theta_h)$ es estrictamente monótona creciente en el rango de interés, lo que garantiza una solución única mediante el método de bisección o Newton-Raphson:
+    \begin{equation}
+    \theta_h^{(k+1)} = \theta_h^{(k)} - \frac{g(\theta_h^{(k)})}{g'(\theta_h^{(k)})}
+    \end{equation}
+    donde la derivada tangente local es:
+    \begin{equation}
+    g'(\theta_h) = \frac{L^2}{2.85 E I} k_{t,\theta}(\theta_h) + 0.95 L \quad \text{con } k_{t,\theta} = \frac{dM_h}{d\theta_h}
+    \end{equation}
+    \item \textbf{Evaluación del Momento en la Rótula:} Con el valor convergido $\theta_h^*$, se evalúa la ley constitutiva ASCE 41:
+    \begin{equation}
+    M_h^* = f_{\text{ASCE}}(\theta_h^*)
+    \end{equation}
+    \item \textbf{Determinación del Cortante Lateral:} Por equilibrio estático riguroso:
+    \begin{equation}
+    V^* = \frac{M_h^*}{0.95 L}
+    \end{equation}
+    \item \textbf{Verificación y Descomposición:} Se recalculan las componentes individuales:
+    \begin{equation}
+    \Delta_{\text{el}}^* = \frac{V^* L^3}{3 E I}, \qquad \Delta_{\theta}^* = \theta_h^* \cdot (0.95 L)
+    \end{equation}
+    verificando que $\Delta_{\text{el}}^* + \Delta_{\theta}^* = \Delta^*$ y que el residuo de momento $|V^* \cdot 0.95 L - M_h^*| < 10^{-12}\text{ kN}\cdot\text{m}$.
+\end{enumerate}
+\end{stepbox}
+
+\subsection{Rigidez Lateral Tangente del Sistema Global}
+La rigidez tangente de la curva pushover ($K_t = dV / d\Delta$) se obtiene aplicando la regla de la cadena:
+\begin{equation}
+K_t = \frac{dV}{d\Delta} = \frac{dV}{d\theta_h} \cdot \left(\frac{d\Delta}{d\theta_h}\right)^{-1}
+\end{equation}
+Diferenciando las ecuaciones \eqref{eq:equilibrio_vh} y \eqref{eq:delta_fundamental}:
+\begin{equation}
+\frac{dV}{d\theta_h} = \frac{1}{0.95 L} k_{t,\theta}, \qquad \frac{d\Delta}{d\theta_h} = \frac{L^2}{2.85 E I} k_{t,\theta} + 0.95 L
+\end{equation}
+Por tanto, la rigidez lateral global tangente es:
+\begin{equation}
+K_t = \frac{k_{t,\theta}}{0.95 L \left( \frac{L^2}{2.85 E I} k_{t,\theta} + 0.95 L \right)} = \frac{1}{\frac{L^3}{3 E I} + \frac{(0.95 L)^2}{k_{t,\theta}}}
+\label{eq:kt_global}
+\end{equation}
+Esta formulación en serie revela directamente que:
+\begin{itemize}
+    \item En el rango elástico inicial ($k_{t,\theta} = k_{\theta,0} > 0$): $K_t = K_0 > 0$.
+    \item En el punto pico C ($k_{t,\theta} = 0$): el numerador se anula $\implies K_t = 0$ (fuerza máxima alcanzada).
+    \item En el tramo de ablandamiento C--D ($k_{t,\theta} < 0$): $K_t < 0$, generando la pendiente descendente de la curva pushover sin divergencias numéricas gracias al control por desplazamiento.
+\end{itemize}
+
+% ==============================================================================
+% SECCIÓN 5: FENÓMENO DE DESCARGA ELÁSTICA (SPRINGBACK)
+% ==============================================================================
+\section{Demostración del Fenómeno de Descarga Elástica (\textit{Springback})}
+
+Uno de los conceptos físicos más sutiles y formativos en ingeniería estructural no lineal es el comportamiento del fuste elástico durante la degradación de la rótula.
+
+\begin{alertbox}[Demostración Analítica del Enderezamiento del Fuste]
+Durante la rama descendente post-pico (tramo C--D de la curva ASCE 41), el resorte rotacional experimenta ablandamiento:
+\begin{equation}
+k_{t,\theta} = \frac{dM_h}{d\theta_h} < 0 \implies dM_h < 0
+\end{equation}
+Dado que por equilibrio estricto $V = \frac{M_h}{0.95 L}$, al disminuir el momento interno resistente, la fuerza cortante lateral $V$ \textbf{debe disminuir obligatoriamente}:
+\begin{equation}
+dV = \frac{dM_h}{0.95 L} < 0
+\end{equation}
+Analicemos la derivada de la deformación elástica del fuste respecto al avance del desplazamiento total $\Delta$:
+\begin{equation}
+\frac{d\Delta_{\text{el}}}{d\Delta} = \frac{L^3}{3 E I} \frac{dV}{d\Delta} = \frac{L^3}{3 E I} K_t
+\end{equation}
+Como en el ablandamiento $K_t < 0$, se concluye formalmente que:
+\begin{equation}
+\frac{d\Delta_{\text{el}}}{d\Delta} < 0 \iff d\Delta_{\text{el}} < 0
+\end{equation}
+\textbf{Conclusión física:} ¡A pesar de que el desplazamiento total en la punta $\Delta$ continúa aumentando hacia adelante, la deflexión elástica del fuste $\Delta_{\text{el}}$ DISMINUYE! El fuste de concreto de la columna se descarga elásticamente y se endereza.
+\end{alertbox}
+
+Para compensar esta contracción elástica del fuste y al mismo tiempo acomodar el incremento de desplazamiento global positivo ($d\Delta > 0$), la rotación de la rótula $\theta_h$ debe acelerarse de forma extraordinaria:
+\begin{equation}
+d\Delta_{\theta} = d\Delta - d\Delta_{\text{el}} = d\Delta + |d\Delta_{\text{el}}| > d\Delta
+\end{equation}
+\begin{equation}
+\frac{d\Delta_{\theta}}{d\Delta} = 1 - \frac{d\Delta_{\text{el}}}{d\Delta} > 1
+\end{equation}
+La rótula concentra toda la deformación inelástica destructiva, abriéndose con mayor velocidad para compensar la energía elástica que el fuste le transfiere al relajarse.
+
+% ==============================================================================
+% SECCIÓN 6: EJEMPLO NUMÉRICO PASO A PASO
+% ==============================================================================
+\section{Ejemplo Numérico Desarrollado Paso a Paso}
+
+A continuación, se desarrolla el cálculo analítico manual de una columna típica idéntica a la calibrada en el laboratorio virtual:
+
+\subsection{Parámetros Geométricos y Mecánicos}
+\begin{itemize}
+    \item Longitud de columna: $L = 3.00\text{ m}$.
+    \item Sección transversal: $b = 0.35\text{ m}$ (ancho), $d = 0.45\text{ m}$ (peralte).
+    \item Concreto: $f'_c = 28\text{ MPa} \implies E_c = 4700 \sqrt{28} \times 1000 = 24,870,062\text{ kN/m}^2$.
+    \item Inercia gruesa:
+    \begin{equation}
+    I = \frac{1}{12} b d^3 = \frac{1}{12} (0.35) (0.45)^3 = 2.6578 \times 10^{-3}\text{ m}^4
+    \end{equation}
+    \item Rigidez a flexión: $E I = 24870062 \times 0.0026578 = 66,099.7\text{ kN}\cdot\text{m}^2$.
+    \item Rigidez elástica del voladizo:
+    \begin{equation}
+    k_{\text{beam}} = \frac{3 E I}{L^3} = \frac{3 \times 66099.7}{27.0} = 7,344.4\text{ kN/m} = 7.3444\text{ kN/mm}
+    \end{equation}
+    \item Ubicación del resorte: $x_h = 0.05 L = 0.15\text{ m} \implies h_{\text{lever}} = 0.95 L = 2.85\text{ m}$.
+    \item Acero y cuantía: $f_y = 420\text{ MPa}$, $\rho = 1.50\%$.
+    \item Capacidad de fluencia estimada: $M_y = 379.5\text{ kN}\cdot\text{m}$.
+    \item Rotación de fluencia del resorte: $\theta_y = 0.0020\text{ rad} \implies k_{\theta,0} = \frac{379.5}{0.0020} = 189,750\text{ kN}\cdot\text{m/rad}$.
+    \item Parámetros ASCE 41:
+    \begin{itemize}
+        \item $a = 0.020\text{ rad}$, $Q_y = 1.15 \implies M_u = 1.15 \times 379.5 = 436.4\text{ kN}\cdot\text{m}$, $\theta_u = \theta_y + a = 0.0220\text{ rad}$.
+        \item $c = 0.20 \implies M_r = 0.20 \times 379.5 = 75.9\text{ kN}\cdot\text{m}$, $\theta_r = 0.0250\text{ rad}$.
+        \item $b = 0.040\text{ rad} \implies \theta_e = \theta_y + b = 0.0420\text{ rad}$.
+    \end{itemize}
+\end{itemize}
+
+Constante geométrica de compatibilidad:
+\begin{equation}
+C_{\text{el}} = \frac{L^2}{2.85 E I} = \frac{(3.0)^2}{2.85 \times 66099.7} = 4.7774 \times 10^{-5}\text{ m/(kN}\cdot\text{m)}
+\end{equation}
+La ecuación de desplazamiento \eqref{eq:delta_fundamental} se reduce a:
+\begin{equation}
+\Delta(\theta_h) = 4.7774 \times 10^{-5} M_h(\theta_h) + 2.85 \cdot \theta_h \quad \text{[m]}
+\end{equation}
+
+% --- PASO 1 ---
+\subsection{Paso 1: Rango Elástico Lineal (\texorpdfstring{$\Delta = 10.0\text{ mm} = 0.010\text{ m}$}{Delta = 10.0 mm})}
+
+\begin{examplebox}[Cálculo Detallado del Paso 1]
+Como $\Delta$ es pequeño, asumimos comportamiento elástico de la rótula: $M_h = k_{\theta,0} \theta_h = 189750 \theta_h$.
+Sustituyendo en la ecuación cinemática:
+\begin{align}
+0.010 &= 4.7774 \times 10^{-5} (189750 \theta_h) + 2.85 \theta_h \nonumber\\
+0.010 &= 9.0651 \theta_h + 2.85 \theta_h = 11.9151 \theta_h
+\end{align}
+Despejamos el giro en la rótula:
+\begin{equation}
+\theta_h = \frac{0.010}{11.9151} = 8.3927 \times 10^{-4}\text{ rad} = 0.8393\text{ mrad}
+\end{equation}
+Verificación de rango: $\theta_h = 0.000839 < \theta_y = 0.0020\text{ rad} \implies$ \textbf{¡Correcto, rango elástico A--B!}
+
+Calculamos el momento en la rótula:
+\begin{equation}
+M_h = 189750 \times 8.3927 \times 10^{-4} = 159.25\text{ kN}\cdot\text{m}
+\end{equation}
+Calculamos la fuerza cortante lateral por equilibrio:
+\begin{equation}
+V = \frac{M_h}{0.95 L} = \frac{159.25}{2.85} = \mathbf{55.88\text{ kN}}
+\end{equation}
+Momento en la base:
+\begin{equation}
+M_{\text{base}} = V \cdot L = 55.88 \times 3.0 = \mathbf{167.64\text{ kN}\cdot\text{m}} = \frac{159.25}{0.95}
+\end{equation}
+Descomposición de desplazamientos:
+\begin{align}
+\Delta_{\text{el}} &= \frac{V L^3}{3 E I} = \frac{55.88 \times 27}{3 \times 66099.7} = 7.61 \times 10^{-3}\text{ m} = \mathbf{7.61\text{ mm}}\\
+\Delta_{\theta} &= \theta_h \times 2.85 = 8.3927 \times 10^{-4} \times 2.85 = 2.39 \times 10^{-3}\text{ m} = \mathbf{2.39\text{ mm}}
+\end{align}
+Verificación de compatibilidad y equilibrio:
+\begin{equation}
+\Delta_{\text{el}} + \Delta_{\theta} = 7.61 + 2.39 = \mathbf{10.00\text{ mm}} \quad (\text{Error} = 0.000\text{ mm})
+\end{equation}
+\begin{equation}
+R_M = V \cdot (0.95 L) - M_h = 55.88 \times 2.85 - 159.25 = \mathbf{0.00\text{ kN}\cdot\text{m}} \quad \checkmark
+\end{equation}
+\end{examplebox}
+
+% --- PASO 2 ---
+\subsection{Paso 2: Fluencia e Inicio de Plastificación (\texorpdfstring{$\theta_h = \theta_y = 0.0020\text{ rad}$}{theta = 0.0020 rad})}
+
+\begin{examplebox}[Cálculo Detallado del Paso 2 (Punto B de ASCE 41)]
+En el umbral de plastificación, el momento alcanza la fluencia seccional:
+\begin{equation}
+M_h = M_y = 379.50\text{ kN}\cdot\text{m}
+\end{equation}
+El cortante lateral en fluencia es:
+\begin{equation}
+V_y = \frac{M_y}{0.95 L} = \frac{379.50}{2.85} = \mathbf{133.16\text{ kN}}
+\end{equation}
+Momento basal en fluencia:
+\begin{equation}
+M_{\text{base},y} = 133.16 \times 3.0 = \mathbf{399.47\text{ kN}\cdot\text{m}}
+\end{equation}
+Desplazamiento global de fluencia en la punta:
+\begin{align}
+\Delta_y &= \frac{V_y L^3}{3 E I} + \theta_y \times 2.85 \nonumber\\
+&= \frac{133.16 \times 27}{3 \times 66099.7} + 0.0020 \times 2.85 \nonumber\\
+&= 0.01813\text{ m} + 0.00570\text{ m} = 0.02383\text{ m} = \mathbf{23.83\text{ mm}}
+\end{align}
+Rigidez lateral inicial elástica global:
+\begin{equation}
+K_0 = \frac{V_y}{\Delta_y} = \frac{133.16\text{ kN}}{23.83\text{ mm}} = \mathbf{5.588\text{ kN/mm}} = 5,588\text{ kN/m}
+\end{equation}
+\end{examplebox}
+
+% --- PASO 3 ---
+\subsection{Paso 3: Endurecimiento Plástico (\texorpdfstring{$\Delta = 40.0\text{ mm} = 0.040\text{ m}$}{Delta = 40.0 mm})}
+
+\begin{examplebox}[Cálculo Detallado del Paso 3 (Tramo B--C)]
+Como $\Delta = 40.0\text{ mm} > \Delta_y = 23.83\text{ mm}$, la rótula ha plastificado y se encuentra en la rama de endurecimiento plástico (tramo B--C).
+La ley de endurecimiento entre $B$ ($0.002, 379.5$) y $C$ ($0.022, 436.4$) tiene una pendiente tangente:
+\begin{equation}
+k_{t,\theta} = \frac{M_u - M_y}{\theta_u - \theta_y} = \frac{436.425 - 379.50}{0.020} = \frac{56.925}{0.020} = 2,846.25\text{ kN}\cdot\text{m/rad}
+\end{equation}
+La ecuación constitutiva en este tramo es:
+\begin{equation}
+M_h(\theta_h) = 379.50 + 2846.25 (\theta_h - 0.0020) = 373.8075 + 2846.25 \theta_h
+\end{equation}
+Sustituimos en la ecuación de compatibilidad cinemática:
+\begin{align}
+0.040 &= 4.7774 \times 10^{-5} (373.8075 + 2846.25 \theta_h) + 2.85 \theta_h \nonumber\\
+0.040 &= 0.017858 + 0.13598 \theta_h + 2.85 \theta_h \nonumber\\
+0.022142 &= 2.98598 \theta_h \implies \theta_h = \mathbf{7.4153 \times 10^{-3}\text{ rad}} = \mathbf{7.42\text{ mrad}}
+\end{align}
+Momento resistente en la rótula:
+\begin{equation}
+M_h = 379.50 + 2846.25 (0.0074153 - 0.0020) = \mathbf{394.91\text{ kN}\cdot\text{m}}
+\end{equation}
+Cortante lateral equilibrado:
+\begin{equation}
+V = \frac{M_h}{2.85} = \frac{394.91}{2.85} = \mathbf{138.56\text{ kN}}
+\end{equation}
+Descomposición de desplazamientos:
+\begin{align}
+\Delta_{\text{el}} &= \frac{138.56 \times 27}{3 \times 66099.7} = 0.01887\text{ m} = \mathbf{18.87\text{ mm}}\\
+\Delta_{\theta} &= 0.0074153 \times 2.85 = 0.02113\text{ m} = \mathbf{21.13\text{ mm}}\\
+\Delta_{\text{total}} &= 18.87 + 21.13 = \mathbf{40.00\text{ mm}} \quad (\text{Equilibrio y compatibilidad exactos})
+\end{align}
+Rigidez tangente global en endurecimiento:
+\begin{align}
+K_t &= \frac{1}{\frac{1}{7.3444} + \frac{(2.85)^2}{2.84625}} = \frac{1}{0.13616 + 2.85375} = \mathbf{0.334\text{ kN/mm}} \nonumber\\
+    &\quad (\text{Degradación severa de rigidez: } K_t \approx 0.06 K_0)
+\end{align}
+\end{examplebox}
+
+% --- PASO 4 ---
+\subsection{Paso 4: Ablandamiento y Descarga Elástica (\texorpdfstring{$\Delta = 100.0\text{ mm} = 0.100\text{ m}$}{Delta = 100.0 mm})}
+
+\begin{examplebox}[Cálculo Detallado del Paso 4 (Meseta Residual y Comprobación de Springback)]
+A $\Delta = 100\text{ mm}$, la rótula ha superado el tramo de ablandamiento post-pico C--D y ha ingresado en la meseta residual D--E:
+\begin{equation}
+M_h = M_r = c \cdot M_y = 0.20 \times 379.50 = \mathbf{75.90\text{ kN}\cdot\text{m}}
+\end{equation}
+El cortante lateral se reduce drásticamente por pérdida de capacidad en la rótula:
+\begin{equation}
+V = \frac{M_r}{2.85} = \frac{75.90}{2.85} = \mathbf{26.63\text{ kN}}
+\end{equation}
+Calculamos la deformación elástica del fuste para este cortante residual:
+\begin{equation}
+\Delta_{\text{el}} = \frac{V L^3}{3 E I} = \frac{26.63 \times 27}{3 \times 66099.7} = 3.63 \times 10^{-3}\text{ m} = \mathbf{3.63\text{ mm}}
+\end{equation}
+\textbf{¡Demostración de Springback!:}\\
+En el Paso 3 ($\Delta = 40\text{ mm}$), la deformación elástica del fuste era $\Delta_{\text{el}} = 18.87\text{ mm}$. En el pico C llegó a ser $\approx 19.8\text{ mm}$. Ahora, a $\Delta = 100\text{ mm}$, $\Delta_{\text{el}}$ ha caído a solo \textbf{3.63 mm}. ¡El fuste ha recuperado más de $16\text{ mm}$ de deflexión elástica enderezándose!
+
+El aporte de rotación en la rótula plástica debe absorber todo el resto del desplazamiento:
+\begin{equation}
+\Delta_{\theta} = \Delta - \Delta_{\text{el}} = 100.0 - 3.63 = \mathbf{96.37\text{ mm}} = 0.09637\text{ m}
+\end{equation}
+El giro en la rótula se dispara a:
+\begin{equation}
+\theta_h = \frac{\Delta_{\theta}}{2.85} = \frac{0.09637}{2.85} = \mathbf{0.03381\text{ rad}} = \mathbf{33.81\text{ mrad}}
+\end{equation}
+Verificación de rango: $\theta_r = 0.0250 < \theta_h = 0.03381 < \theta_e = 0.0420\text{ rad} \implies$ \textbf{¡Meseta residual D--E confirmada!}
+
+Residuo numérico exacto:
+\begin{equation}
+R_M = 26.63 \times 2.85 - 75.90 = 75.90 - 75.90 = \mathbf{0.000\text{ kN}\cdot\text{m}} \quad \checkmark
+\end{equation}
+\end{examplebox}
+
+% ==============================================================================
+% SECCIÓN 7: TABLA COMPARATIVA DE RESULTADOS
+% ==============================================================================
+\section{Tabla Comparativa de Resultados en las Fases de Deformación}
+
+La Tabla~\ref{tab:resumen_pushover} resume la evolución de las variables mecánicas a lo largo del proceso de empuje Pushover con control por desplazamiento.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.25}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Fase / Punto} & $\bm{\Delta}$ [mm] & \textbf{Estado ASCE} & $\bm{\theta_h}$ [mrad] & $\bm{M_h}$ [kN$\cdot$m] & $\bm{V}$ [kN] & $\bm{M_{\text{base}}}$ [kN$\cdot$m] & $\bm{\Delta_{\text{el}}}$ [mm] & $\bm{\Delta_{\theta}}$ [mm] \\
+\midrule
+1. Reposo & 0.0 & Elástico A & 0.00 & 0.0 & 0.0 & 0.0 & 0.00 & 0.00 \\
+2. Elástico & 10.0 & Elástico A--B & 0.84 & 159.3 & 55.9 & 167.6 & 7.61 & 2.39 \\
+3. Fluencia (B) & 23.8 & Umbral Fluencia & 2.00 & 379.5 & 133.2 & 399.5 & 18.13 & 5.70 \\
+4. Endurecimiento & 40.0 & Plástico B--C & 7.42 & 394.9 & 138.6 & 415.7 & 18.87 & 21.13 \\
+5. Capacidad Pico (C) & 82.5 & Capping Point & 22.00 & 436.4 & 153.1 & 459.4 & 19.82 & 62.70 \\
+6. Ablandamiento & 86.0 & Degradación C--D & 23.50 & 256.2 & 89.9 & 269.7 & 12.22 & 66.98 \\
+7. Residual (D--E) & 100.0 & Meseta Residual & 33.81 & 75.9 & 26.6 & 79.9 & \textbf{3.63} & \textbf{96.37} \\
+8. Límite Último (E) & 123.3 & Colapso Inminente & 42.00 & 75.9 & 26.6 & 79.9 & 3.63 & 119.70 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Evolución paso a paso de fuerzas, momentos y deformaciones. Nótese la marcada reducción de $\Delta_{\text{el}}$ de 19.82 mm a 3.63 mm durante el ablandamiento post-pico (descarga elástica o \textit{springback}).}
+\label{tab:resumen_pushover}
+\end{table}
+
+
+% ==============================================================================
+% SECCIÓN 8: CONCLUSIONES Y RECOMENDACIONES
+% ==============================================================================
+\section{Conclusiones Pedagógicas y de Diseño}
+
+\begin{enumerate}
+    \item \textbf{Equivalencia Cinemática de la Plasticidad Concentrada:} Ubicar el resorte rotacional no lineal al $5\%$ de la altura ($x_h = 0.05 L$) representa rigurosamente el centroide del bloque de curvatura inelástica de longitud $L_p \approx 0.10 L$, desacoplando la flexibilidad de flexión del fuste de la rotación concentrada de la rótula.
+    \item \textbf{Resolución del Cortante bajo Control por Desplazamiento:} La fuerza lateral cortante $V$ no se puede imponer libremente cuando la estructura incursiona en el rango post-pico. En su lugar, el desplazamiento impuesto $\Delta$ actúa como variable de control cinemático, determinando unívocamente la rotación $\theta_h$ por compatibilidad en serie y fijando el cortante $V = M_h(\theta_h) / (0.95 L)$ a través del equilibrio estricto de momentos seccionales.
+    \item \textbf{Naturaleza Física del \textit{Springback}:} Durante la etapa de degradación post-capping ($k_{t,\theta} < 0$), la caída de resistencia interna en la rótula provoca que el cortante $V$ disminuya. Esta disminución de fuerza descarga elásticamente al fuste de la columna, haciendo que su curvatura continua disminuya y obligando a la rótula a abrirse aceleradamente. Ignorar este acoplamiento conduce a estimaciones erróneas de la demanda de ductilidad local.
+    \item \textbf{Criterios de Desempeño ASCE 41:} Los límites IO, LS y CP brindan umbrales objetivos de daño. El modelo demuestra que entre la fluencia (B) y el límite Life Safety (LS), la estructura conserva estabilidad global con endurecimiento positivo, mientras que superar el punto C sitúa al elemento en una zona de alta vulnerabilidad donde la resistencia residual depende exclusivamente de la integridad del confinamiento del núcleo.
+\end{enumerate}
+
+% ==============================================================================
+% REFERENCIAS BIBLIOGRÁFICAS
+% ==============================================================================
+\begin{thebibliography}{99}
+    \bibitem{asce41} American Society of Civil Engineers (ASCE). (2017). \textit{Seismic Evaluation and Retrofit of Existing Buildings} (ASCE/SEI Standard 41-17). Reston, VA: ASCE.
+    \bibitem{fema356} Federal Emergency Management Agency (FEMA). (2000). \textit{Prestandard and Commentary for the Seismic Rehabilitation of Buildings} (FEMA 356). Washington, DC: FEMA.
+    \bibitem{chopra} Chopra, A. K. (2020). \textit{Dynamics of Structures: Theory and Applications to Earthquake Engineering} (5th ed.). Hoboken, NJ: Pearson.
+    \bibitem{priestley} Paulay, T., \& Priestley, M. J. N. (1992). \textit{Seismic Design of Reinforced Concrete and Masonry Buildings}. New York: John Wiley \& Sons.
+    \bibitem{powell} Powell, G. H. (2010). \textit{Nonlinear Analysis of Concrete and Steel Structures: An Introduction to the Mechanics and Analysis of Inelastic Structures}. Berkeley, CA: Computers and Structures, Inc.
+\end{thebibliography}
+
+\end{document}
