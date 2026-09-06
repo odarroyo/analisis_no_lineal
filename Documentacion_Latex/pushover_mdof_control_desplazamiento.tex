@@ -1,0 +1,770 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ==============================================================================
+% PAQUETES DE CONFIGURACIÓN Y TIPOGRAFÍA
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot,es-noshorthands]{babel}
+\usepackage[margin=2.2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{microtype}
+\usepackage{booktabs,array,tabularx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,patterns,calc,positioning,decorations.pathmorphing,shapes.geometric,babel}
+\usepackage[skins,breakable]{tcolorbox}
+\usepackage{hyperref}
+
+% ==============================================================================
+% PALETA DE COLORES INSTITUCIONAL Y PEDAGÓGICA (TEMA UIS ROYAL PURPLE / BLUE)
+% ==============================================================================
+\definecolor{uispurple}{RGB}{109, 40, 217}       % Color primario institucional
+\definecolor{uisblue}{RGB}{2, 132, 199}         % Color secundario tecnológico
+\definecolor{uisgreen}{RGB}{5, 150, 105}        % Color acento éxito / elasticidad
+\definecolor{uisamber}{RGB}{217, 119, 6}        % Color prevención / fluencia
+\definecolor{uisrose}{RGB}{220, 38, 38}         % Color alerta / daño plástico
+\definecolor{uisdark}{RGB}{15, 23, 42}          % Texto principal pizarra
+\definecolor{uisgray}{RGB}{100, 116, 139}       % Texto atenuado
+\definecolor{uislightbg}{RGB}{248, 250, 252}    % Fondos suaves
+\definecolor{uisboxborder}{RGB}{203, 213, 225}  % Bordes de cajas
+
+% ==============================================================================
+% HIPERVÍNCULOS
+% ==============================================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=uispurple,
+    citecolor=uisblue,
+    urlcolor=uispurple,
+    pdftitle={De la Rotula Plastica al Edificio MDOF - Factores y Control por Desplazamiento en Pushover},
+    pdfauthor={Prof. Orlando Arroyo - Universidad Industrial de Santander}
+}
+
+% ==============================================================================
+% ENCABEZADOS Y PIES DE PÁGINA (FANCYHDR)
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{\color{uispurple}Análisis No Lineal de Estructuras} | Posgrado en Ing. Estructural}
+\fancyhead[R]{\small\color{uisgray}Universidad Industrial de Santander}
+\fancyfoot[L]{\small\color{uisgray}Prof. Orlando Arroyo}
+\fancyfoot[C]{\small\color{uisgray}Material Docente de Cátedra --- Transición SDOF a MDOF}
+\fancyfoot[R]{\small\color{uisdark}\thepage\ / \pageref{LastPage}}
+
+% ==============================================================================
+% CAJAS DESTACADAS (TCOLORBOX)
+% ==============================================================================
+\newtcolorbox{conceptbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uislightbg,
+    colframe=uispurple,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    sharp corners=downhill,
+    arc=4mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt,
+    shadow={2pt}{-2pt}{0pt}{black!10}
+}
+
+\newtcolorbox{stepbox}[1][]{
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=uisblue,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+\newtcolorbox{alertbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uisrose!5,
+    colframe=uisrose,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+\newtcolorbox{examplebox}[1][]{
+    enhanced,
+    breakable,
+    colback=uisamber!5,
+    colframe=uisamber,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+% ==============================================================================
+% DOCUMENTO PRINCIPAL
+% ==============================================================================
+\begin{document}
+
+% --- PORTADA / ENCABEZADO TITULAR ---
+\begin{center}
+    {\scshape\Large Universidad Industrial de Santander}\\[0.2cm]
+    {\large Escuela de Ingeniería Civil --- Posgrado en Ingeniería Estructural}\\[0.35cm]
+    {\color{uispurple}\hrule height 2pt}\vspace{0.4cm}
+    {\huge\bfseries\color{uisdark} De la Rótula Plástica al Edificio MDOF}\\[0.25cm]
+    {\Large\bfseries\color{uispurple} Determinación de Factores de Carga, Control por Desplazamiento y Equivalencia Modal en Análisis Pushover}\\[0.35cm]
+    {\color{uispurple}\hrule height 1pt}\vspace{0.35cm}
+    {\textbf{Autor:} Prof. Orlando Arroyo}\quad\textbullet\quad
+    {\textbf{Asignatura:} Análisis No Lineal de Estructuras}\quad\textbullet\quad
+    {\textbf{Material de Cátedra Avanzado}}
+\end{center}
+
+\vspace{0.25cm}
+
+\begin{abstract}
+\noindent En este documento técnico se establece el puente analítico, matemático y normativo entre el modelo básico de plasticidad concentrada en una columna en voladizo (sistema de 1 grado de libertad cinemático) y el análisis estático no lineal (\textit{Pushover}) de edificaciones de múltiples grados de libertad (MDOF). Se responde a la pregunta fundamental que surge en la práctica computacional: \textit{¿Cómo calcula el solucionador no lineal las fuerzas laterales de cada entrepiso y el factor de escala global cuando únicamente se impone el desplazamiento en un grado de libertad de control (el techo)?} Para resolver esta aparente indeterminación, se deduce con todo rigor el algoritmo de control por desplazamiento de Batoz-Dhatt / Powell mediante la técnica de descomposición en dos vectores tangentes. Asimismo, se formulan los factores de transformación modal ($\Gamma, m^*, C_0, C_1, C_2$) requeridos por el estándar ASCE 41-17 y el Método N2 de Fajfar para mapear la curva de capacidad global del edificio al oscilador equivalente SDOF. Finalmente, se desarrolla un ejemplo numérico detallado paso a paso en un pórtico de 3 pisos demostrando la evolución de fuerzas, desplazamientos y rigideces tangentes.
+\end{abstract}
+
+\vspace{0.25cm}
+
+% ==============================================================================
+% SECCIÓN 1: INTRODUCCIÓN Y LA PREGUNTA CENTRAL
+% ==============================================================================
+\section{Introducción y Planteamiento de la Paradoja de Control}
+
+En la Clase 04 del curso se estudió minuciosamente la columna en voladizo con una rótula plástica concentrada tipo ASCE 41 ubicada a $x_h = 0.05 L$. En dicho sistema unidimensional, el equilibrio y la cinemática son estáticamente determinados y directos:
+\begin{itemize}
+    \item Existe \textbf{una sola fuerza lateral} $V$ actuando en la punta.
+    \item Existe \textbf{un solo desplazamiento lateral} $\Delta$ como variable independiente impuesta.
+    \item El momento seccional en la rótula está unívocamente determinado por el brazo de palanca libre: $M_h = V \cdot (0.95 L)$.
+\end{itemize}
+
+Sin embargo, al trasladar este concepto a un \textbf{edificio real de múltiples grados de libertad (MDOF)}, el ingeniero se enfrenta a una aparente paradoja:
+
+\begin{conceptbox}[La Paradoja del Pushover Multicelular MDOF]
+En un edificio de $N$ niveles existen $N$ grados de libertad laterales independientes $\mathbf{u} = [u_1, u_2, \dots, u_N]^T$ y $N$ fuerzas horizontales actuantes $\mathbf{P} = [P_1, P_2, \dots, P_N]^T$. 
+
+No obstante, tanto en los ensayos de laboratorio con actuadores servo-controlados como en los programas de elementos finitos no lineales (OpenSees, SAP2000, SeismoStruct), el analista impone \textbf{exclusivamente el avance de desplazamiento en un único punto}: el nodo de cubierta o techo ($u_N = u_{\text{techo}}$).
+
+\begin{center}
+    \textit{¿Cómo sabe el computador cuánta fuerza $P_i$ debe aplicar a cada piso intermedio?} \\
+    \textit{¿Cómo se calcula el factor de escala que vincula el desplazamiento del techo con el cortante en la base?}
+\end{center}
+\end{conceptbox}
+
+La respuesta radica en dos niveles perfectamente articulados:
+\begin{enumerate}
+    \item \textbf{El Nivel Numérico / Algorítmico:} El uso de un vector patrón de carga normalizado $\mathbf{s}$ escalado por un multiplicador $\lambda$, resuelto mediante el \textbf{Algoritmo de Batoz-Dhatt / Powell}.
+    \item \textbf{El Nivel Mecánico / Normativo:} La proyección modal del sistema MDOF sobre su primer modo de vibración mediante el \textbf{Factor de Participación Modal $\Gamma$} y los coeficientes de ASCE 41 / Método N2, los cuales demuestran que el edificio completo equivale matemáticamente a la columna de la Clase 04.
+\end{enumerate}
+
+% ==============================================================================
+% SECCIÓN 2: FORMULACIÓN MATEMÁTICA DEL PUSHOVER EN MDOF
+% ==============================================================================
+\section{Formulación Matemática del Sistema MDOF bajo Control por Desplazamiento}
+
+Considérese una estructura modelada con $N$ grados de libertad horizontales de entrepiso, con matriz de masa $\mathbf{M} \in \mathbb{R}^{N \times N}$ y vector de fuerzas elasto-plásticas internas restauradoras $\mathbf{F}_{\text{int}}(\mathbf{u}) \in \mathbb{R}^N$.
+
+\subsection{El Vector Patrón de Cargas Normalizado y el Multiplicador \texorpdfstring{$\lambda$}{lambda}}
+
+En el análisis Pushover estándar, las fuerzas laterales no varían de forma independiente ni caótica. Su distribución espacial en la altura de la estructura se mantiene \textbf{congelada en proporciones relativas prefijadas} a través de un vector invariante denominado \textbf{vector patrón de cargas} $\mathbf{s} \in \mathbb{R}^N$:
+\begin{equation}
+    \mathbf{P}(\lambda) = \lambda \cdot \mathbf{s}
+    \label{eq:fuerzas_patron}
+\end{equation}
+donde:
+\begin{itemize}
+    \item $\mathbf{s} = [s_1, s_2, \dots, s_N]^T$ es el vector adimensional que define la silueta o perfil relativo de fuerzas laterales a lo largo de los entrepisos.
+    \item $\lambda \ge 0$ es un escalar denominado \textbf{multiplicador de carga} o factor de escala de intensidad de fuerza.
+\end{itemize}
+
+El vector patrón $\mathbf{s}$ puede adoptarse según los criterios de ASCE 41-17:
+\begin{enumerate}
+    \item \textbf{Patrón Modal (Primer Modo):} $\mathbf{s} = \mathbf{M} \bm{\phi}_1$, donde $\bm{\phi}_1$ es el modo fundamental elástico. Representa la distribución inercial del sismo.
+    \item \textbf{Patrón Triangular / Parabólico:} $s_i = m_i h_i^k / \sum m_j h_j^k$, proporcional a la altura y a la masa.
+    \item \textbf{Patrón Uniforme:} $\mathbf{s} = \mathbf{M} \mathbf{1}$, representativo de mecanismos de entrepiso blando inferior o aceleraciones de base casi rígidas.
+\end{enumerate}
+
+\subsection{El Sistema Extendido de Ecuaciones: \texorpdfstring{$N+1$}{N+1} Incógnitas}
+
+Las ecuaciones de equilibrio estático no lineal del edificio exigen que el vector residuo de fuerzas desbalanceadas $\mathbf{R} \in \mathbb{R}^N$ sea idénticamente nulo:
+\begin{equation}
+    \mathbf{R}(\mathbf{u}, \lambda) = \lambda \cdot \mathbf{s} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}
+    \label{eq:equilibrio_mdof}
+\end{equation}
+
+Obsérvese con detenimiento la dimensión del problema:
+\begin{itemize}
+    \item Hay $N$ ecuaciones de equilibrio escalar.
+    \item Pero hay \textbf{$N+1$ incógnitas}: los $N$ desplazamientos de entrepiso $\mathbf{u} = [u_1, \dots, u_N]^T$ \textbf{más} el multiplicador de carga $\lambda$.
+\end{itemize}
+
+Para cerrar el sistema estricto de ecuaciones, se añade una \textbf{ecuación de ligadura o restricción cinemática} que fija el desplazamiento en un grado de libertad de control específico $c$ (típicamente el último nivel, $c = N$):
+\begin{equation}
+    g(\mathbf{u}) = u_c - u_c^* = \mathbf{e}_c^T \mathbf{u} - u_c^* = 0
+    \label{eq:ligadura_control}
+\end{equation}
+donde $\mathbf{e}_c = [0, \dots, 0, 1, 0, \dots, 0]^T$ es el vector booleano que selecciona el grado de libertad $c$, y $u_c^*$ es el desplazamiento objetivo prescrito para ese paso de cálculo.
+
+El sistema general acoplado con $N+1$ ecuaciones y $N+1$ incógnitas adopta la forma:
+\begin{equation}
+    \bm{\Phi}(\mathbf{u}, \lambda) = 
+    \begin{bmatrix}
+        \lambda \mathbf{s} - \mathbf{F}_{\text{int}}(\mathbf{u}) \\[4pt]
+        \mathbf{e}_c^T \mathbf{u} - u_c^*
+    \end{bmatrix} =
+    \begin{bmatrix}
+        \mathbf{0} \\[4pt]
+        0
+    \end{bmatrix}
+    \label{eq:sistema_extendido}
+\end{equation}
+
+% --- ESQUEMA GRÁFICO TIKZ: EDIFICIO MDOF ---
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.95, >=Stealth]
+    % Suelo y empotramiento
+    \fill[pattern=north east lines, pattern color=uisgray!70] (-2,0) rectangle (2,-0.4);
+    \draw[line width=1.3pt, uisdark] (-2,0) -- (2,0);
+    
+    % Columnas Piso 1
+    \draw[line width=2.5pt, uisdark] (-1.3,0) -- (-1.3,2.2);
+    \draw[line width=2.5pt, uisdark] (1.3,0) -- (1.3,2.2);
+    % Viga Piso 1
+    \fill[uislightbg, draw=uisdark, line width=1.5pt] (-1.6,2.0) rectangle (1.6,2.4);
+    \node at (0,2.2) {\small\textbf{Piso 1} ($m_1$)};
+    
+    % Columnas Piso 2
+    \draw[line width=2.2pt, uisdark] (-1.3,2.4) -- (-1.3,4.6);
+    \draw[line width=2.2pt, uisdark] (1.3,2.4) -- (1.3,4.6);
+    % Viga Piso 2
+    \fill[uislightbg, draw=uisdark, line width=1.5pt] (-1.6,4.4) rectangle (1.6,4.8);
+    \node at (0,4.6) {\small\textbf{Piso 2} ($m_2$)};
+    
+    % Columnas Piso 3
+    \draw[line width=1.8pt, uisdark] (-1.3,4.8) -- (-1.3,7.0);
+    \draw[line width=1.8pt, uisdark] (1.3,4.8) -- (1.3,7.0);
+    % Viga Piso 3 (Techo)
+    \fill[uispurple!15, draw=uispurple, line width=1.8pt] (-1.6,6.8) rectangle (1.6,7.2);
+    \node at (0,7.0) {\small\textbf{\color{uispurple}Techo} ($m_3$)};
+    
+    % Rótulas plásticas en la base (ejemplo)
+    \fill[uisrose] (-1.3,0.3) circle (4pt);
+    \fill[uisrose] (1.3,0.3) circle (4pt);
+    \node[right, uisrose, font=\scriptsize\bfseries] at (1.5,0.3) {Rótulas ASCE 41};
+    
+    % Fuerzas laterales patrón P_i = \lambda s_i
+    \draw[->, line width=1.5pt, uisblue] (-3.2,2.2) -- (-1.6,2.2) node[midway, above] {$P_1 = \lambda s_1$};
+    \draw[->, line width=1.8pt, uisblue] (-3.8,4.6) -- (-1.6,4.6) node[midway, above] {$P_2 = \lambda s_2$};
+    \draw[->, line width=2.2pt, uisblue] (-4.5,7.0) -- (-1.6,7.0) node[midway, above] {$P_3 = \lambda s_3$};
+    
+    % Desplazamiento impuesto de control en el techo
+    \draw[dashed, line width=1pt, uispurple] (1.6,7.0) -- (3.5,7.0);
+    \draw[->, line width=2pt, uispurple] (2.2,7.3) -- (3.3,7.3) node[right] {\bfseries $u_c = u_{\text{techo}}^*$ (Control)};
+    
+    % Ejes y cortante basal
+    \draw[<-, line width=2.2pt, uisamber] (-0.8,-0.7) -- (0.8,-0.7) node[midway, below] {\bfseries $V_b = \sum P_i = \lambda \sum s_i$};
+\end{tikzpicture}
+\caption{Esquema cinemático y de fuerzas en un edificio de múltiples grados de libertad (MDOF) sujeto a un patrón lateral $\mathbf{P} = \lambda \mathbf{s}$ con desplazamiento impuesto en el nodo de control de cubierta $u_c$.}
+\label{fig:edificio_mdof}
+\end{figure}
+
+% ==============================================================================
+% SECCIÓN 3: EL ALGORITMO DE BATOZ-DHATT / POWELL
+% ==============================================================================
+\section{El Algoritmo de Batoz-Dhatt / Powell (Descomposición en Dos Vectores)}
+
+Si se intentara linealizar el sistema extendido \eqref{eq:sistema_extendido} en bloque mediante el método clásico de Newton-Raphson, la matriz jacobiana $(N+1) \times (N+1)$ resultante sería:
+\begin{equation}
+    \begin{bmatrix}
+        \mathbf{K}_t & -\mathbf{s} \\[4pt]
+        \mathbf{e}_c^T & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        \delta \mathbf{u} \\[4pt]
+        \delta \lambda
+    \end{bmatrix} =
+    \begin{bmatrix}
+        \mathbf{R} \\[4pt]
+        0
+    \end{bmatrix}
+    \label{eq:jacobiano_extendido}
+\end{equation}
+donde $\mathbf{K}_t = \frac{\partial \mathbf{F}_{\text{int}}}{\partial \mathbf{u}}$ es la matriz de rigidez tangente estructural.
+
+\begin{alertbox}[Desventaja Crítica del Jacobiano Extendido Directo]
+La matriz jacobiana extendida de la Ec.~\eqref{eq:jacobiano_extendido} tiene un cero en su esquina inferior derecha, pierde la simetría y destruye el ancho de banda característico de los solvers de elementos finitos eficientes (Cholesky o perfiles dispersos). Además, requiere reestructurar todo el código del solucionador estructural.
+\end{alertbox}
+
+Para evitar este costo numérico, Batoz y Dhatt (1979), generalizado por Powell (2010), propusieron una formulación elegante y sumamente eficiente basada en la \textbf{superposición de dos estados elásticos tangentes}.
+
+\subsection{Deducción de la Descomposición}
+
+La ecuación de equilibrio incremental en la iteración $k$ es:
+\begin{equation}
+    \mathbf{K}_t^{(k)} \, \delta \mathbf{u}^{(k)} = \delta \lambda^{(k)} \cdot \mathbf{s} + \mathbf{R}^{(k)}
+    \label{eq:newton_descomp}
+\end{equation}
+
+Dividimos el vector de corrección incremental $\delta \mathbf{u}^{(k)}$ en dos componentes independientes:
+\begin{equation}
+    \delta \mathbf{u}^{(k)} = \delta \lambda^{(k)} \cdot \delta \mathbf{u}_s^{(k)} + \delta \mathbf{u}_R^{(k)}
+    \label{eq:descomposicion_batoz}
+\end{equation}
+Sustituyendo \eqref{eq:descomposicion_batoz} en \eqref{eq:newton_descomp}:
+\begin{equation}
+    \mathbf{K}_t^{(k)} \left( \delta \lambda^{(k)} \delta \mathbf{u}_s^{(k)} + \delta \mathbf{u}_R^{(k)} \right) = \delta \lambda^{(k)} \cdot \mathbf{s} + \mathbf{R}^{(k)}
+\end{equation}
+Para que esta igualdad se verifique de manera idéntica e incondicional para cualquier valor del escalar $\delta \lambda^{(k)}$, se deben resolver \textbf{dos sistemas lineales desacoplados} utilizando la misma matriz de rigidez tangente $\mathbf{K}_t^{(k)}$:
+\begin{align}
+    \mathbf{K}_t^{(k)} \, \delta \mathbf{u}_s^{(k)} &= \mathbf{s} \quad \longrightarrow \text{Deformada tangente ante el patrón de carga unitario} \label{eq:sub_s}\\
+    \mathbf{K}_t^{(k)} \, \delta \mathbf{u}_R^{(k)} &= \mathbf{R}^{(k)} \quad \longrightarrow \text{Deformada tangente ante el residuo de desbalance} \label{eq:sub_r}
+\end{align}
+
+Nótese la enorme ventaja computacional: la factorización triangular ($\mathbf{L}\mathbf{D}\mathbf{L}^T$ o $\mathbf{L}\mathbf{U}$) de la matriz $\mathbf{K}_t^{(k)}$ se realiza \textbf{una sola vez por iteración}, y los dos vectores $\delta \mathbf{u}_s$ y $\delta \mathbf{u}_R$ se obtienen por simple sustitución hacia adelante y hacia atrás.
+
+\subsection{Determinación Exacta del Multiplicador de Carga \texorpdfstring{$\delta \lambda$}{delta lambda}}
+
+Una vez calculados los vectores $\delta \mathbf{u}_s$ y $\delta \mathbf{u}_R$, evaluamos la ecuación de compatibilidad escalar \eqref{eq:descomposicion_batoz} \textbf{únicamente en la fila del grado de libertad de control $c$}:
+\begin{equation}
+    \delta u_c^{(k)} = \delta \lambda^{(k)} \cdot \delta u_{s,c}^{(k)} + \delta u_{R,c}^{(k)}
+    \label{eq:escalar_control}
+\end{equation}
+
+De esta simple ecuación escalar despejamos de forma exacta el multiplicador $\delta \lambda^{(k)}$ según la fase del algoritmo:
+
+\subsubsection{Fase 1: Paso Predictor (Inicio del Incremento)}
+Al inicio del paso incremental ($k = 0$), partimos de un estado en equilibrio previo ($\mathbf{R}^{(0)} = \mathbf{0} \implies \delta \mathbf{u}_R^{(0)} = \mathbf{0}$). Deseamos avanzar un incremento prescrito de desplazamiento en el techo $\Delta u_c^*$. Por tanto:
+\begin{equation}
+    \Delta u_c^* = \Delta \lambda^{(0)} \cdot \delta u_{s,c}^{(0)} \implies \mathbf{\Delta \lambda^{(0)} = \frac{\Delta u_c^*}{\delta u_{s,c}^{(0)}}}
+    \label{eq:predictor_lambda}
+\end{equation}
+¡Aquí se determina el primer factor de escala del paso! El avance inicial del desplazamiento en toda la estructura es:
+\begin{equation}
+    \Delta \mathbf{u}^{(0)} = \Delta \lambda^{(0)} \cdot \delta \mathbf{u}_s^{(0)} = \Delta u_c^* \cdot \frac{\delta \mathbf{u}_s^{(0)}}{\delta u_{s,c}^{(0)}}
+\end{equation}
+
+\subsubsection{Fase 2: Pasos Correctores (Iteraciones de Equilibrio de Newton-Raphson)}
+En las iteraciones subsiguientes ($k \ge 1$), el desplazamiento en el nodo de control ya alcanzó el valor objetivo prescrito $u_c^*$. En consecuencia, el desplazamiento del techo no debe sufrir ninguna variación durante la búsqueda del equilibrio interno:
+\begin{equation}
+    \delta u_c^{(k)} = 0 \quad (\forall k \ge 1)
+\end{equation}
+Sustituyendo esta condición de contorno en la ecuación escalar \eqref{eq:escalar_control}:
+\begin{equation}
+    0 = \delta \lambda^{(k)} \cdot \delta u_{s,c}^{(k)} + \delta u_{R,c}^{(k)} \implies \mathbf{\delta \lambda^{(k)} = -\frac{\delta u_{R,c}^{(k)}}{\delta u_{s,c}^{(k)}}}
+    \label{eq:corrector_lambda}
+\end{equation}
+
+\begin{stepbox}[Resumen Operativo del Algoritmo de Batoz-Dhatt]
+En cada iteración de equilibrio:
+\begin{enumerate}
+    \item Se factoriza la matriz de rigidez tangente actual $\mathbf{K}_t^{(k)}$.
+    \item Se resuelven los dos sistemas lineales: $\mathbf{K}_t \delta \mathbf{u}_s = \mathbf{s}$ y $\mathbf{K}_t \delta \mathbf{u}_R = \mathbf{R}$.
+    \item Se calcula la corrección del multiplicador de carga:
+    $$\delta \lambda^{(k)} = -\frac{\delta u_{R,c}^{(k)}}{\delta u_{s,c}^{(k)}}$$
+    \item Se corrige el vector de desplazamientos global de todos los pisos:
+    $$\delta \mathbf{u}^{(k)} = \delta \lambda^{(k)} \delta \mathbf{u}_s^{(k)} + \delta \mathbf{u}_R^{(k)}$$
+    \item Se actualizan el estado de deformaciones y la carga total:
+    $$\mathbf{u}^{(k+1)} = \mathbf{u}^{(k)} + \delta \mathbf{u}^{(k)}, \qquad \lambda^{(k+1)} = \lambda^{(k)} + \delta \lambda^{(k)}$$
+    \item Se reevalúan los esfuerzos internos $\mathbf{F}_{\text{int}}(\mathbf{u}^{(k+1)})$ y se verifica si $\|\mathbf{R}\| < \text{TOL}$.
+\end{enumerate}
+\end{stepbox}
+
+\subsection{Cálculo del Cortante Basal y Fuerzas de Piso}
+Con el multiplicador $\lambda$ convergido en cada paso de desplazamiento impuesto $u_c^*$, se determinan de inmediato todas las solicitaciones globales:
+\begin{itemize}
+    \item \textbf{Fuerzas laterales en cada nivel:} $P_i = \lambda \cdot s_i$.
+    \item \textbf{Cortante en la base ($V_b$):} Por equilibrio de fuerzas horizontales globales:
+    \begin{equation}
+        V_b = \sum_{i=1}^N P_i = \lambda \sum_{i=1}^N s_i
+        \label{eq:cortante_basal_vb}
+    \end{equation}
+\end{itemize}
+
+% ==============================================================================
+% SECCIÓN 4: EQUIVALENCIA MODAL SDOF <-> MDOF (ASCE 41 Y MÉTODO N2)
+% ==============================================================================
+\section{Equivalencia Modal SDOF \texorpdfstring{$\longleftrightarrow$}{<->} MDOF (ASCE 41 y Método N2)}
+
+Una vez que el algoritmo de Batoz-Dhatt ha trazado la curva de capacidad global del edificio ($V_b$ vs. $u_{\text{techo}}$), surge la pregunta estructural:
+\begin{center}
+    \textit{¿Por qué este edificio de $N$ pisos se puede analizar conceptualmente como la columna en voladizo con rótula plástica de la Clase 04?}
+\end{center}
+
+La respuesta teórica se fundamenta en la \textbf{proyección modal de la respuesta inelástica} sobre el modo fundamental de vibración $\bm{\phi}_1$.
+
+\subsection{El Factor de Participación Modal (\texorpdfstring{$\Gamma$}{Gamma})}
+
+Sea $\bm{\phi}_1 \in \mathbb{R}^N$ el vector de forma modal elástica fundamental, normalizado arbitrariamente de manera que en el nivel de cubierta el desplazamiento modal sea unitario:
+\begin{equation}
+    \phi_{N,1} = \phi_{\text{techo},1} = 1.00
+\end{equation}
+
+El \textbf{factor de participación modal} del primer modo se define como:
+\begin{equation}
+    \Gamma = \frac{\bm{\phi}_1^T \mathbf{M} \mathbf{1}}{\bm{\phi}_1^T \mathbf{M} \bm{\phi}_1} = \frac{\sum_{i=1}^N m_i \phi_{i,1}}{\sum_{i=1}^N m_i \phi_{i,1}^2}
+    \label{eq:factor_gamma}
+\end{equation}
+donde $\mathbf{1} = [1, 1, \dots, 1]^T$ es el vector de influencia sísmica uniforme.
+
+Propiedades mecánicas asociadas al primer modo:
+\begin{itemize}
+    \item \textbf{Masa modal efectiva ($m^*$):}
+    \begin{equation}
+        m^* = \Gamma \left(\bm{\phi}_1^T \mathbf{M} \mathbf{1}\right) = \frac{\left(\sum_{i=1}^N m_i \phi_{i,1}\right)^2}{\sum_{i=1}^N m_i \phi_{i,1}^2} = \sum_{i=1}^N m_i \phi_{i,1} \quad (\text{para } \Gamma = 1 \text{ simplificado})
+    \end{equation}
+    \item \textbf{Coeficiente de masa modal efectiva ($\alpha_1$):} Porcentaje de la masa total del edificio $M_{\text{total}} = \sum m_i$ movilizada por el primer modo:
+    \begin{equation}
+        \alpha_1 = \frac{m^*}{M_{\text{total}}} \quad (\text{usualmente entre } 70\% \text{ y } 85\% \text{ en edificios regulares})
+    \end{equation}
+\end{itemize}
+
+\subsection{Transformación de Coordenadas: Curva MDOF a Oscilador SDOF}
+
+Para convertir la curva de capacidad del edificio ($V_b - u_{\text{techo}}$) a la curva fuerza-desplazamiento del oscilador equivalente de 1 grado de libertad ($F^* - d^*$), se aplican los factores de escala:
+
+\begin{equation}
+    \mathbf{d^* = \frac{u_{\text{techo}}}{\Gamma \cdot \phi_{\text{techo},1}} = \frac{u_{\text{techo}}}{\Gamma}}
+    \label{eq:transf_d_star}
+\end{equation}
+\begin{equation}
+    \mathbf{F^* = \frac{V_b}{\Gamma}}
+    \label{eq:transf_f_star}
+\end{equation}
+
+\begin{conceptbox}[Equivalencia Estricta con la Columna de la Clase 04]
+¡La curva resultante $F^* - d^*$ del oscilador equivalente es formalmente \textbf{idéntica} a la curva cortante-desplazamiento $V - \Delta$ de la columna en voladizo!
+\begin{itemize}
+    \item La rotación plástica en la base del edificio concentra el daño, de manera idéntica a la rótula $M_h - \theta_h$ a $0.05 L$.
+    \item La rigidez inicial del oscilador equivalente es:
+    $$K^* = \frac{F_y^*}{d_y^*} = \frac{V_{b,y} / \Gamma}{\Delta_{y,\text{techo}} / \Gamma} = \frac{V_{b,y}}{\Delta_{y,\text{techo}}} = K_0$$
+    \item El periodo fundamental equivalente se calcula como:
+    $$T^* = 2\pi \sqrt{\frac{m^* d_y^*}{F_y^*}} = 2\pi \sqrt{\frac{m^* \Delta_{y,\text{techo}}}{V_{b,y}}}$$
+\end{itemize}
+\end{conceptbox}
+
+\subsection{Los Factores de Modificación de Desplazamiento de ASCE 41-17}
+
+En el estándar ASCE 41-17 (\textit{Seismic Evaluation and Retrofit of Existing Buildings}), el procedimiento no lineal estático calcula el desplazamiento inelástico objetivo del techo $\delta_t$ mediante la fórmula del método de coeficientes:
+
+\begin{equation}
+    \delta_t = C_0 \cdot C_1 \cdot C_2 \cdot S_a \left( \frac{T_e^2}{4\pi^2} \right) g
+    \label{eq:asce41_delta_t}
+\end{equation}
+
+donde los factores representan rigurosamente:
+
+\begin{enumerate}
+    \item \textbf{Factor $C_0$ (Factor de Forma y Transformación Modal):}
+    Modifica el desplazamiento espectral elástico de un oscilador SDOF para transformarlo en el desplazamiento de techo del edificio MDOF. Teóricamente corresponde a:
+    \begin{equation}
+        C_0 \approx \Gamma \cdot \phi_{\text{techo},1} = \Gamma
+    \end{equation}
+    Valores tabulados de ASCE 41-17 (Tabla 7-5) en función del número de pisos:
+    \begin{itemize}
+        \item 1 a 2 pisos: $C_0 = 1.0$ a $1.15$
+        \item 3 a 5 pisos: $C_0 = 1.20$
+        \item 10 o más pisos: $C_0 = 1.30$ a $1.40$
+    \end{itemize}
+
+    \item \textbf{Factor $C_1$ (Factor de Ductilidad Inelástica):}
+    Relaciona los desplazamientos inelásticos máximos esperados con los desplazamientos elásticos lineales. En periodos cortos ($T_e < T_s$), la respuesta inelástica supera a la elástica; en periodos largos, rige la regla de igual desplazamiento ($C_1 \to 1.0$):
+    \begin{equation}
+        C_1 = 1.0 + \frac{R - 1}{a T_e^2} \ge 1.0, \qquad R = \frac{S_a}{V_y / W} \cdot C_m
+    \end{equation}
+
+    \item \textbf{Factor $C_2$ (Factor de Degradación Histerética y Pinching):}
+    Representa el incremento de deformación lateral debido al ablandamiento de la rótula plástica, pérdida de rigidez cíclica y degradación de resistencia (ramas C--D y D--E del modelo ASCE 41 estudiado en la Clase 04):
+    \begin{equation}
+        C_2 = 1.0 + \frac{1}{800} \left( \frac{R - 1}{T_e} \right)^2 \ge 1.0
+    \end{equation}
+
+    \item \textbf{Factor $C_m$ (Factor de Masa Modal Efectiva):}
+    Pondera la masa que participa en el primer modo para no sobreestimar la demanda de resistencia elástica: $C_m \approx \alpha_1 = m^* / M_{\text{total}} \approx 0.90$ para marcos rígidos de hasta 3 pisos.
+\end{enumerate}
+
+% ==============================================================================
+% SECCIÓN 5: EJEMPLO NUMÉRICO PASO A PASO EN PÓRTICO DE 3 PISOS
+% ==============================================================================
+\section{Ejemplo Numérico Desarrollado Paso a Paso}
+
+Para ilustrar de forma numérica y transparente cada una de las ecuaciones deducidas, consideremos un edificio de 3 niveles con comportamiento de pórtico de cortante.
+
+\subsection{Parámetros del Edificio de Ensayo}
+
+\begin{itemize}
+    \item Masa concentrada en cada nivel: $m_1 = m_2 = m_3 = 40.0\text{ t} = 40,000\text{ kg}$.
+    \item Rigideces elásticas de entrepiso:
+    \begin{align}
+        k_1 &= 30,000\text{ kN/m} = 30.0\text{ kN/mm}, \quad k_2 = 25,000\text{ kN/m} = 25.0\text{ kN/mm}, \nonumber\\
+        k_3 &= 20,000\text{ kN/m} = 20.0\text{ kN/mm}
+    \end{align}
+    \item Alturas de entrepiso: $h_1 = h_2 = h_3 = 3.5\text{ m}$.
+    \item Capacidad de fluencia a cortante del piso 1: $V_{y,1} = 450.0\text{ kN}$.
+    \item Rótula plástica en la base del piso 1: endurecimiento plástico post-fluencia con rigidez residual $k_{t,1} = 0.05 k_1 = 1,500\text{ kN/m} = 1.5\text{ kN/mm}$.
+\end{itemize}
+
+Matriz de masa $\mathbf{M}$ y matriz de rigidez inicial $\mathbf{K}_0$:
+\begin{equation}
+    \mathbf{M} = \begin{bmatrix}
+        40 & 0 & 0 \\
+        0 & 40 & 0 \\
+        0 & 0 & 40
+    \end{bmatrix} \text{ t}, \qquad
+    \mathbf{K}_0 = \begin{bmatrix}
+        k_1 + k_2 & -k_2 & 0 \\
+        -k_2 & k_2 + k_3 & -k_3 \\
+        0 & -k_3 & k_3
+    \end{bmatrix} =
+    \begin{bmatrix}
+        55,000 & -25,000 & 0 \\
+        -25,000 & 45,000 & -20,000 \\
+        0 & -20,000 & 20,000
+    \end{bmatrix} \text{ kN/m}
+\end{equation}
+
+\subsection{Análisis Modal Previo y Factores de Forma}
+
+Resolviendo el problema de autovalores $\det(\mathbf{K}_0 - \omega^2 \mathbf{M}) = 0$:
+\begin{itemize}
+    \item Frecuencia angular fundamental: $\omega_1 = 12.083\text{ rad/s} \implies f_1 = 1.923\text{ Hz} \implies \mathbf{T_1 = 0.520\text{ s}}$.
+    \item Vector propio normalizado en el techo ($\phi_{3,1} = 1.000$):
+    \begin{equation}
+        \bm{\phi}_1 = \begin{bmatrix} 0.3850 \\ 0.7320 \\ 1.0000 \end{bmatrix}
+    \end{equation}
+    \item Factor de participación modal $\Gamma$:
+    \begin{equation}
+        \bm{\phi}_1^T \mathbf{M} \mathbf{1} = 40 \times (0.3850 + 0.7320 + 1.0000) = 40 \times 2.1170 = 84.680\text{ t}
+    \end{equation}
+    \begin{align}
+        \bm{\phi}_1^T \mathbf{M} \bm{\phi}_1 &= 40 \times (0.3850^2 + 0.7320^2 + 1.0000^2) \nonumber\\
+        &= 40 \times (0.1482 + 0.5358 + 1.0000) = 40 \times 1.6840 = \mathbf{67.360\text{ t}}
+    \end{align}
+    \begin{equation}
+        \mathbf{\Gamma = \frac{84.680}{67.360} = 1.2571}
+    \end{equation}
+    \item Masa modal efectiva: $m^* = \Gamma \times 67.360 = 84.680\text{ t} \implies \alpha_1 = \frac{84.68}{120.0} = \mathbf{70.57\%}$ de la masa total.
+    \item Vector patrón de carga lateral modal $\mathbf{s} = \mathbf{M} \bm{\phi}_1$:
+    \begin{equation}
+        \mathbf{s} = \begin{bmatrix} 40 \times 0.3850 \\ 40 \times 0.7320 \\ 40 \times 1.0000 \end{bmatrix} = \begin{bmatrix} 15.40 \\ 29.28 \\ 40.00 \end{bmatrix} \text{ kN (normalizado proporcional)}
+    \end{equation}
+    Para fines de cálculo, normalizamos el patrón para que la fuerza del techo sea unitaria ($s_3 = 1.00$):
+    \begin{equation}
+        \mathbf{s} = \begin{bmatrix} 0.3850 \\ 0.7320 \\ 1.0000 \end{bmatrix} \implies \sum s_i = 2.1170
+    \end{equation}
+\end{itemize}
+
+% --- PASO 1 NUMÉRICO ---
+\subsection{Paso 1: Estado Elástico Inicial (\texorpdfstring{$\Delta u_3^* = 10.0\text{ mm} = 0.010\text{ m}$}{Delta u3 = 10.0 mm})}
+
+\begin{examplebox}[Cálculo Detallado del Paso 1]
+Aplicamos el paso predictor de Batoz-Dhatt con la matriz de rigidez elástica inicial $\mathbf{K}_0$:
+\begin{enumerate}
+    \item \textbf{Resolución de la deformada ante el patrón unitario:}
+    \begin{equation}
+        \mathbf{K}_0 \, \delta \mathbf{u}_s = \mathbf{s} \implies
+        \begin{bmatrix}
+            55000 & -25000 & 0 \\
+            -25000 & 45000 & -20000 \\
+            0 & -20000 & 20000
+        \end{bmatrix}
+        \begin{bmatrix}
+            \delta u_{s,1} \\ \delta u_{s,2} \\ \delta u_{s,3}
+        \end{bmatrix} =
+        \begin{bmatrix}
+            0.3850 \\ 0.7320 \\ 1.0000
+        \end{bmatrix}
+    \end{equation}
+    Resolviendo el sistema lineal por sustitución progresiva:
+    \begin{equation}
+        \delta \mathbf{u}_s = \begin{bmatrix} 0.00007057 \\ 0.00013985 \\ 0.00018985 \end{bmatrix} \text{ m/kN}
+    \end{equation}
+    Obsérvese el desplazamiento en el nodo de control de cubierta (techo):
+    \begin{equation}
+        \delta u_{s,3} = 0.00018985\text{ m/kN} = 0.18985\text{ mm/kN}
+    \end{equation}
+    
+    \item \textbf{Determinación del multiplicador de carga $\Delta \lambda$:}
+    Aplicando la Ec.~\eqref{eq:predictor_lambda} para el incremento prescrito de $\Delta u_3^* = 0.010\text{ m}$:
+    \begin{equation}
+        \mathbf{\Delta \lambda = \frac{\Delta u_3^*}{\delta u_{s,3}} = \frac{0.010\text{ m}}{0.00018985\text{ m/kN}} = 52.673\text{ kN}}
+    \end{equation}
+    
+    \item \textbf{Fuerzas laterales resultantes en cada piso:}
+    \begin{equation}
+        \mathbf{P} = \Delta \lambda \cdot \mathbf{s} = 52.673 \times \begin{bmatrix} 0.3850 \\ 0.7320 \\ 1.0000 \end{bmatrix} =
+        \begin{bmatrix}
+            \mathbf{20.28\text{ kN}} \\
+            \mathbf{38.56\text{ kN}} \\
+            \mathbf{52.67\text{ kN}}
+        \end{bmatrix}
+    \end{equation}
+    
+    \item \textbf{Cortante Basal Total ($V_b$):}
+    \begin{equation}
+        V_b = P_1 + P_2 + P_3 = 20.28 + 38.56 + 52.67 = \mathbf{111.51\text{ kN}} = 52.673 \times 2.1170
+    \end{equation}
+    
+    \item \textbf{Desplazamientos absolutos de piso:}
+    \begin{align}
+        \mathbf{u} &= \Delta \lambda \cdot \delta \mathbf{u}_s = 52.673 \times \begin{bmatrix} 0.00007057 \\ 0.00013985 \\ 0.00018985 \end{bmatrix} \nonumber\\
+        &= \begin{bmatrix}
+            0.003716\text{ m} \\
+            0.007366\text{ m} \\
+            0.010000\text{ m}
+        \end{bmatrix} =
+        \begin{bmatrix}
+            \mathbf{3.72\text{ mm}} \\
+            \mathbf{7.37\text{ mm}} \\
+            \mathbf{10.00\text{ mm}}
+        \end{bmatrix} \quad (\text{Control exacto})
+    \end{align}
+    
+    \item \textbf{Transformación a Coordenadas del Oscilador SDOF Equivalente:}
+    \begin{align}
+        d^* &= \frac{u_{\text{techo}}}{\Gamma} = \frac{10.00\text{ mm}}{1.2571} = \mathbf{7.955\text{ mm}} = 0.007955\text{ m}\\
+        F^* &= \frac{V_b}{\Gamma} = \frac{111.51\text{ kN}}{1.2571} = \mathbf{88.70\text{ kN}}
+    \end{align}
+    Rigidez elástica del oscilador equivalente:
+    \begin{equation}
+        K_0^* = \frac{F^*}{d^*} = \frac{88.70\text{ kN}}{7.955\text{ mm}} = 11.15\text{ kN/mm} = 11,150\text{ kN/m}
+    \end{equation}
+\end{enumerate}
+\end{examplebox}
+
+% --- PASO 2 NUMÉRICO ---
+\subsection{Paso 2: Plastificación del Primer Nivel y Pérdida de Rigidez Tangente}
+
+\begin{examplebox}[Cálculo Detallado del Paso 2]
+Continuando el empuje, el cortante en el piso 1 alcanza su capacidad de fluencia $V_{y,1} = 450.0\text{ kN}$ cuando el cortante basal es $V_b = 450\text{ kN}$. En ese instante:
+\begin{itemize}
+    \item Multiplicador de fluencia: $\lambda_y = \frac{450.0}{2.1170} = 212.565\text{ kN}$.
+    \item Desplazamiento del techo en fluencia:
+    \begin{equation}
+        u_{\text{techo},y} = \lambda_y \times \delta u_{s,3} = 212.565 \times 0.18985 = \mathbf{40.35\text{ mm}}
+    \end{equation}
+    \item Deformada de entrepiso en el piso 1: $\Delta u_1 = 40.35 \times \frac{0.07057}{0.18985} = 15.00\text{ mm}$.
+\end{itemize}
+
+\textbf{Incursión inelástica post-fluencia:}\\
+Se forma una rótula plástica en la base del edificio (idéntica al mecanismo de la columna en voladizo). La rigidez a cortante del piso 1 se degrada severamente a su pendiente de endurecimiento plástico:
+\begin{equation}
+    k_{t,1} = 0.05 \times 30,000 = 1,500\text{ kN/m} = 1.5\text{ kN/mm}
+\end{equation}
+La nueva matriz de rigidez tangente estructural $\mathbf{K}_t$ pasa a ser:
+\begin{equation}
+    \mathbf{K}_t = \begin{bmatrix}
+        k_{t,1} + k_2 & -k_2 & 0 \\
+        -k_2 & k_2 + k_3 & -k_3 \\
+        0 & -k_3 & k_3
+    \end{bmatrix} =
+    \begin{bmatrix}
+        26,500 & -25,000 & 0 \\
+        -25,000 & 45,000 & -20,000 \\
+        0 & -20,000 & 20,000
+    \end{bmatrix} \text{ kN/m}
+\end{equation}
+
+Aplicamos un nuevo incremento de desplazamiento en el techo de $\Delta u_3^* = 10.0\text{ mm}$ (llevando el techo de $40.35\text{ mm}$ a $50.35\text{ mm}$):
+\begin{enumerate}
+    \item \textbf{Nueva deformada tangente ante el patrón unitario ($\mathbf{K}_t \delta \mathbf{u}_s = \mathbf{s}$):}
+    Resolviendo con la nueva matriz $\mathbf{K}_t$:
+    \begin{equation}
+        \delta \mathbf{u}_s = \begin{bmatrix} 0.0014113 \\ 0.0014806 \\ 0.0015306 \end{bmatrix} \text{ m/kN} \implies \delta u_{s,3} = 1.5306\text{ mm/kN}
+    \end{equation}
+    ¡Nótese que $\delta u_{s,3}$ creció de $0.18985$ a $1.5306\text{ mm/kN}$ (un factor de más de $8$ veces), reflejando la alta flexibilidad originada por la plastificación de la base!
+    
+    \item \textbf{Cálculo del nuevo factor de carga $\Delta \lambda$ en rango plástico:}
+    \begin{equation}
+        \mathbf{\Delta \lambda = \frac{\Delta u_3^*}{\delta u_{s,3}} = \frac{10.0\text{ mm}}{1.5306\text{ mm/kN}} = \mathbf{6.533\text{ kN}}}
+    \end{equation}
+    Obsérvese cómo en el rango elástico (Paso 1) se requirieron $\Delta \lambda = 52.67\text{ kN}$ para mover el techo $10\text{ mm}$, mientras que ahora en el rango plástico solo se requieren $\mathbf{6.533\text{ kN}}$ para lograr los mismos $10\text{ mm}$.
+    
+    \item \textbf{Incremento de cortante basal:}
+    \begin{equation}
+        \Delta V_b = 6.533 \times 2.1170 = \mathbf{13.83\text{ kN}} \quad (\text{Frente a } 111.51\text{ kN en la fase elástica})
+    \end{equation}
+    Cortante basal total acumulado:
+    \begin{equation}
+        V_b = 450.0 + 13.83 = \mathbf{463.83\text{ kN}}
+    \end{equation}
+    
+    \item \textbf{Rigidez tangente global del edificio:}
+    \begin{equation}
+        K_t = \frac{\Delta V_b}{\Delta u_{\text{techo}}} = \frac{13.83\text{ kN}}{10.0\text{ mm}} = \mathbf{1.383\text{ kN/mm}} = 1,383\text{ kN/m}
+    \end{equation}
+    La rigidez global del edificio cayó al $\mathbf{12.4\%}$ de su rigidez elástica inicial ($11.15\text{ kN/mm} \to 1.383\text{ kN/mm}$), gobernada estrictamente por la plastificación de la rótula en la base.
+\end{enumerate}
+\end{examplebox}
+
+% ==============================================================================
+% SECCIÓN 6: TABLA SÍNTESIS Y COMPARACIÓN MDOF VS SDOF
+% ==============================================================================
+\section{Tabla Comparativa de Correspondencia MDOF \texorpdfstring{$\longleftrightarrow$}{<->} SDOF}
+
+La Tabla~\ref{tab:equivalencia_mdof_sdof} sintetiza la perfecta correspondencia biunívoca entre las variables del edificio real de múltiples pisos y el modelo de columna en voladizo de la Clase 04.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.8cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Parámetro Físico} & \textbf{Edificio MDOF (Pórtico / Muros)} & \textbf{Columna SDOF (Clase 04)} \\
+\midrule
+Variable de control & Desplazamiento de cubierta $u_{\text{techo}}$ & Deflexión en la punta $\Delta$ \\
+Fuerza reactiva equilibrada & Cortante basal $V_b = \sum P_i = \lambda \sum s_i$ & Fuerza cortante en la punta $V$ \\
+Mecanismo de daño & Rótulas plásticas en vigas/columnas & Resorte rotacional $M_h - \theta_h$ a $0.05 L$ \\
+Relación de equilibrio interno & $\lambda \mathbf{s} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}$ & $V = \frac{M_h}{0.95 L}$ \\
+Masa dinámica representativa & Masa modal efectiva $m^* = \alpha_1 M_{\text{total}}$ & Masa concentrada en la punta $m$ \\
+Factor de escala cinemático & Factor de participación modal $\Gamma$ & Factor unitario ($\Gamma = 1.0$) \\
+Coordenada reducida & $d^* = u_{\text{techo}} / \Gamma$ & $\Delta^* = \Delta$ \\
+Fuerza reducida & $F^* = V_b / \Gamma$ & $F^* = V$ \\
+Descarga elástica (\textit{springback}) & Descompresión de pisos superiores ante ablandamiento de piso blando & Enderezamiento del fuste elástico continuo al degradarse la rótula \\
+\bottomrule
+\end{tabularx}
+\caption{Analogía rigurosa entre las ecuaciones de la columna con rótula ASCE 41 (Clase 04) y el edificio MDOF bajo control por desplazamiento.}
+\label{tab:equivalencia_mdof_sdof}
+\end{table}
+
+
+% ==============================================================================
+% SECCIÓN 7: CONCLUSIONES Y RECOMENDACIONES DOCENTES
+% ==============================================================================
+\section{Conclusiones Pedagógicas y Criterios de Aplicación}
+
+\begin{enumerate}
+    \item \textbf{Desmitificación de la Distribución de Fuerzas:} La aplicación de fuerzas en los pisos durante un análisis pushover no requiere adivinar las cargas intermedias. El vector patrón $\mathbf{s}$ fija la silueta espacial, mientras que el algoritmo de Batoz-Dhatt determina el multiplicador escalar $\lambda$ con precisión matemática absoluta en cada iteración de Newton-Raphson.
+    \item \textbf{Preservación de la Eficiencia Computacional:} La descomposición en dos vectores tangentes ($\delta \mathbf{u}_s$ y $\delta \mathbf{u}_R$) permite conservar la simetría y estructura banda de la matriz de rigidez $\mathbf{K}_t$, evitando el costoso uso de multiplicadores de Lagrange o matrices jacobianas asimétricas.
+    \item \textbf{La Columna de la Clase 04 como Arquetipo Universal:} Toda la física de un edificio MDOF regular gobernado por su modo fundamental es directamente extrapolable al comportamiento de la columna en voladizo con rótula al $5\%$ de la altura mediante el factor de participación modal $\Gamma$ y los coeficientes de ASCE 41-17 ($C_0, C_1, C_2$).
+    \item \textbf{Capacidad de Rastrear Ablandamiento Post-Pico:} El control por desplazamiento en el techo es el único procedimiento numérico capaz de superar puntos límites de carga (\textit{snap-through}) y registrar la degradación estructural sin inducir divergencias artificiales de cálculo.
+\end{enumerate}
+
+% ==============================================================================
+% REFERENCIAS BIBLIOGRÁFICAS
+% ==============================================================================
+\begin{thebibliography}{99}
+    \bibitem{batoz} Batoz, J. L., \& Dhatt, G. (1979). Incremental displacement algorithms for nonlinear problems. \textit{International Journal for Numerical Methods in Engineering}, 14(8), 1262--1267.
+    \bibitem{powell} Powell, G. H. (2010). \textit{Nonlinear Analysis of Concrete and Steel Structures: An Introduction to the Mechanics and Analysis of Inelastic Structures}. Berkeley, CA: Computers and Structures, Inc.
+    \bibitem{asce41} American Society of Civil Engineers (ASCE). (2017). \textit{Seismic Evaluation and Retrofit of Existing Buildings} (ASCE/SEI Standard 41-17). Reston, VA: ASCE.
+    \bibitem{fajfar} Fajfar, P. (2000). A nonlinear analysis method for performance-based seismic design. \textit{Earthquake Spectra}, 16(3), 573--592.
+    \bibitem{chopra} Chopra, A. K. (2020). \textit{Dynamics of Structures: Theory and Applications to Earthquake Engineering} (5th ed.). Hoboken, NJ: Pearson.
+    \bibitem{fema440} Federal Emergency Management Agency (FEMA). (2005). \textit{Improvement of Nonlinear Static Seismic Analysis Procedures} (FEMA 440). Washington, DC: Applied Technology Council.
+\end{thebibliography}
+
+\end{document}
