@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 04: La Rótula Plástica y Modelo ASCE 41 | Análisis No Lineal</title>
+  <meta name="description" content="Simulador interactivo avanzado de una columna en voladizo con rótula plástica concentrada ASCE 41 al 5% de L. Análisis Pushover con control de desplazamiento, equilibrio estático seccional y descarga elástica (springback).">
+
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES DE DISEÑO Y PALETA DE COLORES (MODO CLARO Y OSCURO)
+       TEMA CLASE 04: ESMERALDA / TEAL (#059669 / #10b981)
+       ========================================================================== */
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #059669;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #ecfdf5 50%, #f8fafc 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 30%, #059669 70%, #0d9488 100%);
+
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --blue-400: #2563eb;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --emerald-600: #065f46;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --rose-400: #dc2626;
+      --rose-500: #b91c1c;
+      --purple-400: #7c3aed;
+      --purple-500: #6d28d9;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.2);
+    }
+
+    body.dark-theme {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: #162032;
+      --bg-card-hover: #1e2c45;
+      --border-subtle: #1f2d47;
+      --border-accent: #10b981;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(17, 24, 39, 0.95);
+      --hero-bg: linear-gradient(135deg, rgba(6, 78, 59, 0.35) 0%, rgba(22, 32, 50, 0.9) 60%, rgba(17, 24, 39, 0.95) 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 30%, #34d399 70%, #2dd4bf 100%);
+
+      --cyan-400: #22d3ee;
+      --cyan-500: #06b6d4;
+      --blue-400: #60a5fa;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --emerald-600: #059669;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --rose-400: #f87171;
+      --rose-500: #ef4444;
+      --purple-400: #c084fc;
+      --purple-500: #a855f7;
+
+      --canvas-bg: #0d131f;
+      --canvas-grid: #1e293b;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(16, 185, 129, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* ENCABEZADO Y NAVEGACIÓN */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #059669, #0d9488);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      list-style: none;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    .nav-btn.active {
+      background: rgba(5, 150, 105, 0.12);
+      color: var(--emerald-400);
+      border-color: rgba(5, 150, 105, 0.3);
+      font-weight: 600;
+    }
+
+    .theme-toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--border-accent);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 2.25rem 1.5rem 2rem 1.5rem;
+    }
+
+    .hero-container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--emerald-500);
+      margin-bottom: 0.6rem;
+    }
+
+    .hero-title {
+      font-size: 2.15rem;
+      font-weight: 800;
+      line-height: 1.2;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 960px;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .hero-tag {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    .hero-tag.highlight {
+      border-color: var(--emerald-400);
+      color: var(--emerald-500);
+      background: rgba(5, 150, 105, 0.08);
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    .main-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* BARRA DE PRESETS PEDAGÓGICOS */
+    .presets-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .presets-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .preset-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.55rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .preset-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--emerald-400);
+      transform: translateY(-2px);
+    }
+
+    .preset-btn.active {
+      background: rgba(5, 150, 105, 0.12);
+      border-color: var(--emerald-400);
+      color: var(--emerald-500);
+      box-shadow: 0 0 12px rgba(5, 150, 105, 0.15);
+    }
+
+    .preset-btn span.sub {
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--text-faint);
+    }
+
+    /* GRID DEL SIMULADOR: CONTROLES A LA IZQUIERDA, LIENZOS A LA DERECHA */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .sim-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* PANEL DE CONTROL LATERAL */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .panel-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .panel-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 1rem;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-value {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--emerald-500);
+      font-weight: 700;
+    }
+
+    .slider-input {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-card-hover);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--emerald-500);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .control-hint {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+    }
+
+    /* BOTONES DE ANIMACIÓN PUSHOVER */
+    .anim-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-anim {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      transition: all 0.2s;
+    }
+
+    .btn-anim:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--emerald-400);
+    }
+
+    .btn-anim.primary {
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-anim.primary:hover {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    /* DETALLES COLAPSABLES DE PARÁMETROS ASCE 41 */
+    .collapsible-details {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .collapsible-summary {
+      list-style: none;
+      padding: 0.65rem 0.85rem;
+      background: var(--bg-surface);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .collapsible-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .collapsible-summary:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .collapsible-content {
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* ÁREA DE VISUALIZACIÓN: LIENZOS */
+    .canvas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .canvas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .canvas-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.15rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+    }
+
+    .canvas-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .canvas-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .canvas-legend {
+      display: flex;
+      gap: 0.6rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .canvas-wrapper {
+      width: 100%;
+      height: 340px;
+      position: relative;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* BADGES DE ESTADO ASCE 41 */
+    .hinge-state-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .state-elastic {
+      background: rgba(5, 150, 105, 0.15);
+      color: var(--emerald-500);
+      border: 1px solid rgba(5, 150, 105, 0.3);
+    }
+
+    .state-hardening {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--amber-500);
+      border: 1px solid rgba(217, 119, 6, 0.3);
+    }
+
+    .state-softening {
+      background: rgba(220, 38, 38, 0.15);
+      color: var(--rose-500);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      animation: pulse-softening 1.8s infinite;
+    }
+
+    .state-residual {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--purple-500);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .state-collapse {
+      background: rgba(15, 23, 42, 0.2);
+      color: var(--rose-500);
+      border: 1px solid var(--rose-500);
+    }
+
+    @keyframes pulse-softening {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.65; }
+    }
+
+    /* PANEL DE DESGLOSE DE EQUILIBRIO Y MÉTRICAS NUMÉRICAS */
+    .metrics-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metrics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .metrics-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .metric-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.75rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      transition: all 0.2s;
+    }
+
+    .metric-item:hover {
+      border-color: var(--emerald-400);
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .metric-unit {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 0.2rem;
+    }
+
+    .metric-sub {
+      font-size: 0.68rem;
+      color: var(--text-faint);
+    }
+
+    /* EQUILIBRIUM BALANCE CHECKER */
+    .balance-box {
+      margin-top: 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .balance-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .balance-status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--emerald-500);
+    }
+
+    .balance-equation {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: var(--bg-surface);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* SECCIÓN DE TEORÍA Y FORMULACIÓN */
+    .theory-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theory-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 2px solid rgba(5, 150, 105, 0.25);
+      padding-bottom: 0.6rem;
+    }
+
+    .theory-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.75rem;
+    }
+
+    @media (max-width: 900px) {
+      .theory-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .theory-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .theory-block h4 {
+      font-size: 1.05rem;
+      color: var(--text-main);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .theory-callout {
+      background: rgba(5, 150, 105, 0.08);
+      border-left: 4px solid var(--emerald-500);
+      border-radius: 0 8px 8px 0;
+      padding: 0.85rem 1.15rem;
+      font-size: 0.86rem;
+      color: var(--text-main);
+      margin: 0.5rem 0;
+    }
+
+    .theory-callout.warning {
+      background: rgba(220, 38, 38, 0.08);
+      border-left-color: var(--rose-500);
+    }
+
+    /* MÓDULO SOCRÁTICO */
+    .socratic-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .socratic-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .socratic-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .socratic-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .quiz-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .quiz-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .quiz-question {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .quiz-opt {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .quiz-opt:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--emerald-400);
+      color: var(--text-main);
+    }
+
+    .quiz-opt.correct {
+      background: rgba(5, 150, 105, 0.15) !important;
+      border-color: var(--emerald-500) !important;
+      color: var(--emerald-600) !important;
+      font-weight: 700;
+    }
+
+    .quiz-opt.wrong {
+      background: rgba(220, 38, 38, 0.15) !important;
+      border-color: var(--rose-500) !important;
+      color: var(--rose-500) !important;
+    }
+
+    .quiz-feedback {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      padding: 0.65rem 0.85rem;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .quiz-feedback.show-correct {
+      display: block;
+      background: rgba(5, 150, 105, 0.1);
+      color: var(--emerald-600);
+      border: 1px solid rgba(5, 150, 105, 0.25);
+    }
+
+    .quiz-feedback.show-wrong {
+      display: block;
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--rose-500);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 2.25rem 1.5rem;
+      margin-top: 3rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--emerald-400);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER NAVEGACIÓN -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">Clase 04</span>
+        <span class="brand-title">Análisis No Lineal • La Rótula Plástica ASCE 41</span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-btn">← Portal</a></li>
+          <li><a href="01_la_trayectoria_importa.html" class="nav-btn">Clase 01</a></li>
+          <li><a href="02_equilibrio_newton_raphson.html" class="nav-btn">Clase 02</a></li>
+          <li><a href="03_analisis_pushover.html" class="nav-btn">Clase 03</a></li>
+          <li><a href="04_rotula_plastica_asce41.html" class="nav-btn active">Clase 04</a></li>
+        </ul>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <button id="theme-toggle" class="theme-toggle-btn" title="Alternar Modo Claro / Oscuro">
+          <span id="theme-icon">🌙</span> <span id="theme-text">Modo Oscuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO PRESENTACIÓN -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-meta">
+        <span>Laboratorio Interactivo 04</span>
+        <span>•</span>
+        <span>Modelos de Plasticidad Concentrada</span>
+        <span>•</span>
+        <span>Control por Desplazamiento</span>
+      </div>
+      <h1 class="hero-title">La Rótula Plástica: Modelo ASCE 41 y Equilibrio en Voladizo</h1>
+      <p class="hero-subtitle">
+        Comprende de manera visual e interactiva cómo se forma y evoluciona una rótula plástica concentrada bajo la norma ASCE 41 en una columna en voladizo. 
+        Observa el acoplamiento en serie entre la flexibilidad elástica del fuste y el resorte rotacional a \(0.05 L\), comprueba el equilibrio en cada incremento de desplazamiento y descubre el fenómeno de descarga elástica (<em>springback</em>) durante el ablandamiento.
+      </p>
+
+      <div class="hero-tags">
+        <span class="hero-tag highlight">🎯 Control de Desplazamiento</span>
+        <span class="hero-tag highlight">📐 ASCE 41-17 / ASCE 41-23</span>
+        <span class="hero-tag">🔗 Resorte Rotacional en Serie</span>
+        <span class="hero-tag">⚖️ Equilibrio de Secciones</span>
+        <span class="hero-tag">📉 Ablandamiento y Descarga Elástica</span>
+        <span class="hero-tag">🛡️ Niveles IO, LS y CP</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- PRESETS PEDAGÓGICOS -->
+    <section class="presets-card">
+      <div class="presets-title">
+        <span>🧪 Casos de Estudio y Fases de Comportamiento (Haz clic para explorar):</span>
+      </div>
+      <div class="presets-grid">
+        <button class="preset-btn active" id="preset-elastic">
+          <span>1. Rango Elástico Lineal</span>
+          <span class="sub">\(M_h < M_y\): fuste y rótula intactos, rigidez inicial \(K_0\).</span>
+        </button>
+        <button class="preset-btn" id="preset-yield">
+          <span>2. Fluencia e Inicio Plástico</span>
+          <span class="sub">\(M_h = M_y\): formación de la rótula (Punto B de ASCE 41).</span>
+        </button>
+        <button class="preset-btn" id="preset-hardening">
+          <span>3. Endurecimiento por Deformación</span>
+          <span class="sub">\(M_y < M_h \le M_u\): plastificación creciente hasta el pico C.</span>
+        </button>
+        <button class="preset-btn" id="preset-softening">
+          <span>4. Ablandamiento y Springback</span>
+          <span class="sub">Pérdida de capacidad en rótula; fuste se endereza elásticamente.</span>
+        </button>
+        <button class="preset-btn" id="preset-residual">
+          <span>5. Meseta Residual y Colapso</span>
+          <span class="sub">Resistencia residual \(c M_y\) hasta rotación última (Puntos D–E).</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- LAYOUT DEL SIMULADOR: CONTROLES + 4 LIENZOS -->
+    <section class="sim-layout">
+
+      <!-- COLUMNA IZQUIERDA: CONTROLES -->
+      <aside class="sidebar">
+
+        <!-- PANEL DE CARGA Y PUSHOVER -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">🕹️ Control de Desplazamiento Pushover</h3>
+          </div>
+
+          <!-- Slider de Desplazamiento en la Punta -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Desplazamiento en Punta \(\Delta\):</span>
+              <span class="control-value" id="val-delta">15.0 mm</span>
+            </div>
+            <input type="range" class="slider-input" id="slider-delta" min="0" max="150" step="0.2" value="15">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-faint); margin-top: 2px;">
+              <span>0 mm (Reposo)</span>
+              <span id="label-drift">Deriva: 0.50%</span>
+              <span>150 mm (Extremo)</span>
+            </div>
+          </div>
+
+          <!-- Botones de Animación y Avance -->
+          <div class="anim-buttons">
+            <button class="btn-anim primary" id="btn-play" title="Iniciar simulación continua">▶ Play</button>
+            <button class="btn-anim" id="btn-pause" title="Pausar simulación">⏸ Pausa</button>
+            <button class="btn-anim" id="btn-step" title="Avanzar un incremento">+1 Paso</button>
+            <button class="btn-anim" id="btn-reset" title="Reiniciar a cero">↺ Cero</button>
+          </div>
+
+          <div style="margin-top: 0.85rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem;">
+            <span style="color: var(--text-muted);">Velocidad de barrido:</span>
+            <select id="select-speed" style="background: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main); border-radius: 4px; padding: 2px 6px; font-size: 0.76rem;">
+              <option value="0.5">Lenta (0.5x)</option>
+              <option value="1" selected>Normal (1.0x)</option>
+              <option value="2">Rápida (2.0x)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- PANEL DE GEOMETRÍA DE LA COLUMNA -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">📏 Geometría de la Columna</h3>
+          </div>
+
+          <!-- Longitud L -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Longitud \(L\):</span>
+              <span class="control-value" id="val-L">3.00 m</span>
+            </div>
+            <input type="range" class="slider-input" id="slider-L" min="1.5" max="6.0" step="0.1" value="3.0">
+            <span class="control-hint">Por defecto \(L = 3.0\text{ m}\). Rótula a \(x_h = 0.05 L = \)<strong id="val-xh">0.15 m</strong>.</span>
+          </div>
+
+          <!-- Ancho de Base b -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Ancho de sección \(b\):</span>
+              <span class="control-value" id="val-b">0.35 m (35 cm)</span>
+            </div>
+            <input type="range" class="slider-input" id="slider-b" min="0.20" max="0.80" step="0.05" value="0.35">
+          </div>
+
+          <!-- Peralte d -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Peralte de sección \(d\):</span>
+              <span class="control-value" id="val-d">0.45 m (45 cm)</span>
+            </div>
+            <input type="range" class="slider-input" id="slider-d" min="0.25" max="1.00" step="0.05" value="0.45">
+            <span class="control-hint">Inercia \(I = \frac{1}{12}bd^3 = \)<strong id="val-inertia">0.00266 m⁴</strong></span>
+          </div>
+
+          <!-- Desplegable ASCE 41 Parameters -->
+          <details class="collapsible-details" id="details-asce">
+            <summary class="collapsible-summary">
+              <span>⚙️ Parámetros Rótula ASCE 41</span>
+              <span style="font-size: 0.75rem; color: var(--emerald-500);">Configurar ▾</span>
+            </summary>
+            <div class="collapsible-content">
+              <div class="control-group" style="margin-bottom: 0.5rem;">
+                <div class="control-label-row">
+                  <span>Concreto \(f'_c\):</span>
+                  <span class="control-value" id="val-fc">28 MPa</span>
+                </div>
+                <input type="range" class="slider-input" id="slider-fc" min="21" max="42" step="7" value="28">
+              </div>
+
+              <div class="control-group" style="margin-bottom: 0.5rem;">
+                <div class="control-label-row">
+                  <span>Cuantía acero \(\rho\):</span>
+                  <span class="control-value" id="val-rho">1.50 %</span>
+                </div>
+                <input type="range" class="slider-input" id="slider-rho" min="1.0" max="2.5" step="0.25" value="1.5">
+                <span class="control-hint">Fluencia calculada: \(M_y = \)<strong id="val-my">382 kN·m</strong></span>
+              </div>
+
+              <div class="control-group" style="margin-bottom: 0.5rem;">
+                <div class="control-label-row">
+                  <span>Ductilidad \(a\) (Pico C):</span>
+                  <span class="control-value" id="val-param-a">0.020 rad</span>
+                </div>
+                <input type="range" class="slider-input" id="slider-param-a" min="0.010" max="0.035" step="0.005" value="0.020">
+              </div>
+
+              <div class="control-group" style="margin-bottom: 0.2rem;">
+                <div class="control-label-row">
+                  <span>Residual \(c = M_r / M_y\):</span>
+                  <span class="control-value" id="val-param-c">0.20 (20%)</span>
+                </div>
+                <input type="range" class="slider-input" id="slider-param-c" min="0.10" max="0.40" step="0.05" value="0.20">
+              </div>
+            </div>
+          </details>
+        </div>
+
+      </aside>
+
+      <!-- COLUMNA DERECHA: 4 LIENZOS VISUALES -->
+      <div class="canvas-grid">
+
+        <!-- LIENZO 1: DEFORMADA FÍSICA Y RÓTULA PLÁSTICA -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <h3 class="canvas-title">🏢 1. Deformada y Rótula Plástica</h3>
+            <span class="hinge-state-badge state-elastic" id="badge-hinge-state">Rótula Elástica (A–B)</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-columna"></canvas>
+          </div>
+          <div style="font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <span>🟢 Rótula a \(0.05 L\): resorte rotacional concentrado.</span>
+            <span>Giro \(\theta_h\): <strong id="card-val-theta" style="font-family: var(--font-mono); color: var(--emerald-500);">0.000 rad</strong></span>
+          </div>
+        </div>
+
+        <!-- LIENZO 2: DIAGRAMA DE CUERPO LIBRE Y EQUILIBRIO EN EL CORTE -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <h3 class="canvas-title">⚖️ 2. DCL y Equilibrio en la Rótula</h3>
+            <span style="font-size: 0.72rem; font-weight: 700; color: var(--emerald-500); background: rgba(5, 150, 105, 0.1); padding: 2px 6px; border-radius: 4px;">
+              Corte a \(x_h = 0.05 L\)
+            </span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-equilibrio"></canvas>
+          </div>
+          <div style="font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <span>Equilibrio: \(M_{\text{act}} = V \cdot 0.95L\) vs \(M_{\text{res}} = M_h(\theta_h)\)</span>
+            <span id="text-balance-check" style="font-weight: 700; color: var(--emerald-500);">✓ En Equilibrio Exacto</span>
+          </div>
+        </div>
+
+        <!-- LIENZO 3: CURVA PUSHOVER GLOBAL (V vs Delta) -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <h3 class="canvas-title">📈 3. Curva Pushover Global (\(V\) vs \(\Delta\))</h3>
+            <span style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--text-main);" id="card-val-V">
+              V = 0.00 kN
+            </span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-pushover"></canvas>
+          </div>
+          <div style="font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <span>Rigidez lateral tangente: <strong id="card-val-kt" style="font-family: var(--font-mono); color: var(--cyan-400);">-- kN/m</strong></span>
+            <div class="canvas-legend">
+              <div class="legend-item"><span class="legend-dot" style="background: var(--emerald-400);"></span> Elástico</div>
+              <div class="legend-item"><span class="legend-dot" style="background: var(--amber-400);"></span> B-C</div>
+              <div class="legend-item"><span class="legend-dot" style="background: var(--rose-400);"></span> C-D</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIENZO 4: CURVA CONSTITUTIVA ASCE 41 DE LA RÓTULA (M_h vs theta_h) -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <h3 class="canvas-title">📐 4. Curva ASCE 41 Rótula (\(M_h\) vs \(\theta_h\))</h3>
+            <span style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--text-main);" id="card-val-Mh">
+              M_h = 0.00 kN·m
+            </span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-rotula"></canvas>
+          </div>
+          <div style="font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <span>Puntos cardinales: A, B (Fluencia), C (Pico), D (Residual), E (Colapso)</span>
+            <div class="canvas-legend">
+              <div class="legend-item"><span style="color: #0284c7; font-weight: 700;">IO</span></div>
+              <div class="legend-item"><span style="color: #d97706; font-weight: 700;">LS</span></div>
+              <div class="legend-item"><span style="color: #dc2626; font-weight: 700;">CP</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- PANEL DE DESGLOSE DE EQUILIBRIO Y MÉTRICAS NUMÉRICAS EN VIVO -->
+    <section class="metrics-card">
+      <div class="metrics-header">
+        <h3 class="metrics-title">
+          <span>📊 Estado Instantáneo de la Columna y Verificación Numérica del Equilibrio</span>
+        </h3>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+          Brazo de palanca a la rótula: \(h_{\text{lever}} = 0.95 L = \)<strong id="val-hleve-metric">2.85 m</strong>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <span class="metric-label">Cortante en Punta \(V\)</span>
+          <span class="metric-value" id="m-V">0.0<span class="metric-unit">kN</span></span>
+          <span class="metric-sub">Reacción basal en la base</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Momento en Rótula \(M_h\)</span>
+          <span class="metric-value" id="m-Mh">0.0<span class="metric-unit">kN·m</span></span>
+          <span class="metric-sub">\(V \cdot (0.95 L)\)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Momento en Base \(M_{\text{base}}\)</span>
+          <span class="metric-value" id="m-Mbase">0.0<span class="metric-unit">kN·m</span></span>
+          <span class="metric-sub">\(V \cdot L = M_h / 0.95\)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Desplazamiento Total \(\Delta\)</span>
+          <span class="metric-value" id="m-Delta">0.0<span class="metric-unit">mm</span></span>
+          <span class="metric-sub">Control impuesto en punta</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Aporte Elástico \(\Delta_{\text{el}}\)</span>
+          <span class="metric-value" id="m-Del">0.0<span class="metric-unit">mm</span></span>
+          <span class="metric-sub">Flexión del fuste: \(\frac{V L^3}{3 E I}\)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Aporte Rótula \(\Delta_{\theta}\)</span>
+          <span class="metric-value" id="m-Dtheta">0.0<span class="metric-unit">mm</span></span>
+          <span class="metric-sub">Rotación: \(\theta_h \cdot (0.95 L)\)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Giro de Rótula \(\theta_h\)</span>
+          <span class="metric-value" id="m-Theta">0.000<span class="metric-unit">rad</span></span>
+          <span class="metric-sub" id="m-theta-deg">0.000°</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Rigidez Tangente \(K_t\)</span>
+          <span class="metric-value" id="m-Kt">0.0<span class="metric-unit">kN/mm</span></span>
+          <span class="metric-sub" id="m-kt-sub">Pendiente global \(dV/d\Delta\)</span>
+        </div>
+      </div>
+
+      <!-- BALANZA DE EQUILIBRIO DE SECCIÓN -->
+      <div class="balance-box">
+        <div class="balance-bar-wrap">
+          <span class="balance-status" id="balance-badge">
+            <span>⚖️</span> <span>Equilibrio Seccional Estricto:</span>
+          </span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" id="balance-explanation">
+            Las fuerzas cortantes y momentos flectores en la rótula satisfacen \(\sum M = 0\) y \(\sum F_x = 0\) en cada milímetro de desplazamiento.
+          </span>
+        </div>
+
+        <div class="balance-equation">
+          <span>\(M_{\text{actuante}} = V \cdot (0.95 L) = \)<strong id="eq-mact">0.00 kN·m</strong></span>
+          <span>\(M_{\text{resistente}} = M_h(\theta_h) = \)<strong id="eq-mres">0.00 kN·m</strong></span>
+          <span>Residuo \(|R_M| = \)<strong id="eq-res" style="color: var(--emerald-500);">0.0000 kN·m</strong></span>
+          <span>Descomposición: \(\Delta = \Delta_{\text{el}} + \Delta_{\theta} \implies \)<strong id="eq-sum">0.00 + 0.00 = 0.00 mm</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN DE FORMULACIÓN TEÓRICA -->
+    <section class="theory-section">
+      <h2 class="theory-title">📖 Formulación Mecánica Rigurosa y Modelo ASCE 41</h2>
+
+      <div class="theory-grid">
+        <div class="theory-block">
+          <h4>1. Modelo de Plasticidad Concentrada en Serie</h4>
+          <p>
+            En el análisis inelástico práctico de elementos sometidos a flexión dominante, la plastificación se localiza en una zona de longitud finita llamada <em>longitud de rótula plástica</em> \(L_p\).
+            En modelos de plasticidad concentrada (<em>lumped plasticity</em>), esta disipación se idealiza como un <strong>resorte rotacional no lineal de longitud cero</strong> acoplado en serie con un elemento elástico continuo.
+          </p>
+          <div class="theory-callout">
+            <strong>¿Por qué ubicar la rótula a \(0.05 L\)?</strong><br>
+            En una columna en voladizo, la zona plástica se extiende desde la base empotrada hasta una altura \(L_p \approx 0.5 d\) a \(0.10 L\). El centroide de curvatura plástica y disipación histerética se sitúa aproximadamente en \(L_p / 2 \approx 0.05 L\). Ubicar el resorte rotacional a esta distancia captura fielmente la cinemática de la columna real.
+          </div>
+          <p>
+            El brazo de palanca desde la carga superior en la punta hasta la rótula es:
+            $$h_{\text{lever}} = L - x_h = L - 0.05 L = 0.95 L$$
+            El equilibrio estático exige que el momento actuante en la rótula sea:
+            $$M_h = V \cdot (0.95 L) \implies V = \frac{M_h}{0.95 L}$$
+          </p>
+        </div>
+
+        <div class="theory-block">
+          <h4>2. Descomposición Cinemática y Control por Desplazamiento</h4>
+          <p>
+            Al aplicar el análisis Pushover imponiendo el desplazamiento en la punta \(\Delta\), la respuesta total es la suma de dos flexibilidades en serie:
+            $$\Delta = \Delta_{\text{elástico, fuste}} + \Delta_{\text{rótula}} = \frac{V L^3}{3 E I} + \theta_h \cdot (0.95 L)$$
+            Sustituyendo \(V = \frac{M_h(\theta_h)}{0.95 L}\):
+            $$\Delta(\theta_h) = \frac{M_h(\theta_h) L^2}{2.85 E I} + 0.95 L \cdot \theta_h$$
+          </p>
+
+          <div class="theory-callout warning">
+            <strong>El Fenómeno de Descarga Elástica ("Springback"):</strong><br>
+            Cuando la rótula supera el momento máximo \(M_u\) (Punto C) y entra en la rama de ablandamiento (\(k_t < 0\)), el momento \(M_h\) disminuye. 
+            Por equilibrio estricto, la fuerza cortante lateral \(V = \frac{M_h}{0.95 L}\) <strong>debe caer</strong>.<br>
+            Al caer \(V\), la deformación elástica de la columna \(\Delta_{\text{el}} = \frac{V L^3}{3 E I}\) <strong>se reduce</strong>: ¡el fuste elástico se endereza!
+            Para que el desplazamiento total \(\Delta\) siga aumentando, la rótula plástica debe abrirse a una tasa acelerada para absorber tanto el avance global como la recuperación elástica del fuste.
+          </div>
+        </div>
+
+        <div class="theory-block">
+          <h4>3. Curva Troncal ASCE 41-17 / ASCE 41-23</h4>
+          <p>
+            La norma ASCE 41 define el comportamiento momento-rotación a través de 5 puntos canónicos:
+          </p>
+          <ul style="padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem;">
+            <li><strong>Punto A (0, 0)</strong>: Estado inicial no cargado.</li>
+            <li><strong>Punto B (\(\theta_y, M_y\))</strong>: Fluencia del refuerzo a tracción y plastificación inicial.</li>
+            <li><strong>Punto C (\(\theta_u, M_u\))</strong>: Resistencia máxima (capping point), con sobre-resistencia \(M_u / M_y \approx 1.15\).</li>
+            <li><strong>Punto D (\(\theta_r, M_r\))</strong>: Inicio de la meseta residual tras la degradación post-pico (\(M_r = c M_y\), típicamente \(c = 0.20\)).</li>
+            <li><strong>Punto E (\(\theta_e, M_r\))</strong>: Capacidad última de deformación inelástica antes de pérdida catastrófica de gravedad.</li>
+          </ul>
+        </div>
+
+        <div class="theory-block">
+          <h4>4. Niveles de Desempeño Sísmico</h4>
+          <p>
+            Para evaluación sísmica basada en desempeño (PBD), ASCE 41 define tres umbrales fundamentales de daño estructural:
+          </p>
+          <ul style="padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem;">
+            <li><strong style="color: #0284c7;">IO (Immediate Occupancy - Ocupación Inmediata)</strong>: Daño muy leve; agrietamiento menor en la rótula, el edificio es seguro para ser ocupado de inmediato tras el sismo.</li>
+            <li><strong style="color: #d97706;">LS (Life Safety - Seguridad de Vida)</strong>: Daño moderado pero significativo; plastificación visible y desprendimiento de recubrimiento, con margen seguro contra el colapso.</li>
+            <li><strong style="color: #dc2626;">CP (Collapse Prevention - Prevención de Colapso)</strong>: Daño severo y extensivo cerca del límite residual; la estructura conserva soporte de carga gravitacional pero requiere demolición o rehabilitación profunda.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO SOCRÁTICO -->
+    <section class="socratic-section">
+      <div class="socratic-header">
+        <h2 class="socratic-title">🧠 Desafío Socrático: Comprensión Física y Estructural</h2>
+        <p class="socratic-subtitle">Pon a prueba tu intuición como ingeniero estructural de posgrado analizando estos cuatro conceptos fundamentales:</p>
+      </div>
+
+      <div class="quiz-grid">
+
+        <!-- PREGUNTA 1 -->
+        <div class="quiz-card" id="q1">
+          <div class="quiz-question">
+            1. En la rama descendente (ablandamiento post-pico C–D), ¿por qué la deflexión elástica del fuste \(\Delta_{\text{el}}\) disminuye mientras el desplazamiento en la punta \(\Delta\) sigue aumentando?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">A) Porque el material del fuste cambia mágicamente su módulo de elasticidad \(E\).</button>
+            <button class="quiz-opt" data-correct="true">B) Porque el equilibrio exige que \(V = M_h / 0.95L\); al caer \(M_h\), la fuerza \(V\) disminuye y el fuste elástico experimenta una descarga elástica (springback).</button>
+            <button class="quiz-opt" data-correct="false">C) Porque la columna se encoge longitudinalmente debido a la fuerza axial.</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- PREGUNTA 2 -->
+        <div class="quiz-card" id="q2">
+          <div class="quiz-question">
+            2. Si en lugar de control de desplazamiento hubiésemos utilizado control por fuerza (aplicando incrementos de carga \(V\)), ¿qué habría ocurrido al alcanzar el Punto C (capacidad máxima)?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">A) El análisis continuaría normalmente por la rama descendente.</button>
+            <button class="quiz-opt" data-correct="true">B) Ocurriría divergencia numérica catastrófica o salto dinámico (snap-through), pues ninguna fuerza mayor que \(V_{\max}\) puede ser equilibrada.</button>
+            <button class="quiz-opt" data-correct="false">C) La rigidez de la estructura se volvería infinita instantáneamente.</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- PREGUNTA 3 -->
+        <div class="quiz-card" id="q3">
+          <div class="quiz-question">
+            3. Si aumentamos el peralte \(d\) de la sección de la columna de 0.45 m a 0.70 m, ¿cuál es el impacto principal en la respuesta pushover?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="true">A) Aumenta drásticamente la rigidez inicial \(K_0\) (proporcional a \(d^3\)) y el momento de fluencia \(M_y\) (proporcional a \(d^2\)), pero la fluencia ocurrirá a un desplazamiento \(\Delta_y\) menor.</button>
+            <button class="quiz-opt" data-correct="false">B) La columna se vuelve más flexible y el momento de fluencia se reduce a la mitad.</button>
+            <button class="quiz-opt" data-correct="false">C) No hay ningún cambio porque el resorte rotacional absorbe toda la rigidez.</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- PREGUNTA 4 -->
+        <div class="quiz-card" id="q4">
+          <div class="quiz-question">
+            4. ¿Por qué el momento en la base empotrada (\(x=0\)) es \(M_{\text{base}} = V \cdot L\), ligeramente superior al momento en la rótula \(M_h = V \cdot 0.95 L\)?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="true">A) Porque el brazo de palanca hasta la base es \(L\) completo, mientras que la rótula está elevada a \(0.05 L\), resultando exactamente en \(M_{\text{base}} = M_h / 0.95\).</button>
+            <button class="quiz-opt" data-correct="false">B) Porque la rótula plástica pierde momento por fricción interna no lineal.</button>
+            <button class="quiz-opt" data-correct="false">C) Es un error del modelo simplificado que viola las leyes de la termodinámica.</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <strong style="color: var(--text-main);">Análisis No Lineal de Estructuras</strong><br>
+        <span>Prof. Orlando Arroyo • Escuela de Ingeniería Civil • Universidad Industrial de Santander (UIS)</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="index.html">Portal General</a></li>
+        <li><a href="01_la_trayectoria_importa.html">Clase 01</a></li>
+        <li><a href="02_equilibrio_newton_raphson.html">Clase 02</a></li>
+        <li><a href="03_analisis_pushover.html">Clase 03</a></li>
+        <li><a href="04_rotula_plastica_asce41.html">Clase 04</a></li>
+        <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       LÓGICA NUMÉRICA, SOLUCIONADOR Y RENDERIZADO CANVAS EN TIEMPO REAL
+       ========================================================================== -->
+  <script>
+    /* ==========================================================================
+       1. ESTADO DE LA SIMULACIÓN Y VARIABLES GLOBALES
+       ========================================================================== */
+    const state = {
+      // Geometría
+      L: 3.0,       // m
+      b: 0.35,      // m
+      d: 0.45,      // m
+      fc: 28.0,     // MPa
+      rho: 0.015,   // Cuantía de acero (1.5%)
+      fy: 420.0,    // MPa
+
+      // Parámetros ASCE 41
+      param_a: 0.020,     // rad (rotación plástica de pico)
+      param_b: 0.040,     // rad (rotación plástica última)
+      param_c: 0.20,      // factor residual Mr / My
+      param_Qy: 1.15,     // factor sobre-resistencia Mu / My
+
+      // Control de Pushover
+      delta: 0.015,       // m (Desplazamiento actual en punta)
+      delta_max: 0.150,   // m (150 mm)
+
+      // Animación
+      isPlaying: false,
+      speedMultiplier: 1.0,
+      animId: null
+    };
+
+    // Propiedades derivadas
+    let props = {};
+    // Curva precomputada densa para visualización
+    let pushoverCurve = [];
+    let hingeBackbone = [];
+
+    /* ==========================================================================
+       2. MODELO DE SECCIÓN Y CURVA ASCE 41
+       ========================================================================== */
+    function computeSectionProperties() {
+      const L = state.L;
+      const b = state.b;
+      const d = state.d;
+      const fc = state.fc;
+      const fy = state.fy;
+      const rho = state.rho;
+
+      // Inercia gruesa (m^4)
+      const I = (b * Math.pow(d, 3)) / 12.0;
+      // Módulo de elasticidad del concreto (MPa -> kN/m^2)
+      // Ec = 4700 * sqrt(fc) [MPa] * 1000 = kN/m^2
+      const Ec = 4700.0 * Math.sqrt(fc) * 1000.0; // kN/m^2
+      const EI = Ec * I; // kN·m^2
+
+      // Distancia a la rótula plástica: 5% de L
+      const xh = 0.05 * L;
+      const h_lever = 0.95 * L; // Brazo a la punta
+
+      // Rigidez elástica del fuste continuo (sin resorte): K_cantilever = 3EI / L^3
+      const k_beam = (3.0 * EI) / Math.pow(L, 3); // kN/m
+
+      // Estimación del momento de fluencia My (kN·m)
+      // Para viga/columna de concreto armado: My ≈ 0.85 * rho * b * d^2 * fy [kN·m]
+      // fy = 420 MPa = 420,000 kN/m^2
+      const fy_kpa = fy * 1000.0;
+      const My = 0.85 * rho * b * Math.pow(d, 2) * fy_kpa;
+
+      // Rotación de fluencia de la rótula concentrada theta_y
+      // En ASCE 41 para columnas dominadas por flexión:
+      // Longitud plástica Lp ≈ 0.5 * d
+      const Lp = Math.max(0.08 * L, 0.5 * d);
+      // theta_y ≈ (My * Lp) / (3 * EI) o calibrado con rigidez rotacional inicial muy alta
+      // Para visualización limpia y pedagógica: theta_y ≈ 0.0035 rad
+      const theta_y = Math.max(0.002, (My * Lp) / (3.0 * EI) + 0.001);
+
+      // Rigidez elástica rotacional de la rótula (kN·m / rad)
+      const k_theta_0 = My / theta_y;
+
+      // Rigidez lateral elástica combinada en serie:
+      // 1 / K0 = 1 / k_beam + (h_lever)^2 / k_theta_0
+      const flex_beam = 1.0 / k_beam;
+      const flex_hinge = Math.pow(h_lever, 2) / k_theta_0;
+      const K0 = 1.0 / (flex_beam + flex_hinge);
+
+      // Puntos característicos ASCE 41 (M vs theta):
+      // Punto A: (0, 0)
+      // Punto B: (theta_y, My)
+      const a = state.param_a;
+      const b_asce = state.param_b;
+      const Mu = state.param_Qy * My;
+      const theta_u = theta_y + a; // Punto C (Pico)
+
+      // Punto D: (theta_r, Mr) - Caída empinada a la resistencia residual
+      const Mr = state.param_c * My;
+      const drop_width = 0.003; // rad (pendiente pronunciada para continuidad numérica)
+      const theta_r = theta_u + drop_width;
+
+      // Punto E: (theta_e, Mr) - Final de la meseta residual
+      const theta_e = theta_y + b_asce;
+
+      // Punto F: Pérdida total de capacidad
+      const theta_fail = theta_e + 0.005;
+
+      // Umbrales de desempeño ASCE 41
+      const theta_IO = theta_y + 0.25 * a;
+      const theta_LS = theta_y + 0.75 * a;
+      const theta_CP = theta_u + 0.50 * (theta_e - theta_u);
+
+      return {
+        L, b, d, fc, fy, rho,
+        I, Ec, EI, xh, h_lever,
+        k_beam, My, theta_y, k_theta_0, K0,
+        a, b_asce, Mu, theta_u, Mr, theta_r, theta_e, theta_fail,
+        theta_IO, theta_LS, theta_CP
+      };
+    }
+
+    /* ==========================================================================
+       3. FUNCIÓN CONSTITUTIVA ASCE 41: M_h = f(theta_h)
+       ========================================================================== */
+    function getHingeMoment(theta) {
+      const p = props;
+      if (theta <= 0) return 0;
+
+      // Tramo A-B: Elástico
+      if (theta <= p.theta_y) {
+        return p.k_theta_0 * theta;
+      }
+      // Tramo B-C: Endurecimiento por deformación
+      else if (theta <= p.theta_u) {
+        const ratio = (theta - p.theta_y) / (p.theta_u - p.theta_y);
+        return p.My + (p.Mu - p.My) * ratio;
+      }
+      // Tramo C-D: Ablandamiento post-pico (Softening descendente)
+      else if (theta <= p.theta_r) {
+        const ratio = (theta - p.theta_u) / (p.theta_r - p.theta_u);
+        return p.Mu - (p.Mu - p.Mr) * ratio;
+      }
+      // Tramo D-E: Meseta residual
+      else if (theta <= p.theta_e) {
+        return p.Mr;
+      }
+      // Tramo E-F: Pérdida catastrófica de capacidad
+      else if (theta <= p.theta_fail) {
+        const ratio = (theta - p.theta_e) / (p.theta_fail - p.theta_e);
+        return Math.max(0.01 * p.My, p.Mr * (1.0 - ratio));
+      }
+      else {
+        return 0.01 * p.My;
+      }
+    }
+
+    /* ==========================================================================
+       4. RELACIÓN DESPLAZAMIENTO GLOBAL: Delta(theta_h)
+       ========================================================================== */
+    function getDeltaFromTheta(theta) {
+      const p = props;
+      const Mh = getHingeMoment(theta);
+      const V = Mh / p.h_lever;
+      const Delta_el = (V * Math.pow(p.L, 3)) / (3.0 * p.EI);
+      const Delta_theta = theta * p.h_lever;
+      return Delta_el + Delta_theta;
+    }
+
+    /* ==========================================================================
+       5. SOLUCIONADOR INVERSO DE EQUILIBRIO: DADO DELTA, ENCONTRAR THETA_H
+       ========================================================================== */
+    function solveThetaForDelta(targetDelta) {
+      if (targetDelta <= 0) return 0;
+
+      let low = 0.0;
+      let high = 0.08; // 80 mrad
+
+      while (getDeltaFromTheta(high) < targetDelta && high < 0.20) {
+        high *= 1.5;
+      }
+
+      for (let i = 0; i < 30; i++) {
+        const mid = 0.5 * (low + high);
+        const dMid = getDeltaFromTheta(mid);
+        if (Math.abs(dMid - targetDelta) < 1e-7) {
+          return mid;
+        }
+        if (dMid < targetDelta) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+      return 0.5 * (low + high);
+    }
+
+    /* ==========================================================================
+       6. CÁLCULO DEL ESTADO ESTRUCTURAL COMPLETO
+       ========================================================================== */
+    function computeCurrentState() {
+      const p = props;
+      const Delta = state.delta;
+
+      // 1. Resolver giro en la rótula
+      const theta_h = solveThetaForDelta(Delta);
+
+      // 2. Momento en la rótula según curva ASCE 41
+      const Mh = getHingeMoment(theta_h);
+
+      // 3. Fuerza cortante por equilibrio estático en la rótula:
+      const V = p.h_lever > 0 ? (Mh / p.h_lever) : 0;
+
+      // 4. Momento en la base empotrada (x = 0):
+      const M_base = V * p.L;
+
+      // 5. Descomposición de desplazamientos
+      const Delta_el = (V * Math.pow(p.L, 3)) / (3.0 * p.EI);
+      const Delta_theta = theta_h * p.h_lever;
+
+      // 6. Residuo de equilibrio seccional
+      const M_actuante = V * p.h_lever;
+      const residuo_M = Math.abs(M_actuante - Mh);
+
+      // 7. Rigidez lateral tangente local dV/dDelta
+      const dDelta = 0.0005; // 0.5 mm
+      const theta_plus = solveThetaForDelta(Delta + dDelta);
+      const V_plus = getHingeMoment(theta_plus) / p.h_lever;
+      const Kt = (V_plus - V) / dDelta; // kN/m
+
+      // 8. Determinación del estado ASCE 41
+      let stateName = "Elástico (A–B)";
+      let stateClass = "state-elastic";
+
+      if (theta_h < p.theta_y) {
+        stateName = "Elástico (A–B)";
+        stateClass = "state-elastic";
+      } else if (theta_h <= p.theta_u) {
+        stateName = "Endurecimiento (B–C)";
+        stateClass = "state-hardening";
+      } else if (theta_h <= p.theta_r) {
+        stateName = "Ablandamiento (C–D)";
+        stateClass = "state-softening";
+      } else if (theta_h <= p.theta_e) {
+        stateName = "Meseta Residual (D–E)";
+        stateClass = "state-residual";
+      } else {
+        stateName = "Pérdida Capacidad (>E)";
+        stateClass = "state-collapse";
+      }
+
+      return {
+        Delta, theta_h, Mh, V, M_base,
+        Delta_el, Delta_theta, residuo_M,
+        M_actuante, Kt, stateName, stateClass
+      };
+    }
+
+    /* ==========================================================================
+       7. PRECOMPUTACIÓN DE CURVAS DENSAS (PUSHOVER Y BACKBONE ASCE 41)
+       ========================================================================== */
+    function precomputeCurves() {
+      props = computeSectionProperties();
+      const p = props;
+
+      // Precomputar curva Pushover V vs Delta
+      pushoverCurve = [];
+      const nSteps = 250;
+      const maxDelta = state.delta_max;
+
+      for (let i = 0; i <= nSteps; i++) {
+        const d = (i / nSteps) * maxDelta;
+        const th = solveThetaForDelta(d);
+        const m = getHingeMoment(th);
+        const v = m / p.h_lever;
+        pushoverCurve.push({ delta: d, V: v, theta: th, Mh: m });
+      }
+
+      // Precomputar curva ASCE 41 Mh vs theta
+      hingeBackbone = [];
+      const nTheta = 250;
+      const maxTheta = p.theta_fail * 1.1;
+
+      for (let i = 0; i <= nTheta; i++) {
+        const th = (i / nTheta) * maxTheta;
+        const m = getHingeMoment(th);
+        hingeBackbone.push({ theta: th, Mh: m });
+      }
+    }
+
+    /* ==========================================================================
+       8. GESTIÓN DEL TEMA VISUAL (CLARO / OSCURO)
+       ========================================================================== */
+    function isDarkTheme() {
+      return document.body.classList.contains('dark-theme');
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.getElementById('theme-text').textContent = 'Modo Claro';
+      } else {
+        document.body.classList.remove('dark-theme');
+        document.getElementById('theme-icon').textContent = '🌙';
+        document.getElementById('theme-text').textContent = 'Modo Oscuro';
+      }
+      localStorage.setItem('nl_course_theme', theme);
+      redrawAllCanvases();
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      applyTheme(isDarkTheme() ? 'light' : 'dark');
+    });
+
+    /* ==========================================================================
+       9. CONFIGURACIÓN HiDPI PARA CANVASES 2D
+       ========================================================================== */
+    function setupHiDPI(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const parent = canvas.parentElement;
+      const pRect = parent ? parent.getBoundingClientRect() : { width: 0, height: 0 };
+      const w = Math.round(Math.max(rect.width || 0, pRect.width || 0, 300));
+      const h = Math.round(Math.max(rect.height || 0, pRect.height || 0, 240));
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+      return { ctx, width: w, height: h };
+    }
+
+    /* ==========================================================================
+       10. RENDERIZADO DEL LIENZO 1: COLUMNA FÍSICA Y RÓTULA PLÁSTICA
+       ========================================================================== */
+    function renderColumna(cur) {
+      const canvas = document.getElementById('canvas-columna');
+      const { ctx, width, height } = setupHiDPI(canvas);
+      const isDark = isDarkTheme();
+      const p = props;
+
+      // Limpiar fondo
+      ctx.fillStyle = isDark ? '#0d131f' : '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      // Configuración de escalas de dibujo
+      const baseY = height - 40;
+      const baseX = width * 0.45;
+      const colHeightPx = height - 100;
+      const scaleY = colHeightPx / p.L; // px por metro de columna
+      const dispMagnif = 2.5; // Factor de amplificación visual
+
+      const hingeY = baseY - (0.05 * p.L) * scaleY;
+      const topY = baseY - p.L * scaleY;
+      const colWidthPx = Math.max(18, Math.min(45, p.d * scaleY * 0.4));
+
+      // 1. Dibujar apoyo empotrado en la base
+      ctx.save();
+      ctx.fillStyle = isDark ? '#334155' : '#cbd5e1';
+      ctx.strokeStyle = isDark ? '#64748b' : '#475569';
+      ctx.lineWidth = 2;
+      ctx.fillRect(baseX - 45, baseY, 90, 14);
+      ctx.strokeRect(baseX - 45, baseY, 90, 14);
+
+      // Achurado de empotramiento
+      ctx.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctx.lineWidth = 1.5;
+      for (let x = baseX - 40; x <= baseX + 40; x += 10) {
+        ctx.beginPath();
+        ctx.moveTo(x, baseY + 14);
+        ctx.lineTo(x - 8, baseY + 24);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 2. Dibujar línea de referencia no deformada
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(baseX, topY - 10);
+      ctx.stroke();
+      ctx.restore();
+
+      // 3. Calcular puntos de la columna deformada
+      const points = [];
+      const numSegments = 40;
+
+      for (let i = 0; i <= numSegments; i++) {
+        const yFrac = i / numSegments;
+        const yMeters = yFrac * p.L;
+        const py = baseY - yMeters * scaleY;
+
+        let px = baseX;
+        if (yMeters <= p.xh) {
+          const defEl = (cur.V * Math.pow(yMeters, 2) * (3.0 * p.L - yMeters)) / (6.0 * p.EI);
+          px = baseX + defEl * dispMagnif * 1000;
+        } else {
+          const defEl = (cur.V * Math.pow(yMeters, 2) * (3.0 * p.L - yMeters)) / (6.0 * p.EI);
+          const defHinge = cur.theta_h * (yMeters - p.xh);
+          px = baseX + (defEl + defHinge) * dispMagnif * 1000;
+        }
+        points.push({ x: px, y: py });
+      }
+
+      // 4. Dibujar el fuste de la columna deformada
+      ctx.save();
+      ctx.strokeStyle = isDark ? '#38bdf8' : '#0284c7';
+      ctx.lineWidth = colWidthPx;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+
+      ctx.strokeStyle = isDark ? '#0284c7' : '#0369a1';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      // 5. Dibujar la Rótula Plástica Concentrada a 0.05 L
+      const hingePt = points[Math.round(0.05 * numSegments)];
+      ctx.save();
+      let hingeColor = '#10b981';
+      if (cur.stateClass === 'state-hardening') hingeColor = '#f59e0b';
+      else if (cur.stateClass === 'state-softening') hingeColor = '#ef4444';
+      else if (cur.stateClass === 'state-residual') hingeColor = '#a855f7';
+      else if (cur.stateClass === 'state-collapse') hingeColor = '#dc2626';
+
+      if (cur.stateClass === 'state-softening' || cur.stateClass === 'state-collapse') {
+        ctx.beginPath();
+        ctx.arc(hingePt.x, hingePt.y, 16, 0, 2 * Math.PI);
+        ctx.fillStyle = isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(220, 38, 38, 0.25)';
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.arc(hingePt.x, hingePt.y, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = hingeColor;
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(hingePt.x, hingePt.y, 5, 0, 1.6 * Math.PI);
+      ctx.stroke();
+
+      ctx.fillStyle = isDark ? '#f3f4f6' : '#0f172a';
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Rótula ASCE 41 (${(0.05 * p.L).toFixed(2)} m)`, hingePt.x + 18, hingePt.y + 4);
+      ctx.restore();
+
+      // 6. Carga lateral V en la punta superior
+      const topPt = points[points.length - 1];
+      ctx.save();
+      const arrowLength = Math.max(30, Math.min(80, (cur.V / (p.Mu / p.h_lever || 1)) * 75));
+
+      ctx.strokeStyle = '#ef4444';
+      ctx.fillStyle = '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(topPt.x - arrowLength, topPt.y);
+      ctx.lineTo(topPt.x - 4, topPt.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(topPt.x, topPt.y);
+      ctx.lineTo(topPt.x - 10, topPt.y - 6);
+      ctx.lineTo(topPt.x - 10, topPt.y + 6);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold 12px JetBrains Mono, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`V = ${cur.V.toFixed(1)} kN`, topPt.x - arrowLength - 6, topPt.y + 4);
+      ctx.restore();
+
+      // 7. Cota de desplazamiento en la punta
+      ctx.save();
+      ctx.strokeStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(baseX, topPt.y - 18);
+      ctx.lineTo(topPt.x, topPt.y - 18);
+      ctx.stroke();
+
+      ctx.fillStyle = isDark ? '#34d399' : '#059669';
+      ctx.font = 'bold 11px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      const midDispX = 0.5 * (baseX + topPt.x);
+      ctx.fillText(`Δ = ${(cur.Delta * 1000).toFixed(1)} mm`, midDispX, topPt.y - 24);
+
+      ctx.font = '500 10px Inter, sans-serif';
+      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.fillText(`[Elást: ${(cur.Delta_el * 1000).toFixed(1)} + Rótula: ${(cur.Delta_theta * 1000).toFixed(1)}]`, midDispX, topPt.y - 10);
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       11. RENDERIZADO DEL LIENZO 2: DCL Y DIAGRAMA DE MOMENTOS
+       ========================================================================== */
+    function renderEquilibrio(cur) {
+      const canvas = document.getElementById('canvas-equilibrio');
+      const { ctx, width, height } = setupHiDPI(canvas);
+      const isDark = isDarkTheme();
+      const p = props;
+
+      ctx.fillStyle = isDark ? '#0d131f' : '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const midCanvasX = width * 0.44;
+
+      // --- PARTE A: DIAGRAMA DE MOMENTOS M(x) ---
+      const diagTopY = 40;
+      const diagBaseY = height - 40;
+      const diagColX = 65;
+      const maxMomentScale = Math.max(10, cur.M_base * 1.15, p.Mu * 1.2);
+      const maxPlotWidth = midCanvasX - 85;
+
+      ctx.save();
+      ctx.strokeStyle = isDark ? '#475569' : '#cbd5e1';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(diagColX, diagTopY);
+      ctx.lineTo(diagColX, diagBaseY);
+      ctx.stroke();
+
+      const hingeY = diagBaseY - 0.05 * (diagBaseY - diagTopY);
+      const mBaseWidth = maxMomentScale > 0 ? (cur.M_base / maxMomentScale) * maxPlotWidth : 0;
+      const mHingeWidth = maxMomentScale > 0 ? (cur.Mh / maxMomentScale) * maxPlotWidth : 0;
+
+      ctx.beginPath();
+      ctx.moveTo(diagColX, diagTopY);
+      ctx.lineTo(diagColX + mHingeWidth, hingeY);
+      ctx.lineTo(diagColX + mBaseWidth, diagBaseY);
+      ctx.lineTo(diagColX, diagBaseY);
+      ctx.closePath();
+      ctx.fillStyle = isDark ? 'rgba(56, 189, 248, 0.15)' : 'rgba(2, 132, 199, 0.12)';
+      ctx.fill();
+
+      ctx.strokeStyle = isDark ? '#38bdf8' : '#0284c7';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.strokeStyle = '#f59e0b';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(diagColX - 10, hingeY);
+      ctx.lineTo(diagColX + mHingeWidth + 20, hingeY);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+      ctx.font = '600 10px Inter, sans-serif';
+      ctx.fillText('Punta (M=0)', diagColX + 5, diagTopY + 12);
+
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 10px JetBrains Mono, monospace';
+      ctx.fillText(`M_h = ${cur.Mh.toFixed(1)} kN·m`, diagColX + mHingeWidth + 6, hingeY + 4);
+
+      ctx.fillStyle = isDark ? '#f3f4f6' : '#0f172a';
+      ctx.fillText(`M_base = ${cur.M_base.toFixed(1)} kN·m`, diagColX + mBaseWidth + 6, diagBaseY - 2);
+
+      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.font = '700 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Diagrama de Momentos M(x)', midCanvasX * 0.45, height - 12);
+      ctx.restore();
+
+      // --- PARTE B: DCL DEL CORTE EN LA RÓTULA ---
+      ctx.save();
+      ctx.strokeStyle = isDark ? '#1f2d47' : '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(midCanvasX + 10, 20);
+      ctx.lineTo(midCanvasX + 10, height - 20);
+      ctx.stroke();
+
+      const dclCenterX = midCanvasX + (width - midCanvasX) * 0.5;
+      const dclTopY = 55;
+      const dclBotY = height - 85;
+      const colThick = 24;
+
+      ctx.fillStyle = isDark ? '#1e293b' : '#f1f5f9';
+      ctx.strokeStyle = isDark ? '#475569' : '#cbd5e1';
+      ctx.lineWidth = 2;
+      ctx.fillRect(dclCenterX - colThick / 2, dclTopY, colThick, dclBotY - dclTopY);
+      ctx.strokeRect(dclCenterX - colThick / 2, dclTopY, colThick, dclBotY - dclTopY);
+
+      // Carga V superior en DCL
+      ctx.strokeStyle = '#ef4444';
+      ctx.fillStyle = '#ef4444';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(dclCenterX - 45, dclTopY + 12);
+      ctx.lineTo(dclCenterX - colThick / 2 - 2, dclTopY + 12);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(dclCenterX - colThick / 2, dclTopY + 12);
+      ctx.lineTo(dclCenterX - colThick / 2 - 8, dclTopY + 7);
+      ctx.lineTo(dclCenterX - colThick / 2 - 8, dclTopY + 17);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.font = 'bold 11px JetBrains Mono, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`V = ${cur.V.toFixed(1)} kN`, dclCenterX - 50, dclTopY + 16);
+
+      // Cota 0.95 L
+      ctx.strokeStyle = isDark ? '#64748b' : '#94a3b8';
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(dclCenterX + colThick / 2 + 15, dclTopY);
+      ctx.lineTo(dclCenterX + colThick / 2 + 15, dclBotY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.font = '600 10px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`0.95 L = ${p.h_lever.toFixed(2)} m`, dclCenterX + colThick / 2 + 20, (dclTopY + dclBotY) / 2);
+
+      // Cortante interno equilibrante
+      ctx.strokeStyle = '#0284c7';
+      ctx.fillStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(dclCenterX + colThick / 2 + 2, dclBotY - 10);
+      ctx.lineTo(dclCenterX + 45, dclBotY - 10);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(dclCenterX + colThick / 2, dclBotY - 10);
+      ctx.lineTo(dclCenterX + colThick / 2 + 8, dclBotY - 15);
+      ctx.lineTo(dclCenterX + colThick / 2 + 8, dclBotY - 5);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.font = 'bold 11px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`V_int = ${cur.V.toFixed(1)} kN`, dclCenterX + 50, dclBotY - 6);
+
+      // Momento interno resistente
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(dclCenterX, dclBotY, 26, Math.PI * 0.2, Math.PI * 1.1, true);
+      ctx.stroke();
+
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.moveTo(dclCenterX - 22, dclBotY - 14);
+      ctx.lineTo(dclCenterX - 14, dclBotY - 26);
+      ctx.lineTo(dclCenterX - 28, dclBotY - 24);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.font = 'bold 11px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`M_h(θ) = ${cur.Mh.toFixed(1)} kN·m`, dclCenterX, dclBotY + 22);
+
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.fillStyle = isDark ? '#34d399' : '#059669';
+      ctx.fillText('Σ M = V · (0.95 L) - M_h = 0', dclCenterX, height - 15);
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       12. RENDERIZADO DEL LIENZO 3: CURVA PUSHOVER (V vs Delta)
+       ========================================================================== */
+    function renderPushover(cur) {
+      const canvas = document.getElementById('canvas-pushover');
+      const { ctx, width, height } = setupHiDPI(canvas);
+      const isDark = isDarkTheme();
+      const p = props;
+
+      ctx.fillStyle = isDark ? '#0d131f' : '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const padL = 55;
+      const padR = 25;
+      const padT = 30;
+      const padB = 40;
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      const maxDeltaPlot = state.delta_max * 1000;
+      let maxVPlot = (p.Mu / p.h_lever) * 1.25;
+      if (maxVPlot <= 0) maxVPlot = 100;
+
+      function toX(delta_mm) {
+        return padL + (delta_mm / maxDeltaPlot) * plotW;
+      }
+      function toY(v_val) {
+        return padT + plotH - (v_val / maxVPlot) * plotH;
+      }
+
+      ctx.save();
+      ctx.strokeStyle = isDark ? '#1e293b' : '#e2e8f0';
+      ctx.lineWidth = 1;
+
+      // Rejilla V
+      const vTicks = 5;
+      for (let i = 0; i <= vTicks; i++) {
+        const val = (i / vTicks) * maxVPlot;
+        const y = toY(val);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + plotW, y);
+        ctx.stroke();
+
+        ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(0), padL - 8, y + 4);
+      }
+
+      // Rejilla Delta
+      const dTicks = 5;
+      for (let i = 0; i <= dTicks; i++) {
+        const val = (i / dTicks) * maxDeltaPlot;
+        const x = toX(val);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, padT + plotH);
+        ctx.stroke();
+
+        ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(val.toFixed(0), x, padT + plotH + 16);
+      }
+
+      ctx.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + plotH);
+      ctx.lineTo(padL + plotW, padT + plotH);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Desplazamiento en Punta Δ (mm)', padL + plotW / 2, height - 8);
+
+      ctx.save();
+      ctx.translate(14, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Fuerza Cortante V (kN)', 0, 0);
+      ctx.restore();
+      ctx.restore();
+
+      if (pushoverCurve.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(toX(pushoverCurve[0].delta * 1000), toY(pushoverCurve[0].V));
+        for (let i = 1; i < pushoverCurve.length; i++) {
+          ctx.lineTo(toX(pushoverCurve[i].delta * 1000), toY(pushoverCurve[i].V));
+        }
+        ctx.stroke();
+
+        const curDelta = cur.Delta;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(toX(pushoverCurve[0].delta * 1000), toY(pushoverCurve[0].V));
+        for (let i = 1; i < pushoverCurve.length; i++) {
+          if (pushoverCurve[i].delta <= curDelta) {
+            ctx.lineTo(toX(pushoverCurve[i].delta * 1000), toY(pushoverCurve[i].V));
+          } else {
+            ctx.lineTo(toX(curDelta * 1000), toY(cur.V));
+            break;
+          }
+        }
+        ctx.strokeStyle = isDark ? '#34d399' : '#059669';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const ptX = toX(cur.Delta * 1000);
+      const ptY = toY(cur.V);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(ptX, ptY, 8, 0, 2 * Math.PI);
+      ctx.fillStyle = isDark ? 'rgba(52, 211, 153, 0.3)' : 'rgba(5, 150, 105, 0.25)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(ptX, ptY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = isDark ? '#34d399' : '#059669';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = isDark ? '#f3f4f6' : '#0f172a';
+      ctx.font = 'bold 11px JetBrains Mono, monospace';
+      ctx.textAlign = ptX > width - 110 ? 'right' : 'left';
+      const offsetTextX = ptX > width - 110 ? -12 : 12;
+      ctx.fillText(`(${(cur.Delta * 1000).toFixed(1)} mm, ${cur.V.toFixed(1)} kN)`, ptX + offsetTextX, ptY - 8);
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       13. RENDERIZADO DEL LIENZO 4: CURVA CONSTITUTIVA ASCE 41 (M_h vs theta_h)
+       ========================================================================== */
+    function renderRotula(cur) {
+      const canvas = document.getElementById('canvas-rotula');
+      const { ctx, width, height } = setupHiDPI(canvas);
+      const isDark = isDarkTheme();
+      const p = props;
+
+      ctx.fillStyle = isDark ? '#0d131f' : '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const padL = 60;
+      const padR = 25;
+      const padT = 30;
+      const padB = 40;
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      const maxThetaPlot = p.theta_fail * 1.15 * 1000; // mrad
+      const maxMPlot = p.Mu * 1.25; // kN·m
+
+      function toX(theta_mrad) {
+        return padL + (theta_mrad / maxThetaPlot) * plotW;
+      }
+      function toY(m_val) {
+        return padT + plotH - (m_val / maxMPlot) * plotH;
+      }
+
+      ctx.save();
+      ctx.strokeStyle = isDark ? '#1e293b' : '#e2e8f0';
+      ctx.lineWidth = 1;
+
+      // Rejilla M_h
+      const mTicks = 5;
+      for (let i = 0; i <= mTicks; i++) {
+        const val = (i / mTicks) * maxMPlot;
+        const y = toY(val);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + plotW, y);
+        ctx.stroke();
+
+        ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(0), padL - 8, y + 4);
+      }
+
+      // Rejilla theta_h
+      const thTicks = 5;
+      for (let i = 0; i <= thTicks; i++) {
+        const val = (i / thTicks) * maxThetaPlot;
+        const x = toX(val);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, padT + plotH);
+        ctx.stroke();
+
+        ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(val.toFixed(0), x, padT + plotH + 16);
+      }
+
+      ctx.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + plotH);
+      ctx.lineTo(padL + plotW, padT + plotH);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Rotación Plástica en Rótula θ_h (mrad)', padL + plotW / 2, height - 8);
+
+      ctx.save();
+      ctx.translate(16, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Momento en Rótula M_h (kN·m)', 0, 0);
+      ctx.restore();
+      ctx.restore();
+
+      // Umbrales ASCE 41 (IO, LS, CP)
+      const ioX = toX(p.theta_IO * 1000);
+      const lsX = toX(p.theta_LS * 1000);
+      const cpX = toX(p.theta_CP * 1000);
+
+      ctx.save();
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 4]);
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(ioX, padT);
+      ctx.lineTo(ioX, padT + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0284c7';
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.fillText('IO', ioX + 3, padT + 12);
+
+      ctx.strokeStyle = '#d97706';
+      ctx.beginPath();
+      ctx.moveTo(lsX, padT);
+      ctx.lineTo(lsX, padT + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = '#d97706';
+      ctx.fillText('LS', lsX + 3, padT + 12);
+
+      ctx.strokeStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.moveTo(cpX, padT);
+      ctx.lineTo(cpX, padT + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = '#dc2626';
+      ctx.fillText('CP', cpX + 3, padT + 12);
+      ctx.restore();
+
+      // Curva troncal ASCE 41
+      if (hingeBackbone.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(toX(hingeBackbone[0].theta * 1000), toY(hingeBackbone[0].Mh));
+        for (let i = 1; i < hingeBackbone.length; i++) {
+          ctx.lineTo(toX(hingeBackbone[i].theta * 1000), toY(hingeBackbone[i].Mh));
+        }
+        ctx.stroke();
+
+        // Puntos A, B, C, D, E
+        const pointsASCE = [
+          { name: 'A', th: 0, m: 0 },
+          { name: 'B', th: p.theta_y, m: p.My },
+          { name: 'C', th: p.theta_u, m: p.Mu },
+          { name: 'D', th: p.theta_r, m: p.Mr },
+          { name: 'E', th: p.theta_e, m: p.Mr }
+        ];
+
+        ctx.font = 'bold 11px JetBrains Mono, monospace';
+        pointsASCE.forEach(pt => {
+          const px = toX(pt.th * 1000);
+          const py = toY(pt.m);
+
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, 2 * Math.PI);
+          ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+          ctx.fill();
+
+          ctx.fillStyle = isDark ? '#f3f4f6' : '#1e293b';
+          ctx.fillText(pt.name, px - 3, py - 8);
+        });
+
+        // Trayectoria recorrida
+        const curTheta = cur.theta_h;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(toX(hingeBackbone[0].theta * 1000), toY(hingeBackbone[0].Mh));
+        for (let i = 1; i < hingeBackbone.length; i++) {
+          if (hingeBackbone[i].theta <= curTheta) {
+            ctx.lineTo(toX(hingeBackbone[i].theta * 1000), toY(hingeBackbone[i].Mh));
+          } else {
+            ctx.lineTo(toX(curTheta * 1000), toY(cur.Mh));
+            break;
+          }
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Marcador actual
+      const curX = toX(cur.theta_h * 1000);
+      const curY = toY(cur.Mh);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(curX, curY, 8, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.3)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(curX, curY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = isDark ? '#f3f4f6' : '#0f172a';
+      ctx.font = 'bold 11px JetBrains Mono, monospace';
+      ctx.textAlign = curX > width - 110 ? 'right' : 'left';
+      const offX = curX > width - 110 ? -12 : 12;
+      ctx.fillText(`(${(cur.theta_h * 1000).toFixed(1)} mrad, ${cur.Mh.toFixed(1)} kN·m)`, curX + offX, curY - 8);
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       14. ACTUALIZACIÓN DE TODOS LOS LIENZOS Y PANELES
+       ========================================================================== */
+    function updateUI() {
+      const cur = computeCurrentState();
+      const p = props;
+
+      // 1. Textos del panel de control
+      document.getElementById('val-delta').textContent = `${(cur.Delta * 1000).toFixed(1)} mm`;
+      const driftPercent = ((cur.Delta / p.L) * 100).toFixed(2);
+      document.getElementById('label-drift').textContent = `Deriva: ${driftPercent}%`;
+
+      document.getElementById('val-L').textContent = `${p.L.toFixed(2)} m`;
+      document.getElementById('val-xh').textContent = `${p.xh.toFixed(2)} m`;
+      document.getElementById('val-b').textContent = `${p.b.toFixed(2)} m (${(p.b * 100).toFixed(0)} cm)`;
+      document.getElementById('val-d').textContent = `${p.d.toFixed(2)} m (${(p.d * 100).toFixed(0)} cm)`;
+      document.getElementById('val-inertia').textContent = `${p.I.toFixed(5)} m⁴`;
+      document.getElementById('val-fc').textContent = `${p.fc.toFixed(0)} MPa`;
+      document.getElementById('val-rho').textContent = `${(p.rho * 100).toFixed(2)} %`;
+      document.getElementById('val-my').textContent = `${p.My.toFixed(0)} kN·m`;
+      document.getElementById('val-param-a').textContent = `${p.a.toFixed(3)} rad`;
+      document.getElementById('val-param-c').textContent = `${p.Mr / p.My ? (p.Mr / p.My).toFixed(2) : '0.20'} (${((p.Mr / p.My) * 100).toFixed(0)}%)`;
+
+      // 2. Badges de los lienzos
+      const badgeHinge = document.getElementById('badge-hinge-state');
+      badgeHinge.textContent = cur.stateName;
+      badgeHinge.className = `hinge-state-badge ${cur.stateClass}`;
+
+      document.getElementById('card-val-theta').textContent = `${cur.theta_h.toFixed(4)} rad (${(cur.theta_h * 1000).toFixed(1)} mrad)`;
+      document.getElementById('card-val-V').textContent = `V = ${cur.V.toFixed(1)} kN`;
+      document.getElementById('card-val-Mh').textContent = `M_h = ${cur.Mh.toFixed(1)} kN·m`;
+
+      const ktDisplay = cur.Kt > 0 ? `+${(cur.Kt / 1000).toFixed(2)}` : (cur.Kt / 1000).toFixed(2);
+      document.getElementById('card-val-kt').textContent = `${ktDisplay} kN/mm`;
+
+      // 3. Tarjetas métricas
+      document.getElementById('m-V').innerHTML = `${cur.V.toFixed(1)}<span class="metric-unit">kN</span>`;
+      document.getElementById('m-Mh').innerHTML = `${cur.Mh.toFixed(1)}<span class="metric-unit">kN·m</span>`;
+      document.getElementById('m-Mbase').innerHTML = `${cur.M_base.toFixed(1)}<span class="metric-unit">kN·m</span>`;
+      document.getElementById('m-Delta').innerHTML = `${(cur.Delta * 1000).toFixed(1)}<span class="metric-unit">mm</span>`;
+      document.getElementById('m-Del').innerHTML = `${(cur.Delta_el * 1000).toFixed(1)}<span class="metric-unit">mm</span>`;
+      document.getElementById('m-Dtheta').innerHTML = `${(cur.Delta_theta * 1000).toFixed(1)}<span class="metric-unit">mm</span>`;
+      document.getElementById('m-Theta').innerHTML = `${cur.theta_h.toFixed(4)}<span class="metric-unit">rad</span>`;
+      document.getElementById('m-theta-deg').textContent = `${(cur.theta_h * (180 / Math.PI)).toFixed(3)}° (${(cur.theta_h * 1000).toFixed(1)} mrad)`;
+      document.getElementById('m-Kt').innerHTML = `${(cur.Kt / 1000).toFixed(2)}<span class="metric-unit">kN/mm</span>`;
+
+      if (cur.Kt < -0.01) {
+        document.getElementById('m-kt-sub').textContent = 'Ablandamiento (K_t < 0)';
+        document.getElementById('m-kt-sub').style.color = 'var(--rose-400)';
+      } else {
+        document.getElementById('m-kt-sub').textContent = 'Pendiente global dV/dΔ';
+        document.getElementById('m-kt-sub').style.color = '';
+      }
+
+      document.getElementById('val-hleve-metric').textContent = `${p.h_lever.toFixed(2)} m`;
+
+      // 4. Balanza de equilibrio
+      document.getElementById('eq-mact').textContent = `${cur.M_actuante.toFixed(2)} kN·m`;
+      document.getElementById('eq-mres').textContent = `${cur.Mh.toFixed(2)} kN·m`;
+      document.getElementById('eq-res').textContent = `${cur.residuo_M.toFixed(6)} kN·m`;
+      document.getElementById('eq-sum').textContent = `${(cur.Delta_el * 1000).toFixed(1)} + ${(cur.Delta_theta * 1000).toFixed(1)} = ${(cur.Delta * 1000).toFixed(1)} mm`;
+
+      // 5. Renderizar los 4 lienzos
+      renderColumna(cur);
+      renderEquilibrio(cur);
+      renderPushover(cur);
+      renderRotula(cur);
+    }
+
+    function redrawAllCanvases() {
+      precomputeCurves();
+      updateUI();
+    }
+
+    /* ==========================================================================
+       15. ANIMACIÓN PUSHOVER CONTINUA (PLAY / PAUSE / STEP / RESET)
+       ========================================================================== */
+    function animate() {
+      if (!state.isPlaying) return;
+
+      const increment = 0.0003 * state.speedMultiplier;
+      state.delta += increment;
+
+      if (state.delta >= state.delta_max) {
+        state.delta = state.delta_max;
+        state.isPlaying = false;
+        document.getElementById('btn-play').textContent = '▶ Play';
+      }
+
+      document.getElementById('slider-delta').value = (state.delta * 1000).toFixed(1);
+      updateUI();
+
+      if (state.isPlaying) {
+        state.animId = requestAnimationFrame(animate);
+      }
+    }
+
+    document.getElementById('btn-play').addEventListener('click', () => {
+      if (state.isPlaying) return;
+      if (state.delta >= state.delta_max) {
+        state.delta = 0;
+      }
+      state.isPlaying = true;
+      document.getElementById('btn-play').textContent = '▶ Corriendo...';
+      state.animId = requestAnimationFrame(animate);
+    });
+
+    document.getElementById('btn-pause').addEventListener('click', () => {
+      state.isPlaying = false;
+      document.getElementById('btn-play').textContent = '▶ Play';
+      if (state.animId) cancelAnimationFrame(state.animId);
+    });
+
+    document.getElementById('btn-step').addEventListener('click', () => {
+      state.isPlaying = false;
+      document.getElementById('btn-play').textContent = '▶ Play';
+      if (state.animId) cancelAnimationFrame(state.animId);
+      state.delta = Math.min(state.delta_max, state.delta + 0.003);
+      document.getElementById('slider-delta').value = (state.delta * 1000).toFixed(1);
+      updateUI();
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      state.isPlaying = false;
+      document.getElementById('btn-play').textContent = '▶ Play';
+      if (state.animId) cancelAnimationFrame(state.animId);
+      state.delta = 0;
+      document.getElementById('slider-delta').value = '0';
+      updateUI();
+    });
+
+    document.getElementById('select-speed').addEventListener('change', (e) => {
+      state.speedMultiplier = parseFloat(e.target.value);
+    });
+
+    /* ==========================================================================
+       16. EVENTOS DE LOS CONTROLES Y SLIDERS
+       ========================================================================== */
+    document.getElementById('slider-delta').addEventListener('input', (e) => {
+      state.delta = parseFloat(e.target.value) / 1000.0;
+      updateUI();
+    });
+
+    document.getElementById('slider-L').addEventListener('input', (e) => {
+      state.L = parseFloat(e.target.value);
+      redrawAllCanvases();
+    });
+
+    document.getElementById('slider-b').addEventListener('input', (e) => {
+      state.b = parseFloat(e.target.value);
+      redrawAllCanvases();
+    });
+
+    document.getElementById('slider-d').addEventListener('input', (e) => {
+      state.d = parseFloat(e.target.value);
+      redrawAllCanvases();
+    });
+
+    document.getElementById('slider-fc').addEventListener('input', (e) => {
+      state.fc = parseFloat(e.target.value);
+      redrawAllCanvases();
+    });
+
+    document.getElementById('slider-rho').addEventListener('input', (e) => {
+      state.rho = parseFloat(e.target.value) / 100.0;
+      redrawAllCanvases();
+    });
+
+    document.getElementById('slider-param-a').addEventListener('input', (e) => {
+      state.param_a = parseFloat(e.target.value);
+      redrawAllCanvases();
+    });
+
+    document.getElementById('slider-param-c').addEventListener('input', (e) => {
+      state.param_c = parseFloat(e.target.value);
+      redrawAllCanvases();
+    });
+
+    /* ==========================================================================
+       17. PRESETS PEDAGÓGICOS
+       ========================================================================== */
+    const presets = {
+      'preset-elastic': () => {
+        state.delta = 0.010;
+      },
+      'preset-yield': () => {
+        state.delta = getDeltaFromTheta(props.theta_y);
+      },
+      'preset-hardening': () => {
+        state.delta = getDeltaFromTheta(props.theta_y + 0.5 * props.a);
+      },
+      'preset-softening': () => {
+        state.delta = getDeltaFromTheta(props.theta_u + 0.002);
+      },
+      'preset-residual': () => {
+        state.delta = getDeltaFromTheta(props.theta_r + 0.010);
+      }
+    };
+
+    Object.keys(presets).forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          presets[id]();
+          document.getElementById('slider-delta').value = (state.delta * 1000).toFixed(1);
+          updateUI();
+        });
+      }
+    });
+
+    /* ==========================================================================
+       18. MÓDULO SOCRÁTICO (INTERACTIVIDAD Y RETROALIMENTACIÓN)
+       ========================================================================== */
+    document.querySelectorAll('.quiz-card').forEach(card => {
+      const options = card.querySelectorAll('.quiz-opt');
+      const feedback = card.querySelector('.quiz-feedback');
+
+      options.forEach(opt => {
+        opt.addEventListener('click', () => {
+          options.forEach(o => {
+            o.disabled = true;
+            o.style.cursor = 'default';
+          });
+
+          const isCorrect = opt.getAttribute('data-correct') === 'true';
+          if (isCorrect) {
+            opt.classList.add('correct');
+            feedback.className = 'quiz-feedback show-correct';
+            feedback.innerHTML = '<strong>¡Excelente deducción!</strong> ' + getFeedbackText(card.id, true);
+          } else {
+            opt.classList.add('wrong');
+            feedback.className = 'quiz-feedback show-wrong';
+            feedback.innerHTML = '<strong>Respuesta incorrecta.</strong> ' + getFeedbackText(card.id, false);
+            options.forEach(o => {
+              if (o.getAttribute('data-correct') === 'true') {
+                o.classList.add('correct');
+              }
+            });
+          }
+        });
+      });
+    });
+
+    function getFeedbackText(cardId, isCorrect) {
+      const texts = {
+        'q1': {
+          true: 'El equilibrio de cuerpo libre establece que el momento en la rótula es M_h = V · 0.95L. Al degradarse la rótula (ablandamiento post-pico), M_h se reduce, obligando a la fuerza lateral V a disminuir. Al caer V, el fuste elástico descarga deformación elástica (springback) y se endereza.',
+          false: 'Recuerda que el fuste es elástico con rigidez constante 3EI/L³. La fuerza cortante V = M_h / 0.95L disminuye porque la rótula pierde momento en el ablandamiento. Al reducirse V, la deformación elástica se reduce forzosamente.'
+        },
+        'q2': {
+          true: 'Con control por fuerza, el solucionador busca un punto con carga V_objetivo > V_pico. Como la estructura no puede generar esa resistencia interna, el residuo nunca se anula y el algoritmo diverge numéricamente o simula un colapso dinámico instantáneo.',
+          false: 'Bajo control de carga, la matriz de rigidez se vuelve singular en el pico (det(Kt) = 0) e indefinida en la rama descendente. Es imposible controlar la rama de ablandamiento sin control de desplazamiento o longitud de arco.'
+        },
+        'q3': {
+          true: 'El peralte d tiene un efecto exponencial en la inercia (I ~ d³) y en la capacidad a flexión (My ~ d²). La columna es mucho más rígida y resistente, por lo que alcanzará la fluencia para desplazamientos laterales mucho más pequeños.',
+          false: 'Aumentar el peralte d incrementa tanto la inercia I = b d³ / 12 como el brazo mecánico interno del acero, elevando significativamente la rigidez inicial K0 y la capacidad resistente My.'
+        },
+        'q4': {
+          true: 'En una viga o columna en voladizo sometida a fuerza lateral en la punta, el diagrama de momento es lineal creciente hacia la base. La rótula está en x = 0.05 L (brazo 0.95 L), mientras que el empotramiento en x = 0 tiene el brazo completo L, por lo que M_base = M_h / 0.95.',
+          false: 'El diagrama de momentos flectores para una carga puntual en voladizo es triangular. Al estar la base más alejada del punto de aplicación de la carga (brazo L vs 0.95L), el momento basal es necesariamente mayor.'
+        }
+      };
+      return texts[cardId] ? texts[cardId][isCorrect] : '';
+    }
+
+    /* ==========================================================================
+       19. INICIALIZADOR GLOBAL ROBUSTO DE KATEX
+       ========================================================================== */
+    function initKaTeX() {
+      if (typeof window !== 'undefined' && typeof window.renderMathInElement === 'function') {
+        try {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+          return true;
+        } catch (e) {
+          console.warn('KaTeX auto-render error:', e);
+        }
+      }
+      return false;
+    }
+
+    /* ==========================================================================
+       20. INICIALIZACIÓN SECUENCIAL GARANTIZADA DEL LABORATORIO
+       ========================================================================== */
+    function startLaboratory() {
+      // 1. Precomputar propiedades y curvas
+      precomputeCurves();
+
+      // 2. Aplicar tema guardado
+      const savedTheme = localStorage.getItem('nl_course_theme') || 'light';
+      applyTheme(savedTheme);
+
+      // 3. Dibujar todos los lienzos y métricas
+      updateUI();
+
+      // 4. Compilar ecuaciones KaTeX
+      initKaTeX();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startLaboratory);
+    } else {
+      startLaboratory();
+    }
+
+    window.addEventListener('load', () => {
+      startLaboratory();
+      setTimeout(initKaTeX, 200);
+      setTimeout(redrawAllCanvases, 250);
+    });
+
+    // Sondeo de respaldo para KaTeX en caso de latencia de red desde CDN
+    let katexPollCount = 0;
+    const katexPollTimer = setInterval(() => {
+      katexPollCount++;
+      if (typeof window !== 'undefined' && window.renderMathInElement) {
+        initKaTeX();
+        clearInterval(katexPollTimer);
+      } else if (katexPollCount > 30) {
+        clearInterval(katexPollTimer);
+      }
+    }, 120);
+
+    window.addEventListener('resize', () => {
+      redrawAllCanvases();
+    });
+  </script>
+</body>
+</html>

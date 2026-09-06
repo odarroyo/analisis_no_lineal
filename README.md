@@ -42,7 +42,15 @@ Plataforma educativa y conjunto de laboratorios computacionales interactivos dis
   * **Curva de Capacidad con Rama Descendente ($K_{\text{push}} < 0$):** Demostración interactiva de superación de puntos límite y descenso ordenado por la rama de degradación sin divergencia numérica.
   * **Mecanismos de Colapso (Piso Blando vs. Piso Alto):** Concentración severa de deformaciones en el entrepiso degradado mientras los pisos no críticos experimentan descarga elástica reversible.
   * **Inspector Matricial y Desglose Operacional:** Visualización en vivo del equilibrio exacto ($\mathbf{P} - \mathbf{F}_{\text{int}} = \mathbf{0}$) aun cuando la matriz tangente $[\mathbf{K}_t]$ es indefinida y $\det(\mathbf{K}_t) < 0$.
-  * **Controles Compactos:** Interfaz con sección de propiedades colapsable para ubicar el control de avance directamente al lado de la curva pushover.
+### 4. [Clase 04 — La Rótula Plástica: Modelo Concentrado ASCE 41 y Equilibrio en Voladizo](https://odarroyo.github.io/analisis_no_lineal/04_rotula_plastica_asce41.html)
+* **Objetivo:** Demostrar cómo funciona una rótula plástica concentrada bajo la norma ASCE 41 en una columna en voladizo, analizando el acoplamiento cinemático en serie, el equilibrio estático de secciones y la descarga elástica (*springback*) durante el ablandamiento.
+* **Características:**
+  * Columna en voladizo con parámetros geométricos totalmente configurables: longitud $L$ (def. 3 m), ancho $b$ y peralte $d$.
+  * Rótula plástica tipo ASCE 41 ubicada a $x_h = 0.05 L$ mediante un resorte rotacional no lineal en serie con el fuste elástico.
+  * Curva troncal ASCE 41 completa (puntos A, B, C, D, E) con niveles de desempeño sísmico: **IO** (Immediate Occupancy), **LS** (Life Safety) y **CP** (Collapse Prevention).
+  * **Visualización en 4 Lienzos HiDPI Simultáneos:** Deformada física de la columna con rótula coloreada según su estado, DCL con corte en la rótula y diagrama de momentos $M(x)$, curva pushover global $V-\Delta$ y curva constitutiva $M_h-\theta_h$.
+  * **Demostración de Descarga Elástica (*Springback*):** En la rama descendente C–D, al degradarse la rótula, la fuerza lateral $V$ cae y el fuste elástico se endereza ($\Delta_{\text{el}}$ disminuye), mientras la rotación plástica $\theta_h$ crece aceleradamente para acomodar el desplazamiento global $\Delta$.
+  * Inspector numérico de equilibrio en vivo con residuo exacto $|V \cdot 0.95L - M_h| = 0.00\text{ kN}\cdot\text{m}$ y módulo socrático interactivo con retroalimentación conceptual inmediata.
 
 ---
 

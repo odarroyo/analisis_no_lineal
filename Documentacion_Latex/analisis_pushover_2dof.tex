@@ -1,0 +1,782 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ==============================================================================
+% PAQUETES DE CONFIGURACIÓN Y TIPOGRAFÍA
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot,es-noshorthands]{babel}
+\usepackage[margin=2.2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{microtype}
+\usepackage{booktabs,array,tabularx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,patterns,calc,positioning,decorations.pathmorphing,shapes.geometric,babel}
+\usepackage[skins,breakable]{tcolorbox}
+\usepackage{hyperref}
+
+% ==============================================================================
+% PALETA DE COLORES INSTITUCIONAL Y PEDAGÓGICA
+% ==============================================================================
+\definecolor{uispurple}{RGB}{109, 40, 217}
+\definecolor{uisblue}{RGB}{2, 132, 199}
+\definecolor{uisgreen}{RGB}{5, 150, 105}
+\definecolor{uisamber}{RGB}{217, 119, 6}
+\definecolor{uisrose}{RGB}{225, 29, 72}
+\definecolor{uisdark}{RGB}{15, 23, 42}
+\definecolor{uisgray}{RGB}{100, 116, 139}
+\definecolor{uislightbg}{RGB}{248, 250, 252}
+\definecolor{uisboxborder}{RGB}{203, 213, 225}
+
+% ==============================================================================
+% HIPERVÍNCULOS
+% ==============================================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=uispurple,
+    citecolor=uisblue,
+    urlcolor=uisblue,
+    pdftitle={Analisis Estatico No Lineal Pushover - Teoria y Ejemplo Numerico 2-DOF},
+    pdfauthor={Prof. Orlando Arroyo - Universidad Industrial de Santander}
+}
+
+% ==============================================================================
+% ENCABEZADOS Y PIES DE PÁGINA (FANCYHDR)
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{\color{uispurple}Análisis No Lineal de Estructuras} | Posgrado en Ing. Estructural}
+\fancyhead[R]{\small\color{uisgray}Universidad Industrial de Santander}
+\fancyfoot[L]{\small\color{uisgray}Prof. Orlando Arroyo}
+\fancyfoot[C]{\small\color{uisgray}Material Docente de Cátedra}
+\fancyfoot[R]{\small\color{uisdark}\thepage\ / \pageref{LastPage}}
+
+% ==============================================================================
+% CAJAS DESTACADAS (TCOLORBOX)
+% ==============================================================================
+\newtcolorbox{conceptbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uislightbg,
+    colframe=uispurple,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    sharp corners=downhill,
+    arc=4mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt,
+    shadow={2pt}{-2pt}{0pt}{black!10}
+}
+
+\newtcolorbox{stepbox}[1][]{
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=uisblue,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+\newtcolorbox{alertbox}[1][]{
+    enhanced,
+    breakable,
+    colback=uisrose!5,
+    colframe=uisrose,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+\newtcolorbox{examplebox}[1][]{
+    enhanced,
+    breakable,
+    colback=uisamber!5,
+    colframe=uisamber,
+    coltitle=white,
+    fonttitle=\bfseries\sffamily,
+    title={#1},
+    rounded corners,
+    arc=3mm,
+    boxrule=1.2pt,
+    left=12pt,right=12pt,top=8pt,bottom=8pt
+}
+
+% ==============================================================================
+% DOCUMENTO PRINCIPAL
+% ==============================================================================
+\begin{document}
+
+% --- PORTADA / ENCABEZADO TITULAR ---
+\begin{center}
+    {\scshape\Large Universidad Industrial de Santander}\\[0.2cm]
+    {\large Escuela de Ingeniería Civil --- Posgrado en Ingeniería Estructural}\\[0.35cm]
+    {\color{uispurple}\hrule height 2pt}\vspace{0.4cm}
+    {\huge\bfseries\color{uisdark} Formulación Teórica y Algorítmica del Análisis Estático No Lineal (Pushover)}\\[0.25cm]
+    {\Large\bfseries\color{uispurple} Control por Desplazamiento, Constitutiva Trilineal con Ablandamiento y Ejemplo Numérico en Pórtico 2-DOF}\\[0.35cm]
+    {\color{uispurple}\hrule height 1pt}\vspace{0.35cm}
+    {\textbf{Autor:} Prof. Orlando Arroyo}\quad\textbullet\quad
+    {\textbf{Asignatura:} Análisis No Lineal de Estructuras}\quad\textbullet\quad
+    {\textbf{Versión:} Material Docente Consolidado (2026)}
+\end{center}
+
+\vspace{0.2cm}
+
+\begin{abstract}
+\noindent El presente documento presenta la derivación rigurosa de la teoría del análisis estático no lineal monótono incremental (\textit{Pushover}) aplicado a sistemas estructurales discretizados. Se fundamenta la necesidad ineludible del algoritmo de control por desplazamiento para trazar curvas de capacidad que exhiben degradación de resistencia (\textit{softening} post-pico con rigidez tangente negativa $k_t < 0$), demostrando analíticamente por qué los esquemas controlados por carga colapsan numéricamente por singularidad jacobiana (\textit{snap-through}). Se incorpora un modelo constitutivo trilineal por entrepiso que incluye ramas elástica, de endurecimiento plástico, de ablandamiento descendente y meseta residual. Finalmente, se desarrolla de forma analítica y numérica el cálculo detallado de los primeros pasos incrementales de empuje y se demuestra formalmente el fenómeno físico de localización de deformaciones en piso blando acompañado por la descarga elástica reversible del piso superior.
+\end{abstract}
+
+\vspace{0.2cm}
+
+% ==============================================================================
+% SECCIÓN 1: FUNDAMENTOS DEL ANÁLISIS PUSHOVER
+% ==============================================================================
+\section{Fundamentos del Análisis Estático No Lineal (Pushover)}
+
+El análisis estático no lineal, comúnmente denominado análisis de empuje lateral progresivo o \textit{Pushover}, es una de las herramientas fundamentales del diseño sísmico por desempeño (ASCE 41, Eurocódigo 8, ATC-40). Su objetivo central consiste en estimar la resistencia lateral máxima, la ductilidad global disponible, la secuencia jerárquica de formación de articulaciones plásticas y el mecanismo cinemático de colapso de la estructura.
+
+\subsection{Definición del Patrón de Carga Lateral Invariante}
+
+A diferencia de un análisis dinámico paso a paso que resuelve ecuaciones diferenciales acopladas a la historia acelerográfica, el análisis pushover asume que la distribución espacial de fuerzas sísmicas puede representarse mediante un \textbf{patrón lateral normalizado invariante} $\mathbf{s} \in \mathbb{R}^N$:
+\begin{equation}
+    \label{eq:fuerzas_externas}
+    \mathbf{P}(\lambda) = \lambda \, \mathbf{s}
+\end{equation}
+donde $\lambda \ge 0$ es un escalar denominado \textbf{factor de escala de carga} o multiplicador de fuerza, y $\mathbf{s}$ define la forma de la solicitación en la altura del edificio.
+
+En estructuras regulares gobernadas por el modo fundamental de vibración $\boldsymbol{\phi}_1$, el patrón de fuerzas nodales se selecciona proporcional a las alturas de piso $h_j$ o a las masas de entrepiso $m_j$ ponderadas por la ordenada modal:
+\begin{equation}
+    s_j = \frac{m_j \, \phi_{1,j}}{\sum_{k=1}^N m_k \, \phi_{1,k}}
+\end{equation}
+
+Si normalizamos el vector $\mathbf{s}$ de modo que la suma de sus componentes sea unitaria:
+\begin{equation}
+    \sum_{j=1}^N s_j = 1
+\end{equation}
+entonces el factor de carga $\lambda$ adquiere una interpretación física inmediata: representa exactamente el \textbf{cortante basal total} $V_b$ que equilibra la edificación:
+\begin{equation}
+    V_b = \sum_{j=1}^N P_j = \lambda \sum_{j=1}^N s_j = \lambda
+\end{equation}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.95]
+    % Suelo
+    \draw[thick, fill=gray!20] (-2,0) -- (4,0) -- (4,-0.4) -- (-2,-0.4) -- cycle;
+    \foreach \x in {-1.8,-1.4,...,3.8} {
+        \draw[thick] (\x,-0.4) -- (\x+0.2,0);
+    }
+    
+    % Columnas Piso 1
+    \draw[line width=2.5pt, uisdark] (-0.8,0) -- (-0.8,2.2);
+    \draw[line width=2.5pt, uisdark] (2.8,0) -- (2.8,2.2);
+    
+    % Resorte 1 conceptual
+    \draw[decorate, decoration={zigzag, segment length=5, amplitude=4}, thick, uispurple] (1,0) -- (1,2.2);
+    \node[right, font=\footnotesize\sffamily] at (1.1,1.1) {Entrepiso 1: $(k_{01}, F_{y1}, \alpha_1, \alpha_2)$};
+    
+    % Viga/Losa 1
+    \draw[fill=uispurple!15, draw=uispurple, thick, rounded corners=2pt] (-1.2,2.2) rectangle (3.2,2.6);
+    \node[font=\bfseries\sffamily\small] at (1,2.4) {Nivel 1 --- Masa $m_1$};
+    
+    % Columnas Piso 2
+    \draw[line width=2.5pt, uisdark] (-0.8,2.6) -- (-0.8,4.8);
+    \draw[line width=2.5pt, uisdark] (2.8,2.6) -- (2.8,4.8);
+    
+    % Resorte 2 conceptual
+    \draw[decorate, decoration={zigzag, segment length=5, amplitude=4}, thick, uispurple] (1,2.6) -- (1,4.8);
+    \node[right, font=\footnotesize\sffamily] at (1.1,3.7) {Entrepiso 2: $(k_{02}, F_{y2}, \alpha_1, \alpha_2)$};
+    
+    % Viga/Losa 2 (Techo)
+    \draw[fill=uisblue!15, draw=uisblue, thick, rounded corners=2pt] (-1.2,4.8) rectangle (3.2,5.2);
+    \node[font=\bfseries\sffamily\small] at (1,5.0) {Nivel 2 (Techo) --- Masa $m_2$};
+    
+    % Grados de libertad (u1, u2)
+    \draw[-{Latex[length=3mm]}, line width=1.5pt, uispurple] (3.4,2.4) -- (4.8,2.4) node[right, font=\bfseries] {$u_1$};
+    \draw[-{Latex[length=3mm]}, line width=1.5pt, uisblue] (3.4,5.0) -- (5.2,5.0) node[right, font=\bfseries] {$u_2$ (Control)};
+    
+    % Cargas laterales P1 y P2
+    \draw[-{Latex[length=3.5mm]}, line width=1.8pt, uisrose] (-2.5,2.4) -- (-1.2,2.4);
+    \node[left, font=\bfseries\sffamily\small, uisrose] at (-2.5,2.4) {$P_1 = \lambda s_1 = \frac{1}{3}\lambda$};
+    
+    \draw[-{Latex[length=3.5mm]}, line width=1.8pt, uisrose] (-3.2,5.0) -- (-1.2,5.0);
+    \node[left, font=\bfseries\sffamily\small, uisrose] at (-3.2,5.0) {$P_2 = \lambda s_2 = \frac{2}{3}\lambda$};
+    
+    % Cortante basal
+    \draw[-{Latex[length=3mm]}, line width=2pt, uisdark] (1,-0.8) -- (2.5,-0.8) node[right, font=\bfseries] {$V_b = \lambda$};
+\end{tikzpicture}
+\caption{Modelo físico de edificio cortante de 2 pisos (2-DOF) sometido a patrón triangular proporcional a la altura $\mathbf{s} = [1/3, 2/3]^T$ con control por desplazamiento en el techo $u_2$.}
+\label{fig:edificio_2dof}
+\end{figure}
+
+\subsection{Ecuaciones de Equilibrio Estático No Lineal}
+
+Para cada configuración geométrica descrita por los desplazamientos nodales $\mathbf{u} = [u_1, u_2, \dots, u_N]^T$, el equilibrio de fuerzas estáticas exige que el residuo nodal sea idénticamente nulo:
+\begin{equation}
+    \label{eq:equilibrio_residuo}
+    \mathbf{r}(\mathbf{u}, \lambda) = \mathbf{P}(\lambda) - \mathbf{F}_{\text{int}}(\mathbf{u}) = \lambda \, \mathbf{s} - \mathbf{F}_{\text{int}}(\mathbf{u}) = \mathbf{0}
+\end{equation}
+donde $\mathbf{F}_{\text{int}}(\mathbf{u}) \in \mathbb{R}^N$ es el vector no lineal de fuerzas internas restauradoras desarrollado por la deformación de los elementos estructurales.
+
+El sistema~(\ref{eq:equilibrio_residuo}) consta de $N$ ecuaciones de equilibrio pero posee \textbf{$N+1$ incógnitas}: los $N$ desplazamientos nodales $\mathbf{u}$ y el multiplicador de carga $\lambda$. Por tanto, se requiere una \textbf{ecuación de restricción o ligadura cinemática} adicional para determinar la solución.
+
+% ==============================================================================
+% SECCIÓN 2: CONTROL POR FUERZA VS CONTROL POR DESPLAZAMIENTO
+% ==============================================================================
+\section{Control por Fuerza vs. Control por Desplazamiento}
+
+\subsection{Falla del Control por Cargas (\textit{Load Control})}
+
+En un análisis controlado por carga, el ingeniero prescribe incrementos monótonos de fuerza $\Delta \lambda > 0$ y resuelve los incrementos de desplazamiento correspondientes mediante el Jacobiano estándar:
+\begin{equation}
+    \mathbf{K}_t \, \Delta \mathbf{u} = \Delta \lambda \, \mathbf{s} \implies \Delta \mathbf{u} = \Delta \lambda \, \mathbf{K}_t^{-1} \mathbf{s}
+\end{equation}
+
+Cuando la estructura plastifica y alcanza su capacidad máxima resistente (punto pico o \textit{capping} de la curva pushover), la rigidez tangente global de la edificación se anula:
+\begin{equation}
+    K_{\text{push}} = \frac{d\lambda}{du_c} = 0
+\end{equation}
+
+En este punto crítico, la matriz de rigidez tangente se vuelve singular ($\det(\mathbf{K}_t) = 0$). Si se intenta incrementar la fuerza más allá del pico ($\Delta \lambda > 0$):
+\begin{equation}
+    \Delta \mathbf{u} \to \infty
+\end{equation}
+El algoritmo de Newton-Raphson diverge instantáneamente. Este colapso matemático se conoce como inestabilidad por punto límite o fenómeno de \textit{snap-through}. El control por carga es completamente incapaz de rastrear la rama descendente de la curva pushover ni de identificar mecanismos de degradación física.
+
+\subsection{Formulación del Control por Desplazamiento (\textit{Displacement Control})}
+
+Para sortear la singularidad jacobiana en el pico y rastrear ordenadamente la degradación post-pico (\textit{softening}), la variable independiente monótona se transfiere de la fuerza al desplazamiento de un grado de libertad de referencia $u_c$, típicamente el \textbf{desplazamiento de azotea o techo} $u_N = u_2$:
+\begin{conceptbox}[Ecuación de Restricción Cinemática]
+En el paso incremental $n$, se impone directamente el desplazamiento de azotea objetivo $u_c^{(n)}$:
+\begin{equation}
+    g(\mathbf{u}, \lambda) = u_c - u_c^{(n)} = 0 \quad \iff \quad \Delta u_c = \Delta u_c^*
+\end{equation}
+donde $\Delta u_c^*$ es un incremento cinemático prescrito fijo (e.g., $\Delta u_2 = 0.25\text{ mm}$).
+\end{conceptbox}
+
+Bajo este esquema, el cortante basal $\lambda = V_b$ se convierte en una \textbf{variable dependiente} que el algoritmo despeja dinámicamente para garantizar el equilibrio estático estricto $\mathbf{r} = \mathbf{0}$. Si la estructura se degrada, $\lambda$ disminuye naturalmente ($\Delta \lambda < 0$), generando una pendiente descendente estable sin divergencia numérica.
+
+% ==============================================================================
+% SECCIÓN 3: MODELO CONSTITUTIVO TRILINEAL CON ABLANDAMIENTO
+% ==============================================================================
+\section{Ley Constitutiva Trilineal con Ablandamiento y Resistencia Residual}
+
+En el diseño sísmico contemporáneo, los elementos estructurales de concreto reforzado o perfiles metálicos sujetos a pandeo local experimentan degradación de resistencia tras superar su deformación pico. En nuestro modelo de edificio cortante 2-DOF, la fuerza cortante $V_j$ en el entrepiso $j$ se define en función de la deriva relativa $\Delta_j$:
+\begin{equation}
+    \Delta_1 = u_1, \qquad \Delta_2 = u_2 - u_1
+\end{equation}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.0]
+    % Ejes
+    \draw[-{Latex[length=3mm]}, thick] (-0.5,0) -- (8.5,0) node[below, font=\bfseries] {Deriva de Entrepiso $|\Delta_j|$};
+    \draw[-{Latex[length=3mm]}, thick] (0,-0.5) -- (0,5.2) node[left, font=\bfseries] {Cortante de Entrepiso $V_j$};
+    
+    % Puntos clave
+    \coordinate (O) at (0,0);
+    \coordinate (Y) at (1.5,2.5);
+    \coordinate (P) at (4.5,3.6);
+    \coordinate (R) at (7.0,1.2);
+    \coordinate (END) at (8.0,1.2);
+    
+    % Ramas
+    \draw[line width=2pt, uisblue] (O) -- (Y) node[midway, above left, font=\small\bfseries] {Rama 1: Elástica ($k_0$)};
+    \draw[line width=2pt, uisamber] (Y) -- (P) node[midway, above left, font=\small\bfseries] {Rama 2: Endurecimiento ($\alpha_1 k_0$)};
+    \draw[line width=2pt, uisrose] (P) -- (R) node[midway, above right, font=\small\bfseries] {Rama 3: Ablandamiento ($\alpha_2 k_0 < 0$)};
+    \draw[line width=2pt, uispurple] (R) -- (END) node[midway, above, font=\small\bfseries] {Rama 4: Residual ($F_{\text{res}}$)};
+    
+    % Líneas de proyección
+    \draw[dashed, gray] (1.5,0) -- (Y) -- (0,2.5);
+    \draw[dashed, gray] (4.5,0) -- (P) -- (0,3.6);
+    \draw[dashed, gray] (7.0,0) -- (R) -- (0,1.2);
+    
+    % Nodos y etiquetas
+    \fill[uisblue] (Y) circle (3pt) node[above left, uisdark] {Fluencia $(\Delta_{yj}, F_{yj})$};
+    \fill[uisamber] (P) circle (3pt) node[above, uisdark] {Pico $(\Delta_{pj}, F_{\max,j})$};
+    \fill[uisrose] (R) circle (3pt) node[below left, uisdark] {Inicio Residual $(\Delta_{\text{res},j}, F_{\text{res},j})$};
+    
+    % Cotas en ejes
+    \node[below, font=\footnotesize] at (1.5,0) {$\Delta_{yj}$};
+    \node[below, font=\footnotesize] at (4.5,0) {$\Delta_{pj} = \mu_{pj} \Delta_{yj}$};
+    \node[below, font=\footnotesize] at (7.0,0) {$\Delta_{\text{res},j}$};
+    
+    \node[left, font=\footnotesize] at (0,2.5) {$F_{yj}$};
+    \node[left, font=\footnotesize] at (0,3.6) {$F_{\max,j}$};
+    \node[left, font=\footnotesize] at (0,1.2) {$F_{\text{res},j}$};
+    
+    % Pendientes
+    \draw[thick, uisblue] (0.8,0.5) arc (0:59:0.8);
+    \node[right, font=\footnotesize, uisblue] at (0.8,0.9) {Pendiente $k_{0j}$};
+    
+    \draw[thick, uisrose] (5.2,3.3) -- (6.0,3.3) -- (6.0,2.8);
+    \node[right, font=\footnotesize, uisrose] at (6.0,3.05) {$\alpha_{2j} k_{0j} < 0$};
+\end{tikzpicture}
+\caption{Relación constitutiva trilineal por entrepiso con ramas elástica, de endurecimiento plástico, de ablandamiento descendente y meseta residual de seguridad.}
+\label{fig:constitutiva_trilineal}
+\end{figure}
+
+Matemáticamente, la fuerza de entrepiso $V_j(\Delta_j)$ y su correspondiente rigidez tangente $k_{tj} = \partial V_j / \partial \Delta_j$ se estructuran en cuatro regímenes:
+
+\begin{enumerate}
+    \item \textbf{Rama 1 --- Régimen Elástico Lineal ($0 \le |\Delta_j| \le \Delta_{yj}$):}
+    \begin{equation}
+        V_j = k_{0j} \Delta_j, \qquad k_{tj} = k_{0j}
+    \end{equation}
+    donde el desplazamiento de fluencia es $\Delta_{yj} = F_{yj} / k_{0j}$.
+    
+    \item \textbf{Rama 2 --- Régimen de Endurecimiento Post-Fluencia ($\Delta_{yj} < |\Delta_j| \le \Delta_{pj}$):}
+    \begin{equation}
+        V_j = \operatorname{sgn}(\Delta_j) \left[ F_{yj} + \alpha_{1j} k_{0j} \left(|\Delta_j| - \Delta_{yj}\right) \right], \qquad k_{tj} = \alpha_{1j} k_{0j}
+    \end{equation}
+    con $\alpha_{1j} \in [0.0, 0.15]$ (típicamente $\alpha_1 = 0.05$). La capacidad máxima alcanzada en el desplazamiento pico $\Delta_{pj} = \mu_{pj} \Delta_{yj}$ es:
+    \begin{equation}
+        F_{\max,j} = F_{yj} + \alpha_{1j} k_{0j} (\Delta_{pj} - \Delta_{yj})
+    \end{equation}
+    
+    \item \textbf{Rama 3 --- Régimen de Ablandamiento Descendente ($\Delta_{pj} < |\Delta_j| \le \Delta_{\text{res},j}$):}
+    \begin{equation}
+        V_j = \operatorname{sgn}(\Delta_j) \left[ F_{\max,j} + \alpha_{2j} k_{0j} \left(|\Delta_j| - \Delta_{pj}\right) \right], \qquad k_{tj} = \alpha_{2j} k_{0j} < 0
+    \end{equation}
+    donde $\alpha_{2j} < 0$ (típicamente $\alpha_2 \in [-0.25, -0.05]$) introduce una \textbf{rigidez tangente negativa}, reflejando la pérdida gradual de integridad mecánica.
+    
+    \item \textbf{Rama 4 --- Meseta de Resistencia Residual ($|\Delta_j| > \Delta_{\text{res},j}$):}
+    \begin{equation}
+        V_j = \operatorname{sgn}(\Delta_j) F_{\text{res},j}, \qquad k_{tj} = 0
+    \end{equation}
+    donde $F_{\text{res},j} = r_{\text{res},j} F_{yj}$ representa la capacidad remanente por fricción interna y confinamiento.
+\end{enumerate}
+
+% ==============================================================================
+% SECCIÓN 4: ENSAMBLAJE MATRICIAL Y RESOLUCIÓN ANALÍTICA
+% ==============================================================================
+\section{Ensamblaje de Ecuaciones y Deducción Analítica del Incremento}
+
+\subsection{Matriz de Rigidez Tangente del Sistema 2-DOF}
+
+Para el edificio cortante de dos pisos, el vector de fuerzas internas nodales está dado por el equilibrio de cada losa:
+\begin{equation}
+    \mathbf{F}_{\text{int}}(\mathbf{u}) = \begin{Bmatrix} V_1(\Delta_1) - V_2(\Delta_2) \\ V_2(\Delta_2) \end{Bmatrix} = \begin{Bmatrix} V_1(u_1) - V_2(u_2 - u_1) \\ V_2(u_2 - u_1) \end{Bmatrix}
+\end{equation}
+
+Diferenciando respecto a los grados de libertad nodales $\mathbf{u} = [u_1, u_2]^T$:
+\begin{equation}
+    \mathbf{K}_t = \frac{\partial \mathbf{F}_{\text{int}}}{\partial \mathbf{u}} = 
+    \begin{bmatrix}
+        \dfrac{\partial (V_1 - V_2)}{\partial u_1} & \dfrac{\partial (V_1 - V_2)}{\partial u_2} \\[0.25cm]
+        \dfrac{\partial V_2}{\partial u_1} & \dfrac{\partial V_2}{\partial u_2}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        k_{t1} + k_{t2} & -k_{t2} \\
+        -k_{t2} & k_{t2}
+    \end{bmatrix}
+\end{equation}
+cuyo determinante está dado de forma notable por:
+\begin{equation}
+    \det(\mathbf{K}_t) = (k_{t1} + k_{t2})(k_{t2}) - (-k_{t2})(-k_{t2}) = k_{t1} k_{t2} + k_{t2}^2 - k_{t2}^2 = k_{t1} k_{t2}
+\end{equation}
+
+\begin{conceptbox}[Propiedad Esencial del Determinante Tangente]
+\begin{equation}
+    \label{eq:det_kt}
+    \det(\mathbf{K}_t) = k_{t1} \, k_{t2}
+\end{equation}
+El determinante de la matriz tangente del pórtico 2-DOF es simplemente el producto de las rigideces tangentes de entrepiso. En consecuencia:
+\begin{itemize}
+    \item Si ambos pisos están en régimen elástico o endurecimiento ($k_{t1} > 0$, $k_{t2} > 0$), $\det(\mathbf{K}_t) > 0$ (definida positiva).
+    \item Si uno de los entrepisos entra en ablandamiento ($k_{ti} < 0$), $\det(\mathbf{K}_t) < 0$ (\textbf{matriz indefinida}, con un autovalor negativo).
+    \item Si un entrepiso alcanza resistencia residual o plástico perfecto ($k_{ti} = 0$), $\det(\mathbf{K}_t) = 0$ (matriz singular).
+\end{itemize}
+\end{conceptbox}
+
+\subsection{Solución Analítica Cerrada del Paso Pushover}
+
+En cada paso incremental de empuje, conocemos el incremento impuesto de desplazamiento de techo $\Delta u_2$ y buscamos determinar el incremento de desplazamiento en el primer nivel $\Delta u_1$ y el incremento del factor de carga $\Delta \lambda$. 
+
+Escribiendo el sistema linealizado incremental $\mathbf{K}_t \Delta \mathbf{u} = \Delta \lambda \mathbf{s}$:
+\begin{equation}
+    \label{eq:sistema_incremental_2x2}
+    \begin{bmatrix}
+        k_{t1} + k_{t2} & -k_{t2} \\
+        -k_{t2} & k_{t2}
+    \end{bmatrix}
+    \begin{Bmatrix}
+        \Delta u_1 \\
+        \Delta u_2
+    \end{Bmatrix}
+    =
+    \Delta \lambda
+    \begin{Bmatrix}
+        s_1 \\
+        s_2
+    \end{Bmatrix}
+\end{equation}
+
+Desarrollando la segunda ecuación escalar:
+\begin{equation}
+    -k_{t2} \Delta u_1 + k_{t2} \Delta u_2 = \Delta \lambda \, s_2 \implies \Delta u_1 = \Delta u_2 - \frac{s_2}{k_{t2}} \Delta \lambda
+\end{equation}
+
+Sustituyendo esta expresión en la primera ecuación escalar:
+\begin{equation}
+    (k_{t1} + k_{t2}) \left( \Delta u_2 - \frac{s_2}{k_{t2}} \Delta \lambda \right) - k_{t2} \Delta u_2 = \Delta \lambda \, s_1
+\end{equation}
+
+Expandiendo y agrupando términos:
+\begin{equation}
+    k_{t1} \Delta u_2 + k_{t2} \Delta u_2 - k_{t2} \Delta u_2 - \frac{k_{t1} + k_{t2}}{k_{t2}} s_2 \Delta \lambda = s_1 \Delta \lambda
+\end{equation}
+\begin{equation}
+    k_{t1} \Delta u_2 = \left[ s_1 + s_2 + \frac{k_{t1}}{k_{t2}} s_2 \right] \Delta \lambda
+\end{equation}
+
+Dado que el patrón de cargas satisface la condición de normalización $s_1 + s_2 = 1$:
+\begin{equation}
+    k_{t1} \Delta u_2 = \left[ 1 + \frac{k_{t1}}{k_{t2}} s_2 \right] \Delta \lambda = \left[ \frac{k_{t2} + s_2 k_{t1}}{k_{t2}} \right] \Delta \lambda
+\end{equation}
+
+Despejando directamente el incremento de cortante basal $\Delta \lambda$:
+\begin{conceptbox}[Fórmula Analítica Cerrada del Factor de Carga Incremental]
+\begin{equation}
+    \label{eq:delta_lambda_analitico}
+    \Delta \lambda = \frac{k_{t1} \, k_{t2}}{k_{t2} + s_2 \, k_{t1}} \, \Delta u_2
+\end{equation}
+Y el incremento cinemático en el nivel 1 resulta:
+\begin{equation}
+    \label{eq:delta_u1_analitico}
+    \Delta u_1 = \Delta u_2 \left[ 1 - \frac{s_2 \, k_{t1}}{k_{t2} + s_2 \, k_{t1}} \right] = \frac{k_{t2} (1 - s_2)}{k_{t2} + s_2 \, k_{t1}} \, \Delta u_2 = \frac{s_1 \, k_{t2}}{k_{t2} + s_2 \, k_{t1}} \, \Delta u_2
+\end{equation}
+\end{conceptbox}
+
+Para el patrón triangular particular adoptado en clase, con $s_1 = 1/3$ y $s_2 = 2/3$:
+\begin{equation}
+    \label{eq:formulas_triangular}
+    \Delta \lambda = \frac{3 \, k_{t1} \, k_{t2}}{3 \, k_{t2} + 2 \, k_{t1}} \, \Delta u_2, \qquad
+    \Delta u_1 = \frac{3 \, k_{t2}}{3 \, k_{t2} + 2 \, k_{t1}} \, \Delta u_2
+\end{equation}
+
+La rigidez tangente global de la curva Pushover se deduce de inmediato:
+\begin{equation}
+    \label{eq:kpush_formula}
+    K_{\text{push}} = \frac{d\lambda}{du_2} = \frac{3 \, k_{t1} \, k_{t2}}{2 \, k_{t1} + 3 \, k_{t2}}
+\end{equation}
+
+\subsection{Demostración Analítica del Mecanismo de Piso Blando y Descarga Elástica}
+
+Las ecuaciones~(\ref{eq:formulas_triangular}) permiten demostrar formalmente dos de los fenómenos físicos más importantes de la sismología aplicada y la ingeniería estructural:
+
+\begin{enumerate}
+    \item \textbf{Concentración de Deformación en el Piso Degradado:}
+    Si el Piso 1 entra en ablandamiento ($k_{t1} < 0$), el denominador $D = 3 k_{t2} + 2 k_{t1}$ disminuye considerablemente. Dado que $k_{t2} > 0$, la relación de amplificación cinemática se convierte en:
+    \begin{equation}
+        \frac{\Delta u_1}{\Delta u_2} = \frac{3 k_{t2}}{3 k_{t2} - 2 |k_{t1}|} > 1
+    \end{equation}
+    ¡El incremento del desplazamiento en el primer piso es \textbf{mayor} que el incremento total impuesto en la azotea! Toda la deformación global se concentra casi en su totalidad en el piso basal.
+
+    \item \textbf{Descarga Elástica Reversible del Piso Superior:}
+    Examinando la deriva incremental del segundo entrepiso $\Delta(\Delta_2) = \Delta u_2 - \Delta u_1$:
+    \begin{equation}
+        \Delta(\Delta_2) = \Delta u_2 - \frac{3 k_{t2}}{3 k_{t2} + 2 k_{t1}} \Delta u_2 = \frac{2 k_{t1}}{3 k_{t2} + 2 k_{t1}} \Delta u_2
+    \end{equation}
+    Si el Piso 1 está en ablandamiento ($k_{t1} < 0$), se concluye inequívocamente que:
+    \begin{equation}
+        \Delta(\Delta_2) < 0
+    \end{equation}
+    ¡La deriva del segundo entrepiso disminuye! Como el Piso 2 todavía se comporta elásticamente ($V_2 = k_{02} \Delta_2$), una disminución en su cortante exigida por el equilibrio global ($V_2 = \frac{2}{3} V_1$) fuerza al piso superior a experimentar una \textbf{descarga elástica}.
+\end{enumerate}
+
+% ==============================================================================
+% SECCIÓN 5: EJEMPLO NUMÉRICO COMPLETO PASO A PASO
+% ==============================================================================
+\section{Ejemplo Numérico Completo: Cálculo Detallado de Pasos}
+
+A continuación, se desarrolla minuciosamente el cálculo numérico para el modelo de 2-DOF configurado en el simulador interactivo de la asignatura.
+
+\subsection{Definición de Parámetros Estructurales del Modelo}
+
+\begin{table}[htbp]
+\centering
+\caption{Parámetros constitutivos y cinemáticos del edificio cortante 2-DOF.}
+\label{tab:parametros}
+\begin{tabularx}{\textwidth}{lcccc}
+\toprule
+\textbf{Parámetro Físico} & \textbf{Símbolo} & \textbf{Piso 1 (Base)} & \textbf{Piso 2 (Techo)} & \textbf{Unidades} \\
+\midrule
+Rigidez elástica inicial & $k_{0j}$ & $100.0$ & $80.0$ & $\text{kN/mm}$ \\
+Fuerza de fluencia elástica & $F_{yj}$ & $100.0$ & $90.0$ & $\text{kN}$ \\
+Deriva de fluencia & $\Delta_{yj} = F_{yj}/k_{0j}$ & $1.00$ & $1.125$ & $\text{mm}$ \\
+Razón de endurecimiento & $\alpha_{1j}$ & $+0.05$ & $+0.05$ & --- \\
+Rigidez en endurecimiento & $k_{t,j}^{(2)} = \alpha_{1j} k_{0j}$ & $+5.0$ & $+4.0$ & $\text{kN/mm}$ \\
+Ductilidad de pico (capping) & $\mu_{pj}$ & $3.0$ & $3.0$ & --- \\
+Deriva pico de capacidad & $\Delta_{pj} = \mu_{pj}\Delta_{yj}$ & $3.00$ & $3.375$ & $\text{mm}$ \\
+Capacidad cortante máxima & $F_{\max,j}$ & $110.0$ & $99.0$ & $\text{kN}$ \\
+Razón de ablandamiento & $\alpha_{2j}$ & $-0.10$ & $-0.10$ & --- \\
+Rigidez de ablandamiento & $k_{\text{soft},j} = \alpha_{2j} k_{0j}$ & $-10.0$ & $-8.0$ & $\text{kN/mm}$ \\
+Fuerza cortante residual & $F_{\text{res},j} = 0.20 F_{yj}$ & $20.0$ & $18.0$ & $\text{kN}$ \\
+\midrule
+Patrón lateral de cargas & $s_j$ & $1/3 \approx 0.3333$ & $2/3 \approx 0.6667$ & --- \\
+Incremento de empuje por paso & $\Delta u_2^*$ & \multicolumn{2}{c}{$0.25$} & $\text{mm}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Paso 0: Estado Inicial Sin Carga}
+En el instante de reposo inicial:
+\begin{equation}
+    \mathbf{u}^{(0)} = \begin{Bmatrix} 0.00 \\ 0.00 \end{Bmatrix}\text{ mm}, \quad
+    \Delta_1^{(0)} = 0.00\text{ mm}, \quad
+    \Delta_2^{(0)} = 0.00\text{ mm}, \quad
+    \lambda^{(0)} = V_b^{(0)} = 0.00\text{ kN}
+\end{equation}
+Ambos pisos son elásticos: $k_{t1} = 100.0\text{ kN/mm}$, $k_{t2} = 80.0\text{ kN/mm}$.
+
+% ------------------------------------------------------------------------------
+\subsection{Paso 1: Primer Incremento Impuesto (\texorpdfstring{$\Delta u_2 = 0.25\text{ mm}$}{Delta u2 = 0.25 mm})}
+
+Se prescribe en la cubierta un desplazamiento objetivo $u_2^{(1)} = 0.25\text{ mm}$ ($\Delta u_2 = 0.25\text{ mm}$).
+
+\begin{stepbox}[Cálculo del Paso 1]
+\textbf{1. Ensamblaje de la matriz tangente inicial $\mathbf{K}_t^{(0)}$:}
+\begin{equation}
+    \mathbf{K}_t^{(0)} = 
+    \begin{bmatrix}
+        100.0 + 80.0 & -80.0 \\
+        -80.0 & 80.0
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        180.0 & -80.0 \\
+        -80.0 & 80.0
+    \end{bmatrix}\text{ kN/mm}
+\end{equation}
+Determinante: $\det(\mathbf{K}_t^{(0)}) = (100.0)(80.0) = 8000.0\text{ (kN/mm)}^2 > 0$.
+
+\vspace{0.2cm}
+\textbf{2. Cálculo de la rigidez Pushover global $K_{\text{push}}$ e incremento de cortante basal $\Delta \lambda$:}
+Aplicando la ecuación~(\ref{eq:kpush_formula}):
+\begin{equation}
+    K_{\text{push}}^{(1)} = \frac{3(100.0)(80.0)}{2(100.0) + 3(80.0)} = \frac{24000.0}{200.0 + 240.0} = \frac{24000.0}{440.0} \approx 54.545\text{ kN/mm}
+\end{equation}
+El incremento en el factor de carga (cortante basal) resulta:
+\begin{equation}
+    \Delta \lambda = K_{\text{push}} \, \Delta u_2 = 54.5454 \times 0.25 = 13.6364\text{ kN} \implies \lambda^{(1)} = 13.64\text{ kN}
+\end{equation}
+
+\vspace{0.2cm}
+\textbf{3. Cálculo de los incrementos cinemáticos $\Delta u_1$ y derivas de entrepiso:}
+Aplicando la ecuación~(\ref{eq:formulas_triangular}):
+\begin{equation}
+    \Delta u_1 = \frac{3(80.0)}{440.0} \times 0.25 = \frac{240.0}{440.0} \times 0.25 \approx 0.1364\text{ mm}
+\end{equation}
+Desplazamientos nodales acumulados al final del Paso 1:
+\begin{equation}
+    u_1^{(1)} = 0.00 + 0.1364 = 0.1364\text{ mm}, \qquad
+    u_2^{(1)} = 0.00 + 0.2500 = 0.2500\text{ mm}
+\end{equation}
+Derivas de entrepiso:
+\begin{align}
+    \Delta_1^{(1)} &= u_1^{(1)} = 0.1364\text{ mm} < \Delta_{y1} = 1.00\text{ mm} \quad \implies \text{\textbf{Piso 1 Elástico}} \\
+    \Delta_2^{(1)} &= u_2^{(1)} - u_1^{(1)} = 0.2500 - 0.1364 = 0.1136\text{ mm} < \Delta_{y2} = 1.125\text{ mm} \quad \implies \text{\textbf{Piso 2 Elástico}}
+\end{align}
+
+\vspace{0.2cm}
+\textbf{4. Fuerzas internas restauradoras de entrepiso y verificación del equilibrio:}
+\begin{align}
+    V_1^{(1)} &= k_{01} \, \Delta_1^{(1)} = 100.0 \times 0.13636 = 13.636\text{ kN} \\
+    V_2^{(1)} &= k_{02} \, \Delta_2^{(1)} = 80.0 \times 0.11364 = 9.091\text{ kN}
+\end{align}
+Fuerzas externas impuestas por el patrón $\mathbf{P} = \lambda \mathbf{s}$:
+\begin{align}
+    P_1^{(1)} &= \frac{1}{3} \lambda^{(1)} = \frac{1}{3}(13.6364) = 4.545\text{ kN} \\
+    P_2^{(1)} &= \frac{2}{3} \lambda^{(1)} = \frac{2}{3}(13.6364) = 9.091\text{ kN}
+\end{align}
+Vector de fuerzas internas nodales:
+\begin{equation}
+    \mathbf{F}_{\text{int}}^{(1)} = \begin{Bmatrix} V_1 - V_2 \\ V_2 \end{Bmatrix} = \begin{Bmatrix} 13.636 - 9.091 \\ 9.091 \end{Bmatrix} = \begin{Bmatrix} 4.545 \\ 9.091 \end{Bmatrix}\text{ kN}
+\end{equation}
+Comprobación del residuo nodal:
+\begin{equation}
+    \mathbf{r}^{(1)} = \mathbf{P}^{(1)} - \mathbf{F}_{\text{int}}^{(1)} = \begin{Bmatrix} 4.545 \\ 9.091 \end{Bmatrix} - \begin{Bmatrix} 4.545 \\ 9.091 \end{Bmatrix} = \begin{Bmatrix} 0.00 \\ 0.00 \end{Bmatrix}\text{ kN} \quad \text{\textbf{(Equilibrio Exacto)}}
+\end{equation}
+\end{stepbox}
+
+% ------------------------------------------------------------------------------
+\subsection{Paso 2: Segundo Incremento Impuesto (\texorpdfstring{$u_2 = 0.50\text{ mm}$}{u2 = 0.50 mm})}
+
+Se avanza un segundo paso de $\Delta u_2 = 0.25\text{ mm}$, alcanzando $u_2^{(2)} = 0.50\text{ mm}$.
+
+\begin{stepbox}[Cálculo del Paso 2]
+Dado que ambos pisos continúan en su rango elástico inicial ($k_{t1} = 100.0$, $k_{t2} = 80.0$), la rigidez pushover se mantiene constante:
+\begin{equation}
+    K_{\text{push}}^{(2)} = 54.545\text{ kN/mm}
+\end{equation}
+Incremento de cortante basal:
+\begin{equation}
+    \Delta \lambda = 13.6364\text{ kN} \implies \lambda^{(2)} = \lambda^{(1)} + \Delta \lambda = 13.6364 + 13.6364 = 27.27\text{ kN}
+\end{equation}
+Desplazamientos nodales acumulados:
+\begin{equation}
+    u_1^{(2)} = 0.1364 + 0.1364 = 0.2727\text{ mm}, \qquad
+    u_2^{(2)} = 0.2500 + 0.2500 = 0.5000\text{ mm}
+\end{equation}
+Derivas de entrepiso:
+\begin{equation}
+    \Delta_1^{(2)} = 0.2727\text{ mm} \quad (\mu = 0.27), \qquad
+    \Delta_2^{(2)} = 0.5000 - 0.2727 = 0.2273\text{ mm} \quad (\mu = 0.20)
+\end{equation}
+Fuerzas cortantes de entrepiso:
+\begin{equation}
+    V_1^{(2)} = 100.0 \times 0.2727 = 27.27\text{ kN}, \qquad
+    V_2^{(2)} = 80.0 \times 0.2273 = 18.18\text{ kN}
+\end{equation}
+Fuerzas externas: $P_1^{(2)} = 9.09\text{ kN}$, $P_2^{(2)} = 18.18\text{ kN}$. Residuo $\mathbf{r}^{(2)} = \mathbf{0}$.
+\end{stepbox}
+
+% ------------------------------------------------------------------------------
+\subsection{Paso Singular 1: Inicio de Fluencia en el Piso 1}
+
+El Piso 1 alcanza su fuerza de fluencia $F_{y1} = 100.0\text{ kN}$ cuando su deriva alcanza $\Delta_{y1} = 1.00\text{ mm}$. Puesto que en el régimen elástico $u_1 = \frac{240}{440} u_2 = \frac{6}{11} u_2$:
+\begin{equation}
+    u_1 = 1.00\text{ mm} \implies u_2 = \frac{11}{6}(1.00) \approx 1.833\text{ mm}
+\end{equation}
+En este punto crítico:
+\begin{itemize}
+    \item Cortante basal de fluencia global: $V_{b,y} = 54.545 \times 1.833 = 100.0\text{ kN}$.
+    \item Cortante en piso 2: $V_2 = \frac{2}{3} V_1 = 66.67\text{ kN} < F_{y2} = 90.0\text{ kN}$ (¡Piso 2 aún no fluye!).
+    \item La rigidez tangente del Piso 1 cae bruscamente a su valor de endurecimiento:
+    \begin{equation}
+        k_{t1} = \alpha_{1,1} k_{01} = 0.05 \times 100.0 = 5.0\text{ kN/mm}
+    \end{equation}
+\end{itemize}
+
+Recalculando la rigidez Pushover inmediatamente después de la fluencia del Piso 1:
+\begin{equation}
+    K_{\text{push}} = \frac{3(5.0)(80.0)}{2(5.0) + 3(80.0)} = \frac{1200.0}{10.0 + 240.0} = \frac{1200.0}{250.0} = \mathbf{4.80\text{ kN/mm}}
+\end{equation}
+¡La rigidez global cae en un $91.2\%$ (de $54.55$ a $4.80\text{ kN/mm}$)! El primer piso actúa como un fusible estructural.
+
+% ------------------------------------------------------------------------------
+\subsection{Paso Singular 2: Ingreso a la Rama de Ablandamiento y Mecanismo de Piso Blando}
+
+Cuando la deriva del Piso 1 supera su límite pico $\Delta_{p1} = 3.00\text{ mm}$ (alrededor de $u_2 \approx 20.25\text{ mm}$), el Piso 1 entra en la rama descendente de ablandamiento con rigidez tangente negativa:
+\begin{equation}
+    k_{t1} = \alpha_{2,1} k_{01} = -0.10 \times 100.0 = \mathbf{-10.0\text{ kN/mm}}
+\end{equation}
+mientras el Piso 2 se encuentra en régimen elástico o endurecimiento ($k_{t2} = 80.0\text{ kN/mm}$).
+
+\begin{alertbox}[Demostración Numérica de Ablandamiento y Descarga Elástica]
+Evaluemos las propiedades tangentes en este estado post-pico:
+
+\textbf{1. Matriz de rigidez tangente $\mathbf{K}_t$ y determinante:}
+\begin{equation}
+    \mathbf{K}_t = 
+    \begin{bmatrix}
+        -10.0 + 80.0 & -80.0 \\
+        -80.0 & 80.0
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        70.0 & -80.0 \\
+        -80.0 & 80.0
+    \end{bmatrix}\text{ kN/mm}
+\end{equation}
+\begin{equation}
+    \det(\mathbf{K}_t) = k_{t1} k_{t2} = (-10.0)(80.0) = \mathbf{-800.0\text{ (kN/mm)}^2 < 0}
+\end{equation}
+¡La matriz es indefinida! Los autovalores de $\mathbf{K}_t$ son $\lambda_1 = -12.46\text{ kN/mm} < 0$ y $\lambda_2 = 162.46\text{ kN/mm} > 0$. Un algoritmo controlado por fuerzas colapsaría aquí.
+
+\vspace{0.2cm}
+\textbf{2. Rigidez global Pushover post-pico:}
+\begin{equation}
+    K_{\text{push}} = \frac{3(-10.0)(80.0)}{2(-10.0) + 3(80.0)} = \frac{-2400.0}{-20.0 + 240.0} = \frac{-2400.0}{220.0} \approx \mathbf{-10.909\text{ kN/mm} < 0}
+\end{equation}
+¡La curva Pushover desciende ordenadamente! Con cada incremento de $\Delta u_2 = 0.25\text{ mm}$, el cortante basal disminuye:
+\begin{equation}
+    \Delta \lambda = K_{\text{push}} \, \Delta u_2 = (-10.909)(0.25) = \mathbf{-2.727\text{ kN}}
+\end{equation}
+
+\vspace{0.2cm}
+\textbf{3. Verificación de la descarga elástica en el Piso 2:}
+\begin{equation}
+    \Delta u_1 = \frac{3(80.0)}{220.0} \Delta u_2 = \frac{240.0}{220.0}(0.25) \approx \mathbf{0.2727\text{ mm}} > \Delta u_2 = 0.25\text{ mm}
+\end{equation}
+Deriva incremental del Piso 2:
+\begin{equation}
+    \Delta(\Delta_2) = \Delta u_2 - \Delta u_1 = 0.2500 - 0.2727 = \mathbf{-0.0227\text{ mm} < 0}
+\end{equation}
+Como $\Delta(\Delta_2) < 0$, el entrepiso 2 experimenta una \textbf{descarga elástica reversible}, acortándose mientras el daño y la deformación plástica se concentran exclusivamente en el entrepiso 1 (mecanismo clásico de piso blando).
+\end{alertbox}
+
+% ==============================================================================
+% SECCIÓN 6: TABLA RESUMEN DE LA TRAYECTORIA PUSHOVER
+% ==============================================================================
+\section{Tabla Resumen de la Trayectoria del Pushover Trilineal}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Evolución paso a paso del estado estructural a lo largo de la curva de capacidad Pushover.}
+\label{tab:resumen_pasos}
+\begin{tabularx}{\textwidth}{cccccccccX}
+\toprule
+\textbf{Paso} & \textbf{$u_2$ [mm]} & \textbf{$u_1$ [mm]} & \textbf{$\Delta_1$ [mm]} & \textbf{$\Delta_2$ [mm]} & \textbf{$V_b$ [kN]} & \textbf{$K_{\text{push}}$} & \textbf{$\det(\mathbf{K}_t)$} & \textbf{Piso 1} & \textbf{Piso 2} \\
+\midrule
+0  & $0.00$  & $0.00$  & $0.00$ & $0.00$ & $0.00$   & $+54.55$ & $+8000$ & Elástico & Elástico \\
+1  & $0.25$  & $0.14$  & $0.14$ & $0.11$ & $13.64$  & $+54.55$ & $+8000$ & Elástico & Elástico \\
+2  & $0.50$  & $0.27$  & $0.27$ & $0.23$ & $27.27$  & $+54.55$ & $+8000$ & Elástico & Elástico \\
+4  & $1.00$  & $0.55$  & $0.55$ & $0.45$ & $54.55$  & $+54.55$ & $+8000$ & Elástico & Elástico \\
+8  & $2.00$  & $1.16$  & $1.16$ & $0.84$ & $100.80$ & $+4.80$  & $+400$  & Endurec. & Elástico \\
+15 & $3.75$  & $2.84$  & $2.84$ & $0.91$ & $109.20$ & $+4.80$  & $+400$  & Endurec. & Elástico \\
+20 & $5.00$  & $4.20$  & $4.20$ & $0.80$ & $98.00$  & $-10.91$ & $-800$  & Abland.  & Descarga \\
+40 & $10.00$ & $9.65$  & $9.65$ & $0.35$ & $43.45$  & $-10.91$ & $-800$  & Abland.  & Descarga \\
+80 & $20.00$ & $19.80$ & $19.80$& $0.20$ & $20.00$  & $0.00$   & $0$     & Residual & Elástico \\
+100& $25.00$ & $24.80$ & $24.80$& $0.20$ & $20.00$  & $0.00$   & $0$     & Residual & Elástico \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ==============================================================================
+% SECCIÓN 7: CONCLUSIONES INGENIERILES Y DOCENTES
+% ==============================================================================
+\section{Conclusiones Pedagógicas e Implicaciones en Ingeniería}
+
+\begin{enumerate}
+    \item \textbf{Robustez del Control por Desplazamiento:} La técnica de imponer el desplazamiento de techo $u_2$ transforma el factor de escala $\lambda$ en una incógnita pasiva, eliminando la singularidad jacobiana en el punto de capacidad máxima y posibilitando el análisis computacional estable de la degradación post-pico.
+    
+    \item \textbf{Significado Físico de $\det(\mathbf{K}_t) < 0$:} En mecánica computacional, un determinante jacobiano negativo no implica falla del algoritmo numérico, sino la presencia de inestabilidades materiales locales (ablandamiento). El equilibrio $\mathbf{P} - \mathbf{F}_{\text{int}} = \mathbf{0}$ se satisface rigurosamente en cada paso con residuo nulo.
+    
+    \item \textbf{Mecanismos de Falla Sísmica:} La solución analítica~(\ref{eq:delta_u1_analitico}) demuestra con claridad meridiana cómo la degradación de un piso debilita la cinemática global, forzando la concentración de desplazamientos inelásticos en la base (\textit{piso blando}) y provocando la descarga elástica de los niveles superiores. Este principio subraya la necesidad de cumplir estrictamente con el principio de columna fuerte--viga débil en el diseño sismorresistente.
+\end{enumerate}
+
+% ==============================================================================
+% REFERENCIAS BIBLIOGRÁFICAS
+% ==============================================================================
+\begin{thebibliography}{99}
+\bibitem{Chopra2020}
+Chopra, A.~K. (2020). \textit{Dynamics of Structures: Theory and Applications to Earthquake Engineering} (5th ed.). Pearson.
+
+\bibitem{FEMA440}
+Federal Emergency Management Agency (FEMA). (2005). \textit{Improvement of Nonlinear Static Seismic Analysis Procedures} (FEMA 440). Washington, D.C.
+
+\bibitem{ASCE41}
+American Society of Civil Engineers (ASCE). (2017). \textit{Seismic Evaluation and Retrofit of Existing Buildings} (ASCE/SEI 41-17). Reston, VA.
+
+\bibitem{Crisfield1991}
+Crisfield, M.~A. (1991). \textit{Non-linear Finite Element Analysis of Solids and Structures: Essentials} (Vol. 1). John Wiley \& Sons.
+\end{thebibliography}
+
+\end{document}

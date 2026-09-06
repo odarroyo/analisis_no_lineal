@@ -339,6 +339,10 @@
       background: linear-gradient(90deg, #d97706, #7c3aed);
     }
 
+    .class-card.card-04::before {
+      background: linear-gradient(90deg, #059669, #0284c7);
+    }
+
     .class-card.card-upcoming::before {
       background: linear-gradient(90deg, #94a3b8, #cbd5e1);
     }
@@ -370,6 +374,11 @@
     .card-03 .class-number {
       background: rgba(217, 119, 6, 0.12);
       color: var(--amber-400);
+    }
+
+    .card-04 .class-number {
+      background: rgba(5, 150, 105, 0.12);
+      color: var(--emerald-400);
     }
 
     .card-upcoming .class-number {
@@ -434,6 +443,10 @@
       color: var(--amber-400);
     }
 
+    .card-04 .feature-icon {
+      color: var(--emerald-400);
+    }
+
     .card-footer {
       padding-top: 1.25rem;
       border-top: 1px solid var(--border-subtle);
@@ -486,6 +499,16 @@
     .card-03 .btn-launch:hover {
       background: linear-gradient(135deg, #f59e0b, #d97706);
       box-shadow: 0 6px 16px rgba(217, 119, 6, 0.35);
+    }
+
+    .card-04 .btn-launch {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+
+    .card-04 .btn-launch:hover {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
     }
 
     .btn-disabled {
@@ -615,7 +638,7 @@
     <h1 class="hero-title">Laboratorios Interactivos de Análisis No Lineal de Estructuras</h1>
     <p class="hero-subtitle">
       Plataforma interactiva para la exploración rigurosa de conceptos fundamentales: memoria estructural, 
-      dependencia de trayectoria inelástica, solución iterativa del equilibrio (Newton-Raphson) y análisis estático no lineal (Pushover).
+      dependencia de trayectoria inelástica, solución iterativa del equilibrio (Newton-Raphson), análisis estático no lineal (Pushover) y rótulas plásticas ASCE 41.
     </p>
 
     <div class="hero-badges">
@@ -759,6 +782,50 @@
         </div>
       </article>
 
+      <!-- Clase 04: La Rótula Plástica y Modelo ASCE 41 -->
+      <article class="class-card card-04">
+        <div>
+          <div class="class-header">
+            <span class="class-number">Clase 04</span>
+            <span class="class-status">● Disponible</span>
+          </div>
+          <h3 class="class-title">La Rótula Plástica: Modelo Concentrado ASCE 41 y Equilibrio en Voladizo</h3>
+          <p class="class-desc">
+            Demuestra cómo funciona una rótula plástica concentrada bajo la norma ASCE 41 mediante una columna en voladizo sometida a análisis pushover con control de desplazamiento, revelando el equilibrio interno y la descarga elástica (springback).
+          </p>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Columna en voladizo con parámetros geométricos totalmente configurables: longitud \(L\) (def. 3 m), base \(b\) y peralte \(d\).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Rótula plástica tipo ASCE 41 ubicada al 5% de \(L\) (\(x_h = 0.05 L\)) mediante resorte rotacional no lineal en serie con el fuste.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Curva troncal ASCE 41 completa (A, B, C, D, E) con umbrales de desempeño sísmico (IO, LS, CP).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Visualización simultánea de 4 lienzos: deformada física, DCL y balanza de equilibrio, curva pushover global \(V-\Delta\) y curva constitutiva \(M_h-\theta_h\).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Demostración explícita del equilibrio estático (\(M_h = V \cdot 0.95L\)) y del fenómeno de descarga elástica durante el ablandamiento post-pico.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <a href="04_rotula_plastica_asce41.html" class="btn-launch">
+            <span>Iniciar Clase 04</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </article>
+
     </div>
 
     <!-- Banner Informativo -->
@@ -789,6 +856,7 @@
         <li><a href="01_la_trayectoria_importa.html">Clase 01</a></li>
         <li><a href="02_equilibrio_newton_raphson.html">Clase 02</a></li>
         <li><a href="03_analisis_pushover.html">Clase 03</a></li>
+        <li><a href="04_rotula_plastica_asce41.html">Clase 04</a></li>
         <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">Repositorio</a></li>
       </ul>
     </div>
