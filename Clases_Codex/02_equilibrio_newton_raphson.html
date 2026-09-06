@@ -157,6 +157,8 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
     }
 
     .brand-badge {
@@ -207,6 +209,34 @@
       color: var(--purple-400);
       background: rgba(124, 58, 237, 0.1);
       border-color: rgba(124, 58, 237, 0.3);
+    }
+
+    .nav-external {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-left: 1px solid var(--border-subtle);
+      padding-left: 0.75rem;
+      margin-left: 0.5rem;
+    }
+
+    .nav-ext-btn {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      text-decoration: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .nav-ext-btn:hover {
+      color: var(--purple-400);
+      border-color: var(--purple-400);
     }
 
     .theme-toggle-btn {
@@ -1068,10 +1098,10 @@
   <!-- Encabezado / Barra Superior -->
   <header>
     <div class="header-inner">
-      <div class="brand">
+      <a href="index.html" class="brand" title="Volver al Portal Principal">
         <span class="brand-badge">Clase 02</span>
         <span class="brand-title">Análisis No Lineal de Estructuras</span>
-      </div>
+      </a>
       <nav style="display: flex; align-items: center;">
         <ul class="nav-links">
           <li><a href="#laboratorio" class="nav-btn active">🏢 Edificio 2-DOF</a></li>
@@ -1080,6 +1110,9 @@
           <li><a href="#teoria" class="nav-btn">📖 Teoría & Matrices</a></li>
           <li><a href="#socratico" class="nav-btn">💡 Preguntas de Clase</a></li>
         </ul>
+        <div class="nav-external">
+          <a href="index.html" class="nav-ext-btn" title="Volver al Índice de Laboratorios">🏠 Inicio</a>
+        </div>
         <button id="theme-toggle" class="theme-toggle-btn" title="Alternar entre modo claro y oscuro">
           <span id="theme-icon">🌙</span> <span id="theme-label">Modo Oscuro</span>
         </button>
@@ -1702,6 +1735,9 @@
     <div style="max-width: 1440px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
       <div>
         <strong>Curso de Análisis No Lineal de Estructuras</strong> | Clase 02: Equilibrio y Newton-Raphson
+      </div>
+      <div>
+        <a href="index.html" style="color: var(--purple-400); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">🏠 Volver al Índice Principal</a>
       </div>
       <div>
         Diseñado para docencia universitaria de posgrado en ingeniería estructural.

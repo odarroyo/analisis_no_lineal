@@ -1,0 +1,3173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 03: Análisis Estático No Lineal (Pushover) | Análisis No Lineal</title>
+  <meta name="description" content="Tutorial interactivo y laboratorio numérico del análisis estático no lineal (Pushover) en un sistema de dos grados de libertad con control por desplazamiento.">
+
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES DE COLOR Y TEMAS (MODO CLARO POR DEFECTO / MODO OSCURO)
+       ========================================================================== */
+    :root {
+      /* MODO CLARO (Default - Proyección óptima en aulas y auditorios) */
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #7c3aed;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 35%, #7c3aed 100%);
+
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --blue-400: #2563eb;
+      --blue-500: #1d4ed8;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --rose-400: #e11d48;
+      --rose-500: #be123c;
+      --purple-400: #7c3aed;
+      --purple-500: #6d28d9;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.2);
+    }
+
+    /* MODO OSCURO */
+    body.dark-theme {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: #162032;
+      --bg-card-hover: #1e2c45;
+      --border-subtle: #1f2d47;
+      --border-accent: #c084fc;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(17, 24, 39, 0.95);
+      --hero-bg: linear-gradient(135deg, rgba(22, 32, 50, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 40%, #c084fc 100%);
+
+      --cyan-400: #22d3ee;
+      --cyan-500: #06b6d4;
+      --blue-400: #60a5fa;
+      --blue-500: #3b82f6;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --purple-400: #c084fc;
+      --purple-500: #a855f7;
+
+      --canvas-bg: #0d131f;
+      --canvas-grid: #1e293b;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(168, 85, 247, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--purple-400);
+    }
+
+    /* ENCABEZADO Y NAVEGACIÓN */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: all 0.25s ease;
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--purple-500), var(--blue-500));
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      list-style: none;
+    }
+
+    .nav-btn {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+    }
+
+    .nav-btn.active {
+      color: var(--purple-400);
+      background: rgba(124, 58, 237, 0.1);
+      font-weight: 600;
+    }
+
+    .nav-external {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-left: 1px solid var(--border-subtle);
+      padding-left: 0.75rem;
+      margin-left: 0.5rem;
+    }
+
+    .nav-ext-btn {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      text-decoration: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s;
+    }
+
+    .nav-ext-btn:hover {
+      color: var(--purple-400);
+      border-color: var(--purple-400);
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+      margin-left: 0.75rem;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--purple-400);
+      background: var(--bg-card-hover);
+    }
+
+    /* HERO BANNER */
+    .hero {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-box {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--purple-400);
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.9rem;
+    }
+
+    .hero-quote {
+      font-size: 1.05rem;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      font-weight: 400;
+    }
+
+    .hero-desc {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* GRID DEL LABORATORIO */
+    .grid-lab {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-lab {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* TARJETAS */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      margin-top: 0.15rem;
+    }
+
+    /* CONTROLES Y SLIDERS */
+    .control-group {
+      margin-bottom: 1.1rem;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.35rem;
+    }
+
+    .control-label {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-val {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--purple-400);
+      background: rgba(124, 58, 237, 0.1);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid rgba(124, 58, 237, 0.25);
+    }
+
+    .slider-input {
+      width: 100%;
+      height: 5px;
+      background: var(--border-subtle);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--purple-400);
+      border: 2px solid var(--bg-surface);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+      transition: transform 0.1s ease;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      margin-top: 0.2rem;
+      font-family: var(--font-mono);
+    }
+
+    /* TABS */
+    .story-tab-bar {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.5rem;
+    }
+
+    .story-tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .story-tab-btn.active {
+      background: rgba(124, 58, 237, 0.15);
+      border-color: rgba(124, 58, 237, 0.4);
+      color: var(--purple-400);
+    }
+
+    /* PRESETS */
+    .presets-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .preset-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+      border-color: var(--purple-400);
+    }
+
+    /* BOTONES DE ACCIÓN */
+    .action-button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .btn-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple-500), var(--blue-500));
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--purple-400);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, var(--emerald-500), #0284c7);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+    }
+
+    .btn-emerald:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: transparent;
+      border-color: rgba(225, 29, 72, 0.3);
+      color: var(--rose-400);
+    }
+
+    .btn-danger:hover {
+      background: rgba(225, 29, 72, 0.1);
+      border-color: var(--rose-400);
+    }
+
+    /* TELEMETRÍA EN VIVO */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .telemetry-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .telemetry-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .telemetry-title {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
+
+    .telemetry-value {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
+    }
+
+    .telemetry-unit {
+      font-size: 0.72rem;
+      font-weight: normal;
+      color: var(--text-muted);
+    }
+
+    /* BARRA DE PROGRESO DE OBJETIVO */
+    .target-progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.4rem;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .target-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue-400), var(--purple-400));
+      width: 0%;
+      transition: width 0.15s ease;
+    }
+
+    /* STATUS CHIP */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.6rem;
+      width: 100%;
+      justify-content: center;
+      letter-spacing: 0.02em;
+    }
+
+    .status-badge.elastic {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--blue-400);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+    }
+
+    .status-badge.yielding {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--amber-400);
+      border: 1px solid rgba(217, 119, 6, 0.35);
+    }
+
+    .status-badge.mechanism {
+      background: rgba(225, 29, 72, 0.15);
+      color: var(--rose-400);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+    }
+
+    .status-badge.completed {
+      background: rgba(5, 150, 105, 0.15);
+      color: var(--emerald-400);
+      border: 1px solid rgba(5, 150, 105, 0.35);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* CANVAS Y VISUALIZADORES */
+    .viz-grid-top {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (max-width: 960px) {
+      .viz-grid-top {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .canvas-overlay-info {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: var(--header-bg);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(8px);
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .viz-grid-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 800px) {
+      .viz-grid-bottom {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* DERIVAS DE ENTREPISO INDICATORS */
+    .drift-indicators-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .drift-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    .drift-title {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .drift-meter {
+      height: 6px;
+      background: var(--border-subtle);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.3rem;
+    }
+
+    .drift-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--emerald-400);
+      transition: width 0.15s ease, background 0.15s ease;
+    }
+
+    /* SECCIÓN DE DESGLOSE MATRICIAL Y NUMÉRICO */
+    .breakdown-section {
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 2rem;
+    }
+
+    .math-breakdown-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .breakdown-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+
+    .breakdown-step-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+    }
+
+    .breakdown-step-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.4rem;
+    }
+
+    .breakdown-step-num {
+      background: var(--purple-400);
+      color: #fff;
+      font-size: 0.7rem;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .breakdown-step-content {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .breakdown-step-calc {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0.55rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      margin: 0.45rem 0;
+      color: var(--text-main);
+      overflow-x: auto;
+    }
+
+    .breakdown-step-calc .katex-display {
+      margin: 0.25rem 0 !important;
+      text-align: left !important;
+    }
+
+    .breakdown-step-calc .katex {
+      font-size: 0.98em !important;
+    }
+
+    /* TABLA DE HISTORIAL DEL PUSHOVER */
+    .table-container {
+      max-height: 260px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      margin-top: 1.25rem;
+      background: var(--bg-surface);
+    }
+
+    .pushover-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    .pushover-table th {
+      background: var(--bg-card);
+      color: var(--text-main);
+      padding: 0.5rem 0.65rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .pushover-table td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .pushover-table tr.current-row td {
+      background: rgba(124, 58, 237, 0.12);
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .pushover-table tr.yield-row td {
+      background: rgba(217, 119, 6, 0.12);
+      color: var(--amber-500);
+      font-weight: 600;
+    }
+
+    /* SECCIÓN DE TEORÍA */
+    .theory-section {
+      margin-top: 3.5rem;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 2.5rem;
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-tag {
+      font-family: var(--font-mono);
+      color: var(--purple-400);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .section-heading {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-top: 0.3rem;
+    }
+
+    .theory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .theory-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theory-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .theory-card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 0.85rem;
+    }
+
+    .formula-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--purple-400);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+
+    .callout-box {
+      background: rgba(124, 58, 237, 0.08);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      border-radius: 8px;
+      padding: 0.85rem 1.1rem;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      margin-top: 1rem;
+    }
+
+    .callout-warning {
+      background: rgba(225, 29, 72, 0.08);
+      border-color: rgba(225, 29, 72, 0.3);
+      color: var(--rose-500);
+    }
+
+    /* PREGUNTAS SOCRÁTICAS */
+    .socratic-section {
+      margin-top: 3.5rem;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 2.5rem;
+    }
+
+    .socratic-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .socratic-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .socratic-question {
+      padding: 1.1rem 1.4rem;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .socratic-question:hover {
+      background: var(--bg-card);
+    }
+
+    .socratic-icon {
+      transition: transform 0.2s ease;
+      color: var(--purple-400);
+      font-size: 1.1rem;
+    }
+
+    .socratic-item.open .socratic-icon {
+      transform: rotate(180deg);
+    }
+
+    .socratic-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 1.4rem;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .socratic-item.open .socratic-answer {
+      max-height: 450px;
+      padding: 1.2rem 1.4rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      padding: 2.5rem 1.5rem;
+      color: var(--text-faint);
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 4rem;
+    }
+
+    footer a {
+      color: var(--purple-400);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado / Barra Superior -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">Clase 03</span>
+        <span class="brand-title">Análisis No Lineal de Estructuras</span>
+      </a>
+      <nav style="display: flex; align-items: center;">
+        <ul class="nav-links">
+          <li><a href="#laboratorio" class="nav-btn active">🏢 Laboratorio Pushover</a></li>
+          <li><a href="#desglose-seccion" class="nav-btn">🔍 Desglose Numérico</a></li>
+          <li><a href="#teoria" class="nav-btn">📖 Teoría & Algoritmo</a></li>
+          <li><a href="#socratico" class="nav-btn">💡 Preguntas de Clase</a></li>
+        </ul>
+        <div class="nav-external">
+          <a href="index.html" class="nav-ext-btn" title="Volver al Índice de Laboratorios">🏠 Inicio</a>
+        </div>
+        <button id="theme-toggle" class="theme-toggle-btn" title="Alternar entre modo claro y oscuro">
+          <span id="theme-icon">🌙</span> <span id="theme-label">Modo Oscuro</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <div class="hero">
+    <div class="hero-box">
+      <div class="hero-tag">
+        <span>📈 Control por Desplazamiento & Curva de Capacidad</span>
+      </div>
+      <h1 class="hero-title">El Análisis Estático No Lineal: Pushover</h1>
+      <div class="hero-quote">
+        "No empujamos una estructura con fuerzas fijas hasta que explote numéricamente; la guiamos por desplazamientos para revelar su curva de capacidad y su mecanismo de falla."
+      </div>
+      <p class="hero-desc">
+        En un análisis Pushover tradicional, la estructura es empujada monótonamente con un <strong>patrón lateral invariante</strong> \(\mathbf{s} = [1/3, 2/3]^T\) (proporcional a la altura) 
+        hasta alcanzar un <strong>desplazamiento objetivo</strong> (\(D_{\text{target}}\)). Para sortear la singularidad numérica en las mesetas plásticas, empleamos 
+        <strong>control por desplazamiento</strong>: en cada paso incrementamos el desplazamiento de la azotea (\(u_2\)) y resolvemos el factor multiplicador de carga 
+        \(\lambda\) que equilibra el sistema. En este laboratorio exploramos cómo se genera la <strong>curva de capacidad</strong> y el mecanismo de colapso en un sistema de 2 grados de libertad.
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenedor Principal del Laboratorio -->
+  <main class="container" id="laboratorio">
+    <div class="grid-lab">
+
+      <!-- Columna Izquierda: Configuración del Pushover y Entrepisos -->
+      <aside class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⚙️ Parámetros del Pushover</div>
+            <div class="card-subtitle">Control por Desplazamiento (2-DOF)</div>
+          </div>
+        </div>
+
+        <!-- Presets Didácticos -->
+        <div style="margin-bottom: 0.85rem;">
+          <span class="control-label" style="font-size:0.75rem; text-transform:uppercase; color:var(--text-faint);">Casos de Estudio Típicos:</span>
+          <div class="presets-container">
+            <button type="button" class="preset-btn" id="btn-preset-base">📍 Caso Base (Triangular 1/3, 2/3)</button>
+            <button type="button" class="preset-btn" id="btn-preset-uniform">🏢 Patrón Uniforme (1/2, 1/2)</button>
+            <button type="button" class="preset-btn" id="btn-preset-top">🎯 Carga en Techo (0, 1)</button>
+            <button type="button" class="preset-btn" id="btn-preset-weak2">⚠️ Piso 2 Débil (F<sub>y2</sub> = 60 kN)</button>
+            <button type="button" class="preset-btn" id="btn-preset-elasto">🧱 Elastoplástico (&alpha; = 0)</button>
+          </div>
+        </div>
+
+        <!-- Parámetros de Control del Pushover -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Desplazamiento Objetivo Techo (D<sub>target</sub>)</span>
+            <span class="control-val" id="val-u-target">15.0 mm</span>
+          </div>
+          <input type="range" id="slider-u-target" class="slider-input" min="3" max="30" step="0.5" value="15.0">
+          <div class="slider-limits"><span>3.0 mm</span><span>30.0 mm</span></div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Incremento por Paso (&Delta;u₂)</span>
+            <span class="control-val" id="val-delta-u">0.25 mm</span>
+          </div>
+          <input type="range" id="slider-delta-u" class="slider-input" min="0.05" max="1.0" step="0.05" value="0.25">
+          <div class="slider-limits"><span>0.05 mm</span><span>1.0 mm</span></div>
+        </div>
+
+        <!-- Patrón de Carga Lateral -->
+        <div class="control-group" style="background: var(--bg-card); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <div class="control-label-row">
+            <span class="control-label">Patrón Lateral Normalizado (s)</span>
+            <span class="control-val" id="val-load-pattern">[1/3, 2/3]</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
+            P₁ = &lambda; &middot; s₁ = ⅓&lambda;, &nbsp; P₂ = &lambda; &middot; s₂ = ⅔&lambda;<br>
+            <strong>Cortante Basal:</strong> V<sub>b</sub> = P₁ + P₂ = &lambda;
+          </div>
+        </div>
+
+        <!-- Pestañas de Pisos -->
+        <div style="margin-top: 1rem;">
+          <div class="story-tab-bar">
+            <button type="button" class="story-tab-btn active" id="tab-story1">Piso 1 (Base)</button>
+            <button type="button" class="story-tab-btn" id="tab-story2">Piso 2 (Cubierta)</button>
+          </div>
+
+          <!-- Controles Piso 1 -->
+          <div id="controls-story1">
+            <div class="control-group">
+              <div class="control-label-row">
+                <span class="control-label">Rigidez Inicial Piso 1 (K₀₁)</span>
+                <span class="control-val" id="val-k01">100.0 kN/mm</span>
+              </div>
+              <input type="range" id="slider-k01" class="slider-input" min="30" max="250" step="5" value="100">
+              <div class="slider-limits"><span>30 kN/mm</span><span>250 kN/mm</span></div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span class="control-label">Fuerza de Fluencia Piso 1 (F<sub>y1</sub>)</span>
+                <span class="control-val" id="val-fy1">100.0 kN</span>
+              </div>
+              <input type="range" id="slider-fy1" class="slider-input" min="30" max="250" step="5" value="100">
+              <div class="slider-limits"><span>30 kN</span><span>250 kN</span></div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span class="control-label">Pendiente Post-fluencia Piso 1 (&alpha;₁)</span>
+                <span class="control-val" id="val-alpha1">0.05 (5%)</span>
+              </div>
+              <input type="range" id="slider-alpha1" class="slider-input" min="0.0" max="0.25" step="0.01" value="0.05">
+              <div class="slider-limits"><span>0% (Plástica)</span><span>25% (Endurecimiento)</span></div>
+            </div>
+          </div>
+
+          <!-- Controles Piso 2 -->
+          <div id="controls-story2" style="display: none;">
+            <div class="control-group">
+              <div class="control-label-row">
+                <span class="control-label">Rigidez Inicial Piso 2 (K₀₂)</span>
+                <span class="control-val" id="val-k02">80.0 kN/mm</span>
+              </div>
+              <input type="range" id="slider-k02" class="slider-input" min="30" max="250" step="5" value="80">
+              <div class="slider-limits"><span>30 kN/mm</span><span>250 kN/mm</span></div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span class="control-label">Fuerza de Fluencia Piso 2 (F<sub>y2</sub>)</span>
+                <span class="control-val" id="val-fy2">90.0 kN</span>
+              </div>
+              <input type="range" id="slider-fy2" class="slider-input" min="30" max="250" step="5" value="90">
+              <div class="slider-limits"><span>30 kN</span><span>250 kN</span></div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span class="control-label">Pendiente Post-fluencia Piso 2 (&alpha;₂)</span>
+                <span class="control-val" id="val-alpha2">0.05 (5%)</span>
+              </div>
+              <input type="range" id="slider-alpha2" class="slider-input" min="0.0" max="0.25" step="0.01" value="0.05">
+              <div class="slider-limits"><span>0% (Plástica)</span><span>25% (Endurecimiento)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="action-button-group">
+          <div class="btn-row-2">
+            <button type="button" class="btn btn-primary" id="btn-step-forward" title="Incrementar un paso de desplazamiento">
+              <span>▶️</span> Paso (+Δu)
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-step-back" title="Retroceder un paso">
+              <span>◀️</span> Paso (-Δu)
+            </button>
+          </div>
+
+          <button type="button" class="btn btn-emerald" id="btn-solve-all" title="Calcular la curva completa hasta el objetivo">
+            <span>⏩</span> Resolver Hasta Objetivo
+          </button>
+
+          <div class="btn-row-2">
+            <button type="button" class="btn btn-secondary" id="btn-play-pause" title="Animar el proceso de empuje">
+              <span id="play-icon">⏯️</span> <span id="play-text">Animar Empuje</span>
+            </button>
+            <button type="button" class="btn btn-danger" id="btn-reset" title="Reiniciar a desplazamiento cero">
+              <span>🔄</span> Reiniciar
+            </button>
+          </div>
+        </div>
+
+        <!-- Estado Global del Edificio -->
+        <div class="status-badge elastic" id="global-status-badge">
+          <span class="status-dot"></span>
+          <span id="global-status-text">Régimen Totalmente Elástico</span>
+        </div>
+      </aside>
+
+      <!-- Columna Derecha: Visualizadores y Gráficas del Pushover -->
+      <section class="viz-column">
+
+        <!-- Telemetría en Vivo -->
+        <div class="telemetry-grid">
+          <div class="telemetry-item">
+            <div class="telemetry-title">Desplazamiento Techo (u₂)</div>
+            <div class="telemetry-value">
+              <span id="hud-u2">0.00</span><span class="telemetry-unit">mm</span>
+            </div>
+            <div class="target-progress-bar">
+              <div class="target-progress-fill" id="hud-progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="telemetry-item">
+            <div class="telemetry-title">Cortante Basal (V<sub>b</sub> = &lambda;)</div>
+            <div class="telemetry-value">
+              <span id="hud-vb">0.00</span><span class="telemetry-unit">kN</span>
+            </div>
+            <div style="font-size:0.7rem; color:var(--text-faint); margin-top:0.25rem;">
+              P₁ = <span id="hud-p1">0.0</span> kN, P₂ = <span id="hud-p2">0.0</span> kN
+            </div>
+          </div>
+
+          <div class="telemetry-item">
+            <div class="telemetry-title">Desplazamiento Piso 1 (u₁)</div>
+            <div class="telemetry-value">
+              <span id="hud-u1">0.00</span><span class="telemetry-unit">mm</span>
+            </div>
+            <div style="font-size:0.7rem; color:var(--text-faint); margin-top:0.25rem;">
+              Deriva 1: <span id="hud-d1">0.00</span> mm, Deriva 2: <span id="hud-d2">0.00</span> mm
+            </div>
+          </div>
+
+          <div class="telemetry-item">
+            <div class="telemetry-title">Rigidez Tangente (K<sub>push</sub>)</div>
+            <div class="telemetry-value">
+              <span id="hud-kpush">54.55</span><span class="telemetry-unit">kN/mm</span>
+            </div>
+            <div style="font-size:0.7rem; color:var(--text-faint); margin-top:0.25rem;">
+              Pendiente: dV<sub>b</sub> / du₂
+            </div>
+          </div>
+        </div>
+
+        <!-- Visualizadores Principales: Edificio Deformado y Curva Pushover -->
+        <div class="viz-grid-top">
+          <!-- Canvas 1: Edificio Deformado 2-DOF -->
+          <div class="card" style="padding: 0.85rem;">
+            <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.4rem;">
+              <div class="card-title" style="font-size: 0.9rem;">
+                🏢 Edificio 2-DOF Deformado
+              </div>
+              <span id="badge-building-step" class="control-val" style="font-size:0.72rem;">Paso 0</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 330px;">
+              <canvas id="canvas-building"></canvas>
+              <div class="canvas-overlay-info" id="overlay-building-info">
+                u₁ = 0.00 mm | u₂ = 0.00 mm
+              </div>
+            </div>
+
+            <!-- Barras de Deriva de Entrepiso -->
+            <div class="drift-indicators-bar">
+              <div class="drift-card">
+                <div class="drift-title">
+                  <span>Deriva Piso 1 (&Delta;₁/h)</span>
+                  <span id="lbl-drift1-val">0.00%</span>
+                </div>
+                <div class="drift-meter">
+                  <div class="drift-meter-fill" id="drift1-fill"></div>
+                </div>
+              </div>
+              <div class="drift-card">
+                <div class="drift-title">
+                  <span>Deriva Piso 2 (&Delta;₂/h)</span>
+                  <span id="lbl-drift2-val">0.00%</span>
+                </div>
+                <div class="drift-meter">
+                  <div class="drift-meter-fill" id="drift2-fill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvas 2: Curva de Capacidad (Pushover: Vb vs u2) -->
+          <div class="card" style="padding: 0.85rem;">
+            <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.4rem;">
+              <div class="card-title" style="font-size: 0.9rem;">
+                📈 Curva de Capacidad Pushover (V<sub>b</sub> vs u<sub>techo</sub>)
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-faint);">
+                Objetivo: <strong id="lbl-target-badge">15.0 mm</strong>
+              </div>
+            </div>
+            <div class="canvas-wrapper" style="height: 385px;">
+              <canvas id="canvas-pushover"></canvas>
+              <div class="canvas-overlay-info">
+                Vb = <span id="overlay-vb">0.0</span> kN | u₂ = <span id="overlay-u2">0.00</span> mm
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visualizadores Secundarios: Curvas Constitutivas de los Entrepisos -->
+        <div class="viz-grid-bottom">
+          <!-- Canvas 3: Piso 1 (V1 vs Delta1) -->
+          <div class="card" style="padding: 0.85rem;">
+            <div class="card-header" style="margin-bottom: 0.4rem; padding-bottom: 0.35rem;">
+              <div class="card-title" style="font-size: 0.85rem;">
+                🌿 Resorte Entrepiso 1: V₁ vs &Delta;₁
+              </div>
+              <span class="control-val" id="badge-story1-state" style="font-size:0.7rem;">Elástico</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 200px;">
+              <canvas id="canvas-story1"></canvas>
+            </div>
+          </div>
+
+          <!-- Canvas 4: Piso 2 (V2 vs Delta2) -->
+          <div class="card" style="padding: 0.85rem;">
+            <div class="card-header" style="margin-bottom: 0.4rem; padding-bottom: 0.35rem;">
+              <div class="card-title" style="font-size: 0.85rem;">
+                🍁 Resorte Entrepiso 2: V₂ vs &Delta;₂
+              </div>
+              <span class="control-val" id="badge-story2-state" style="font-size:0.7rem;">Elástico</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 200px;">
+              <canvas id="canvas-story2"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- SECCIÓN DE DESGLOSE NUMÉRICO DETALLADO -->
+    <section class="breakdown-section" id="desglose-seccion">
+      <div class="section-header">
+        <div class="section-tag">Transparencia Matemática & Algoritmo</div>
+        <h2 class="section-heading">Desglose Numérico del Paso Actual</h2>
+        <p style="color:var(--text-muted); font-size:0.95rem; margin-top:0.4rem;">
+          En el control por desplazamiento, fijamos \(u_2\) en el valor del paso y resolvemos el desplazamiento interno \(u_1\) 
+          y el multiplicador de carga \(\lambda\) para que las fuerzas internas satisfagan exactamente el patrón lateral.
+        </p>
+      </div>
+
+      <div class="math-breakdown-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+          <div style="font-weight: 700; color: var(--text-main); font-size: 1rem;">
+            🔍 Ecuaciones Resueltas en el <span id="breakdown-step-title" style="color: var(--purple-400);">Paso 0</span>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+            u₂ = <span id="math-u2-val" style="font-weight:700; color:var(--text-main);">0.000</span> mm
+          </div>
+        </div>
+
+        <div class="breakdown-steps-grid">
+          <!-- Paso 1: Planteamiento de Equilibrio -->
+          <div class="breakdown-step-box">
+            <div class="breakdown-step-header">
+              <span class="breakdown-step-num">1</span>
+              <span>Equilibrio Interno vs Patrón Lateral</span>
+            </div>
+            <div class="breakdown-step-content">
+              El vector de cargas laterales aplicadas es proporcional al factor escalar \(\lambda\):
+              <div class="breakdown-step-calc">
+                \[ P_1 = \frac{1}{3}\lambda, \quad P_2 = \frac{2}{3}\lambda \]
+              </div>
+              El cortante en cada entrepiso equilibra las fuerzas superiores:
+              <div class="breakdown-step-calc">
+                \[ V_2 = P_2 = \frac{2}{3}\lambda \implies \lambda = \frac{3}{2}V_2 \]
+                <div style="height:3px;"></div>
+                \[ V_1 = P_1 + P_2 = \lambda \]
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 2: Determinación de u1 -->
+          <div class="breakdown-step-box">
+            <div class="breakdown-step-header">
+              <span class="breakdown-step-num">2</span>
+              <span>Ecuación de Cierre para \(u_1\)</span>
+            </div>
+            <div class="breakdown-step-content">
+              Al igualar las dos expresiones para el cortante basal \(\lambda\), el desplazamiento del Piso 1 (\(u_1\)) debe satisfacer:
+              <div class="breakdown-step-calc" id="math-eq-u1"></div>
+              <div id="math-u1-solution-text" style="font-size:0.82rem; margin-top:0.35rem; color:var(--text-muted);"></div>
+            </div>
+          </div>
+
+          <!-- Paso 3: Factor de Carga lambda -->
+          <div class="breakdown-step-box">
+            <div class="breakdown-step-header">
+              <span class="breakdown-step-num">3</span>
+              <span>Cálculo de \(\lambda\) y Cortante Basal</span>
+            </div>
+            <div class="breakdown-step-content">
+              Evaluando los resortes con las derivas encontradas:
+              <div class="breakdown-step-calc" id="math-calc-lambda"></div>
+              <div id="math-calc-forces-text" style="font-size:0.82rem; margin-top:0.35rem; color:var(--text-muted);"></div>
+            </div>
+          </div>
+
+          <!-- Paso 4: Matriz Tangente y Pendiente -->
+          <div class="breakdown-step-box">
+            <div class="breakdown-step-header">
+              <span class="breakdown-step-num">4</span>
+              <span>Rigidez Tangente Instantánea</span>
+            </div>
+            <div class="breakdown-step-content">
+              Con rigideces tangentes \(k_{t1}\) y \(k_{t2}\), la pendiente local de la curva Pushover es:
+              <div class="breakdown-step-calc" id="math-calc-kpush"></div>
+              <div id="math-states-text" style="font-size:0.82rem; margin-top:0.35rem; font-weight:600;"></div>
+            </div>
+          </div>
+
+          <!-- Paso 5: Matriz de Rigidez Tangente Kt -->
+          <div class="breakdown-step-box" style="grid-column: 1 / -1;">
+            <div class="breakdown-step-header">
+              <span class="breakdown-step-num">5</span>
+              <span>Matriz de Rigidez Tangente Global \(\mathbf{K}_t\)</span>
+            </div>
+            <div class="breakdown-step-content">
+              En el paso activo, la matriz de rigidez tangente que rige el sistema incremental \(\mathbf{K}_t \Delta \mathbf{u} = \Delta \mathbf{P}\) es:
+              <div class="breakdown-step-calc" id="math-calc-matrix"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla Histórica de Pasos -->
+        <div style="margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
+              📋 Registro Tabular del Pushover (Pasos Calculados: <span id="lbl-total-steps">1</span>)
+            </span>
+            <button type="button" class="btn btn-secondary" id="btn-export-csv" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">
+              📥 Exportar a CSV
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="pushover-table" id="table-pushover">
+              <thead>
+                <tr>
+                  <th style="text-align: center;">Paso</th>
+                  <th>u₂ (mm)</th>
+                  <th>u₁ (mm)</th>
+                  <th>&Delta;₁ (mm)</th>
+                  <th>&Delta;₂ (mm)</th>
+                  <th>V₁ (kN)</th>
+                  <th>V₂ (kN)</th>
+                  <th>V<sub>b</sub> = &lambda; (kN)</th>
+                  <th>K<sub>push</sub> (kN/mm)</th>
+                  <th style="text-align: center;">Piso 1</th>
+                  <th style="text-align: center;">Piso 2</th>
+                </tr>
+              </thead>
+              <tbody id="table-pushover-body">
+                <!-- Se llena dinámicamente con JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN TEÓRICA -->
+    <section class="theory-section" id="teoria">
+      <div class="section-header">
+        <div class="section-tag">Fundamentos Teóricos</div>
+        <h2 class="section-heading">Conceptos Clave del Análisis Pushover</h2>
+        <p style="color:var(--text-muted); font-size:0.95rem; margin-top:0.4rem;">
+          ¿Por qué el análisis estático no lineal es la piedra angular del diseño sismorresistente basado en desempeño (PBEE)?
+        </p>
+      </div>
+
+      <div class="theory-grid">
+        <!-- Tarjeta 1: ¿Por qué Control por Desplazamiento? -->
+        <article class="theory-card">
+          <h3>🎯 1. ¿Por qué Control por Desplazamiento?</h3>
+          <p>
+            En un análisis no lineal controlado por fuerzas, aplicamos incrementos de carga \(\Delta \mathbf{P}\). 
+            Sin embargo, cuando una estructura plastifica o entra en una meseta plástica, su rigidez tangente tiende a cero (\(\mathbf{K}_t \to \mathbf{0}\)).
+          </p>
+          <div class="callout-box callout-warning">
+            <strong>Falla del Control por Carga:</strong><br>
+            El sistema de corrección \(\delta \mathbf{u} = \mathbf{K}_t^{-1} \mathbf{r}\) produce desplazamientos infinitos (\(\delta \mathbf{u} \to \infty\)) o divergencia matemática.
+          </div>
+          <p style="margin-top: 0.75rem;">
+            Con el <strong>control por desplazamiento</strong>, imponemos el movimiento de un grado de libertad maestro (el desplazamiento del techo \(u_2\)) 
+            y despejamos el factor de fuerza \(\lambda\). Esto permite recorrer mesetas plásticas, capturar la degradación de rigidez y trazar la curva de capacidad completa sin inestabilidad numérica.
+          </p>
+        </article>
+
+        <!-- Tarjeta 2: El Patrón de Carga Proporcional a la Altura -->
+        <article class="theory-card">
+          <h3>📐 2. El Patrón Lateral [1/3, 2/3]</h3>
+          <p>
+            En la dinámica de estructuras, las fuerzas inerciales sísmicas dependen de la masa y de la forma modal fundamental:
+          </p>
+          <div class="formula-box">
+            \[ s_i = \frac{m_i \phi_{i1}}{\sum_{j=1}^{N} m_j \phi_{j1}} \]
+          </div>
+          <p>
+            Para un edificio regular de 2 pisos con masas de piso iguales (\(m_1 = m_2 = m\)) y alturas de entrepiso iguales (\(h_1 = h, h_2 = 2h\)), 
+            el primer modo de vibración es aproximadamente una recta que crece con la altura: \(\boldsymbol{\phi}_1 \propto [1, 2]^T\).
+          </p>
+          <p>
+            Al normalizar para que la suma sea \(1.0\):
+          </p>
+          <div class="formula-box">
+            \[ s_1 = \frac{1}{1 + 2} = \frac{1}{3} \approx 0.333, \quad s_2 = \frac{2}{1 + 2} = \frac{2}{3} \approx 0.667 \]
+          </div>
+        </article>
+
+        <!-- Tarjeta 3: Deducción Analítica del Equilibrio 2-DOF -->
+        <article class="theory-card">
+          <h3>⚖️ 3. Solución Exacta del Sistema 2-DOF</h3>
+          <p>
+            El vector de fuerzas resistentes internas de un edificio de corte de 2 pisos es:
+          </p>
+          <div class="formula-box">
+            \[ \mathbf{F}_{\text{int}}(\mathbf{u}) = \begin{bmatrix} V_1(u_1) - V_2(u_2 - u_1) \\ V_2(u_2 - u_1) \end{bmatrix} \]
+          </div>
+          <p>
+            Igualando a las fuerzas externas \(\mathbf{P} = \lambda [1/3, 2/3]^T\):
+          </p>
+          <div class="formula-box">
+            \[ V_2(u_2 - u_1) = \frac{2}{3}\lambda \implies \lambda = \frac{3}{2}V_2(u_2 - u_1) \]
+            <div style="height: 4px;"></div>
+            \[ V_1(u_1) = P_1 + P_2 = \lambda \]
+          </div>
+          <p>
+            Por tanto, para cualquier valor impuesto de \(u_2\), \(u_1\) queda determinado por la igualdad:
+          </p>
+          <div class="formula-box">
+            \[ V_1(u_1) = \frac{3}{2} V_2(u_2 - u_1) \]
+          </div>
+        </article>
+
+        <!-- Tarjeta 4: El Desplazamiento Objetivo y Desempeño Sísmico -->
+        <article class="theory-card">
+          <h3>🏛️ 4. Desplazamiento Objetivo (\(D_{\text{target}}\))</h3>
+          <p>
+            El análisis Pushover no busca empujar la estructura hasta el infinito sin sentido, sino evaluar su estado inelástico ante la <strong>demanda sísmica esperada</strong>.
+          </p>
+          <p>
+            Normas internacionales (como <strong>ASCE 41-17</strong>, <strong>FEMA 356</strong> o <strong>NSR-10 / AIS-180</strong>) determinan el desplazamiento objetivo 
+            (\(D_{\text{target}}\)) mediante el Método del Coeficiente de Desplazamiento o el Espectro de Capacidad (ATC-40):
+          </p>
+          <div class="formula-box">
+            \[ D_{\text{target}} = C_0 C_1 C_2 C_3 S_a \left(\frac{T_e}{2\pi}\right)^2 g \]
+          </div>
+          <p>
+            En ese punto de demanda se evalúan los niveles de desempeño:
+            <strong>IO</strong> (Ocupación Inmediata), <strong>LS</strong> (Seguridad de Vida) y <strong>CP</strong> (Prevención de Colapso).
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- SECCIÓN DE PREGUNTAS SOCRÁTICAS -->
+    <section class="socratic-section" id="socratico">
+      <div class="section-header">
+        <div class="section-tag">Reflexión & Discusión en Clase</div>
+        <h2 class="section-heading">Preguntas Socráticas para el Estudiante</h2>
+        <p style="color:var(--text-muted); font-size:0.95rem; margin-top:0.4rem;">
+          Haz clic en cada pregunta para abrir la respuesta guiada y debatir en el aula.
+        </p>
+      </div>
+
+      <div class="socratic-list">
+        <div class="socratic-item">
+          <div class="socratic-question">
+            <span>1. ¿Por qué en el caso base el Piso 1 plastifica primero si su rigidez (\(100\) kN/mm) es mayor que la del Piso 2 (\(80\) kN/mm)?</span>
+            <span class="socratic-icon">▼</span>
+          </div>
+          <div class="socratic-answer">
+            <p>
+              Porque el cortante no depende solo de la rigidez, sino de la posición en el edificio. Por equilibrio de cuerpo libre, el Piso 1 debe resistir el cortante basal completo (\(V_1 = P_1 + P_2 = \lambda\)), 
+              mientras que el Piso 2 solo resiste la fuerza de cubierta (\(V_2 = P_2 = \frac{2}{3}\lambda\)).
+            </p>
+            <p style="margin-top: 0.5rem;">
+              En el régimen elástico, la relación de derivas es \(\Delta_1 = \frac{6}{11}u_2\) y \(\Delta_2 = \frac{5}{11}u_2\). 
+              Como la fuerza de fluencia del Piso 1 es \(F_{y1} = 100\) kN (\(u_{y1} = 1.0\) mm), este alcanza su fluencia a un desplazamiento de techo de \(u_2 = 1.83\) mm, 
+              momento en el cual el Piso 2 solo tiene una deriva de \(0.83\) mm (por debajo de sus \(1.125\) mm de fluencia).
+            </p>
+          </div>
+        </div>
+
+        <div class="socratic-item">
+          <div class="socratic-question">
+            <span>2. Una vez que el Piso 1 plastifica, ¿por qué la mayor parte del desplazamiento adicional se concentra en él (mecanismo de piso blando)?</span>
+            <span class="socratic-icon">▼</span>
+          </div>
+          <div class="socratic-answer">
+            <p>
+              Cuando el Piso 1 entra en fluencia, su rigidez tangente se desploma a \(k_{t1} = \alpha_1 K_{01} = 5\) kN/mm, mientras que el Piso 2 se mantiene intacto con \(k_{t2} = 80\) kN/mm.
+            </p>
+            <p style="margin-top: 0.5rem;">
+              La derivación de la ecuación incremental muestra que:
+            </p>
+            <div class="formula-box">
+              \[ \frac{du_1}{du_2} = \frac{3 k_{t2}}{2 k_{t1} + 3 k_{t2}} = \frac{3(80)}{2(5) + 3(80)} = \frac{240}{250} = 0.96 \]
+            </div>
+            <p style="margin-top: 0.5rem;">
+              ¡Esto significa que el <strong>96%</strong> de cualquier desplazamiento adicional impuesto en el techo se absorbe exclusivamente en el primer nivel! 
+              Este fenómeno ilustra el peligro de los <em>entrepisos débiles</em> y la concentración de daño inelástico en la base.
+            </p>
+          </div>
+        </div>
+
+        <div class="socratic-item">
+          <div class="socratic-question">
+            <span>3. ¿Qué sucedería si el material de los entrepisos fuera perfectamente elastoplástico (\(\alpha_1 = \alpha_2 = 0\))?</span>
+            <span class="socratic-icon">▼</span>
+          </div>
+          <div class="socratic-answer">
+            <p>
+              Si \(\alpha_1 = 0\), una vez que el Piso 1 plastifica, su rigidez tangente es \(k_{t1} = 0\). 
+              Sustituyendo en la rigidez global:
+            </p>
+            <div class="formula-box">
+              \[ K_{\text{push}} = \frac{3(0)(80)}{2(0) + 3(80)} = 0 \text{ kN/mm} \]
+            </div>
+            <p style="margin-top: 0.5rem;">
+              La curva Pushover se vuelve perfectamente horizontal en \(V_b = F_{y1} = 100\) kN. Como el cortante basal ya no puede aumentar, 
+              la fuerza en el techo queda congelada en \(P_2 = \frac{2}{3}(100) = 66.7\) kN, lo que es insuficiente para hacer plastificar al Piso 2 (\(F_{y2} = 90\) kN). 
+              ¡El Piso 2 jamás plastificaría y toda la ductilidad del edificio dependería únicamente del primer nivel!
+            </p>
+          </div>
+        </div>
+
+        <div class="socratic-item">
+          <div class="socratic-question">
+            <span>4. ¿Cuáles son las principales limitaciones del Pushover frente a un Análisis Tiempo-Historia No Lineal (NLTHA)?</span>
+            <span class="socratic-icon">▼</span>
+          </div>
+          <div class="socratic-answer">
+            <p>
+              1. <strong>Patrón lateral invariante:</strong> En un sismo real, la distribución de fuerzas cambia constantemente en el tiempo a medida que se degradan los elementos y participan los modos superiores (efectos de segundo y tercer modo).
+            </p>
+            <p style="margin-top: 0.5rem;">
+              2. <strong>Efectos de torsión y modos superiores:</strong> Para edificios altos o con irregularidades en planta/elevación, un único patrón estático subestima la demanda en pisos altos.
+            </p>
+            <p style="margin-top: 0.5rem;">
+              3. <strong>Histéresis y ciclos de carga:</strong> El Pushover es monótono (carga en una sola dirección). No modela la degradación cíclica de rigidez y resistencia por fatiga de bajo número de ciclos producida por el movimiento oscilatorio del terreno.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 900px; margin: 0 auto;">
+      <p style="font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem;">
+        Análisis No Lineal de Estructuras • Escuela de Ingeniería Civil
+      </p>
+      <p style="margin-bottom: 1rem;">
+        Profesor Orlando Arroyo, Ph.D. — Universidad Industrial de Santander (UIS)
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="index.html" style="color: var(--purple-400); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">🏠 Volver al Índice Principal</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       LÓGICA JAVASCRIPT: SIMULACIÓN PUSHOVER, CANVAS Y DESGLOSE MATRICIAL
+       ========================================================================== -->
+  <script>
+    // --- Estado Global del Laboratorio Pushover ---
+    const pushoverState = {
+      // Propiedades de los entrepisos
+      k01: 100.0,
+      fy1: 100.0,
+      alpha1: 0.05,
+      h1: 3000.0, // Altura de entrepiso en mm
+
+      k02: 80.0,
+      fy2: 90.0,
+      alpha2: 0.05,
+      h2: 3000.0,
+
+      // Patrón de carga lateral normalizado [s1, s2]
+      s1: 1.0 / 3.0,
+      s2: 2.0 / 3.0,
+
+      // Parámetros de control del Pushover
+      targetDisp: 15.0,  // Desplazamiento objetivo u2 (mm)
+      deltaU: 0.25,      // Incremento de u2 por paso (mm)
+
+      // Historial completo de pasos calculados
+      // Cada elemento: { step, u2, u1, d1, d2, V1, V2, lambda, P1, P2, kt1, kt2, kpush, state1, state2 }
+      history: [],
+      currentStepIndex: 0,
+
+      // Animación
+      isPlaying: false,
+      animationTimer: null,
+      playSpeed: 80 // ms por paso
+    };
+
+    // --- Función Constitutiva Bilineal de un Entrepiso ---
+    function evaluateStorySpring(delta, k0, fy, alpha) {
+      const uy = fy / k0;
+      const kp = alpha * k0;
+      const absDelta = Math.abs(delta);
+
+      if (absDelta <= uy) {
+        return {
+          V: k0 * delta,
+          kt: k0,
+          state: 'Elástico',
+          isYielded: false,
+          ductility: absDelta / (uy || 1)
+        };
+      } else {
+        const s = Math.sign(delta);
+        const plasticDelta = absDelta - uy;
+        const V = s * (fy + kp * plasticDelta);
+        return {
+          V: V,
+          kt: kp,
+          state: 'Plástico',
+          isYielded: true,
+          ductility: absDelta / (uy || 1)
+        };
+      }
+    }
+
+    // --- Solver de Equilibrio para un Desplazamiento Impuesto u2 ---
+    // Resuelve u1 tal que V1(u1) = ( (s1+s2)/s2 ) * V2(u2 - u1)
+    // Con salvaguarda de acotamiento [0, u2] para garantizar convergencia incondicional
+    function solveEquilibriumAtU2(u2, initialU1Guess = null) {
+      const s1 = pushoverState.s1;
+      const s2 = pushoverState.s2;
+      const ratio = (s1 + s2) / s2; // Factor multiplicador: 1.0 / s2
+
+      if (Math.abs(u2) < 1e-12) {
+        return {
+          u2: 0, u1: 0, d1: 0, d2: 0, V1: 0, V2: 0,
+          lambda: 0, P1: 0, P2: 0,
+          kt1: pushoverState.k01, kt2: pushoverState.k02,
+          kpush: (pushoverState.k01 * pushoverState.k02) / (s2 * pushoverState.k01 + pushoverState.k02),
+          state1: 'Elástico', state2: 'Elástico',
+          yield1: false, yield2: false, duct1: 0, duct2: 0
+        };
+      }
+
+      let low = 0.0;
+      let high = u2;
+      let u1 = (initialU1Guess !== null && initialU1Guess >= 0 && initialU1Guess <= u2)
+        ? initialU1Guess
+        : u2 * 0.5;
+
+      const tol = 1e-9;
+      const maxIter = 60;
+
+      for (let iter = 0; iter < maxIter; iter++) {
+        const d1 = u1;
+        const d2 = u2 - u1;
+
+        const sp1 = evaluateStorySpring(d1, pushoverState.k01, pushoverState.fy1, pushoverState.alpha1);
+        const sp2 = evaluateStorySpring(d2, pushoverState.k02, pushoverState.fy2, pushoverState.alpha2);
+
+        // Residuo g(u1) = V1(u1) - ratio * V2(u2 - u1)
+        const g = sp1.V - ratio * sp2.V;
+
+        if (Math.abs(g) < tol) {
+          break;
+        }
+
+        // Actualizar bracket [low, high]
+        if (g < 0) {
+          low = u1;
+        } else {
+          high = u1;
+        }
+
+        // Derivada dg/du1 = kt1 + ratio * kt2
+        const dg = sp1.kt + ratio * sp2.kt;
+        let nextU1 = u1 - g / dg;
+
+        // Si el paso de Newton salta fuera del intervalo [low, high], aplicar bisección
+        if (nextU1 <= low || nextU1 >= high || isNaN(nextU1)) {
+          nextU1 = 0.5 * (low + high);
+        }
+
+        if (Math.abs(nextU1 - u1) < tol) {
+          u1 = nextU1;
+          break;
+        }
+        u1 = nextU1;
+      }
+
+      // Con u1 convergido, evaluar estado final
+      const d1 = u1;
+      const d2 = u2 - u1;
+      const sp1 = evaluateStorySpring(d1, pushoverState.k01, pushoverState.fy1, pushoverState.alpha1);
+      const sp2 = evaluateStorySpring(d2, pushoverState.k02, pushoverState.fy2, pushoverState.alpha2);
+
+      // Multiplicador de carga lambda = Base Shear Vb
+      const lambda = sp1.V;
+      const P1 = lambda * s1;
+      const P2 = lambda * s2;
+
+      // Rigidez tangente global Kpush = dlambda / du2
+      const denom = s2 * sp1.kt + sp2.kt;
+      const kpush = denom > 1e-9 ? (sp1.kt * sp2.kt) / denom : 0.0;
+
+      return {
+        u2,
+        u1,
+        d1,
+        d2,
+        V1: sp1.V,
+        V2: sp2.V,
+        lambda,
+        P1,
+        P2,
+        kt1: sp1.kt,
+        kt2: sp2.kt,
+        kpush,
+        state1: sp1.state,
+        state2: sp2.state,
+        yield1: sp1.isYielded,
+        yield2: sp2.isYielded,
+        duct1: sp1.ductility,
+        duct2: sp2.ductility
+      };
+    }
+
+    // --- Generador del Historial Completo del Pushover ---
+    function recomputeFullPushoverHistory() {
+      const history = [];
+      const target = pushoverState.targetDisp;
+      const du = pushoverState.deltaU;
+      const numSteps = Math.max(1, Math.round(target / du));
+
+      let lastU1 = 0.0;
+
+      // Paso 0 (Estado inicial descargado)
+      const step0 = solveEquilibriumAtU2(0.0, 0.0);
+      step0.step = 0;
+      history.push(step0);
+
+      // Pasos incrementales
+      for (let s = 1; s <= numSteps; s++) {
+        const u2 = s * du;
+        const res = solveEquilibriumAtU2(u2, lastU1);
+        res.step = s;
+        history.push(res);
+        lastU1 = res.u1;
+      }
+
+      pushoverState.history = history;
+
+      // Ajustar índice actual si queda fuera de rango
+      if (pushoverState.currentStepIndex >= history.length) {
+        pushoverState.currentStepIndex = history.length - 1;
+      }
+    }
+
+    // --- Elementos del DOM ---
+    const sliderUTarget = document.getElementById('slider-u-target');
+    const sliderDeltaU = document.getElementById('slider-delta-u');
+    const valUTarget = document.getElementById('val-u-target');
+    const valDeltaU = document.getElementById('val-delta-u');
+    const valLoadPattern = document.getElementById('val-load-pattern');
+    const lblTargetBadge = document.getElementById('lbl-target-badge');
+
+    const sliderK01 = document.getElementById('slider-k01');
+    const sliderFy1 = document.getElementById('slider-fy1');
+    const sliderAlpha1 = document.getElementById('slider-alpha1');
+    const sliderK02 = document.getElementById('slider-k02');
+    const sliderFy2 = document.getElementById('slider-fy2');
+    const sliderAlpha2 = document.getElementById('slider-alpha2');
+
+    const valK01 = document.getElementById('val-k01');
+    const valFy1 = document.getElementById('val-fy1');
+    const valAlpha1 = document.getElementById('val-alpha1');
+    const valK02 = document.getElementById('val-k02');
+    const valFy2 = document.getElementById('val-fy2');
+    const valAlpha2 = document.getElementById('val-alpha2');
+
+    const tabStory1 = document.getElementById('tab-story1');
+    const tabStory2 = document.getElementById('tab-story2');
+    const controlsStory1 = document.getElementById('controls-story1');
+    const controlsStory2 = document.getElementById('controls-story2');
+
+    const btnStepForward = document.getElementById('btn-step-forward');
+    const btnStepBack = document.getElementById('btn-step-back');
+    const btnSolveAll = document.getElementById('btn-solve-all');
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    const btnReset = document.getElementById('btn-reset');
+    const playIcon = document.getElementById('play-icon');
+    const playText = document.getElementById('play-text');
+
+    const hudU2 = document.getElementById('hud-u2');
+    const hudVb = document.getElementById('hud-vb');
+    const hudU1 = document.getElementById('hud-u1');
+    const hudD1 = document.getElementById('hud-d1');
+    const hudD2 = document.getElementById('hud-d2');
+    const hudP1 = document.getElementById('hud-p1');
+    const hudP2 = document.getElementById('hud-p2');
+    const hudKpush = document.getElementById('hud-kpush');
+    const hudProgressFill = document.getElementById('hud-progress-fill');
+
+    const globalStatusBadge = document.getElementById('global-status-badge');
+    const globalStatusText = document.getElementById('global-status-text');
+    const badgeBuildingStep = document.getElementById('badge-building-step');
+    const overlayBuildingInfo = document.getElementById('overlay-building-info');
+    const overlayVb = document.getElementById('overlay-vb');
+    const overlayU2 = document.getElementById('overlay-u2');
+
+    const lblDrift1Val = document.getElementById('lbl-drift1-val');
+    const lblDrift2Val = document.getElementById('lbl-drift2-val');
+    const drift1Fill = document.getElementById('drift1-fill');
+    const drift2Fill = document.getElementById('drift2-fill');
+
+    const badgeStory1State = document.getElementById('badge-story1-state');
+    const badgeStory2State = document.getElementById('badge-story2-state');
+
+    const breakdownStepTitle = document.getElementById('breakdown-step-title');
+    const mathU2Val = document.getElementById('math-u2-val');
+    const mathEqU1 = document.getElementById('math-eq-u1');
+    const mathU1SolutionText = document.getElementById('math-u1-solution-text');
+    const mathCalcLambda = document.getElementById('math-calc-lambda');
+    const mathCalcForcesText = document.getElementById('math-calc-forces-text');
+    const mathCalcKpush = document.getElementById('math-calc-kpush');
+    const mathStatesText = document.getElementById('math-states-text');
+    const mathCalcMatrix = document.getElementById('math-calc-matrix');
+
+    const tablePushoverBody = document.getElementById('table-pushover-body');
+    const lblTotalSteps = document.getElementById('lbl-total-steps');
+    const btnExportCsv = document.getElementById('btn-export-csv');
+
+    // Canvas
+    const canvasBuilding = document.getElementById('canvas-building');
+    const ctxBuilding = canvasBuilding.getContext('2d');
+    const canvasPushover = document.getElementById('canvas-pushover');
+    const ctxPushover = canvasPushover.getContext('2d');
+    const canvasStory1 = document.getElementById('canvas-story1');
+    const ctxStory1 = canvasStory1.getContext('2d');
+    const canvasStory2 = document.getElementById('canvas-story2');
+    const ctxStory2 = canvasStory2.getContext('2d');
+
+    // --- Renderizador Dinámico Seguro con KaTeX ---
+    function renderTexToElement(element, tex, displayMode = true) {
+      if (!element) return;
+      if (typeof window !== 'undefined' && window.katex && typeof window.katex.render === 'function') {
+        try {
+          window.katex.render(tex, element, { displayMode, throwOnError: false });
+          return;
+        } catch (e) {
+          console.warn('KaTeX render error:', e);
+        }
+      }
+      // Si KaTeX no ha terminado de cargar desde el CDN, guardar el contenido para renderizarlo inmediatamente al cargar
+      element.setAttribute('data-tex', tex);
+      element.setAttribute('data-display', displayMode ? 'true' : 'false');
+      element.innerHTML = displayMode ? `\\[${tex}\\]` : `\\(${tex}\\)`;
+    }
+
+    // --- Inicializador Global de KaTeX (Auto-render en document.body y fórmulas dinámicas) ---
+    function initKaTeX() {
+      let anyRendered = false;
+
+      // 1. Renderizar cualquier contenedor dinámico pendiente
+      if (typeof window !== 'undefined' && window.katex && typeof window.katex.render === 'function') {
+        const dynamicMathEls = document.querySelectorAll('[data-tex]');
+        dynamicMathEls.forEach(el => {
+          const tex = el.getAttribute('data-tex');
+          const isDisplay = el.getAttribute('data-display') === 'true';
+          if (tex) {
+            try {
+              window.katex.render(tex, el, { displayMode: isDisplay, throwOnError: false });
+              anyRendered = true;
+            } catch (err) {
+              console.warn('Error renderizando fórmula data-tex:', err);
+            }
+          }
+        });
+      }
+
+      // 2. Auto-render en todo el árbol DOM usando delimitadores inequívocos
+      if (typeof window !== 'undefined' && typeof window.renderMathInElement === 'function') {
+        try {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '$$', right: '$$', display: true }
+            ],
+            throwOnError: false
+          });
+          anyRendered = true;
+        } catch (e) {
+          console.warn('KaTeX auto-render error:', e);
+        }
+      }
+      return anyRendered;
+    }
+
+    // --- Redimensionamiento de Canvas con Escalado DPI ---
+    function setupCanvasDPI(canvas, ctx) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+
+      // Dimensiones lógicas
+      const width = rect.width;
+      const height = rect.height;
+
+      // Asignar tamaño en buffer
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+
+      // Normalizar contexto
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+
+      return { width, height };
+    }
+
+    // --- Renderizado 1: Edificio Deformado 2-DOF ---
+    function renderBuildingCanvas() {
+      const { width, height } = setupCanvasDPI(canvasBuilding, ctxBuilding);
+      const isDark = document.body.classList.contains('dark-theme');
+
+      ctxBuilding.clearRect(0, 0, width, height);
+
+      const cur = pushoverState.history[pushoverState.currentStepIndex] || pushoverState.history[0];
+      const maxU2 = pushoverState.targetDisp * 1.15 || 15;
+
+      // Geometría del marco en canvas
+      const groundY = height - 55;
+      const storyH = (groundY - 50) / 2;
+      const floor1Y = groundY - storyH;
+      const floor2Y = floor1Y - storyH;
+
+      const frameWidth = Math.min(180, width * 0.45);
+      const baseLeftX = (width - frameWidth) / 2 - 25;
+      const baseRightX = baseLeftX + frameWidth;
+
+      // Factor de escala visual para deformación
+      const maxVisualDeflection = frameWidth * 0.35;
+      const dispScale = maxVisualDeflection / (maxU2 || 1);
+
+      const dx1 = cur.u1 * dispScale;
+      const dx2 = cur.u2 * dispScale;
+
+      const f1LeftX = baseLeftX + dx1;
+      const f1RightX = baseRightX + dx1;
+      const f2LeftX = baseLeftX + dx2;
+      const f2RightX = baseRightX + dx2;
+
+      // 1. Suelo y Fundación
+      ctxBuilding.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctxBuilding.lineWidth = 2;
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(baseLeftX - 45, groundY);
+      ctxBuilding.lineTo(baseRightX + 45, groundY);
+      ctxBuilding.stroke();
+
+      // Patrón de achurado de suelo
+      ctxBuilding.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+      ctxBuilding.lineWidth = 1.2;
+      for (let x = baseLeftX - 40; x <= baseRightX + 40; x += 10) {
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(x, groundY);
+        ctxBuilding.lineTo(x - 8, groundY + 12);
+        ctxBuilding.stroke();
+      }
+
+      // Apoyos empotrados en la base
+      function drawSupport(bx) {
+        ctxBuilding.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
+        ctxBuilding.strokeStyle = isDark ? '#64748b' : '#64748b';
+        ctxBuilding.lineWidth = 1.5;
+        ctxBuilding.beginPath();
+        ctxBuilding.rect(bx - 14, groundY - 6, 28, 6);
+        ctxBuilding.fill();
+        ctxBuilding.stroke();
+      }
+      drawSupport(baseLeftX);
+      drawSupport(baseRightX);
+
+      // 2. Silueta inicial indeformada (Líneas punteadas)
+      ctxBuilding.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.2)' : 'rgba(100, 116, 139, 0.25)';
+      ctxBuilding.lineWidth = 1.5;
+      ctxBuilding.setLineDash([4, 4]);
+
+      // Columnas iniciales
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(baseLeftX, groundY);
+      ctxBuilding.lineTo(baseLeftX, floor2Y);
+      ctxBuilding.moveTo(baseRightX, groundY);
+      ctxBuilding.lineTo(baseRightX, floor2Y);
+      // Vigas iniciales
+      ctxBuilding.moveTo(baseLeftX, floor1Y);
+      ctxBuilding.lineTo(baseRightX, floor1Y);
+      ctxBuilding.moveTo(baseLeftX, floor2Y);
+      ctxBuilding.lineTo(baseRightX, floor2Y);
+      ctxBuilding.stroke();
+      ctxBuilding.setLineDash([]); // Reset dash
+
+      // 3. Columnas Deformadas
+      // Color según plastificación
+      const colColorStory1 = cur.yield1 ? (isDark ? '#fb7185' : '#e11d48') : (isDark ? '#38bdf8' : '#0284c7');
+      const colColorStory2 = cur.yield2 ? (isDark ? '#fb7185' : '#e11d48') : (isDark ? '#38bdf8' : '#0284c7');
+
+      // Columnas Piso 1 (Base a Piso 1)
+      ctxBuilding.strokeStyle = colColorStory1;
+      ctxBuilding.lineWidth = 5;
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(baseLeftX, groundY - 6);
+      ctxBuilding.lineTo(f1LeftX, floor1Y);
+      ctxBuilding.moveTo(baseRightX, groundY - 6);
+      ctxBuilding.lineTo(f1RightX, floor1Y);
+      ctxBuilding.stroke();
+
+      // Columnas Piso 2 (Piso 1 a Piso 2)
+      ctxBuilding.strokeStyle = colColorStory2;
+      ctxBuilding.lineWidth = 4.5;
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(f1LeftX, floor1Y);
+      ctxBuilding.lineTo(f2LeftX, floor2Y);
+      ctxBuilding.moveTo(f1RightX, floor1Y);
+      ctxBuilding.lineTo(f2RightX, floor2Y);
+      ctxBuilding.stroke();
+
+      // 4. Vigas / Diafragmas Rígidos de Piso
+      function drawFloorBeam(lx, rx, y, label, mass) {
+        ctxBuilding.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
+        ctxBuilding.strokeStyle = isDark ? '#94a3b8' : '#475569';
+        ctxBuilding.lineWidth = 2.5;
+
+        ctxBuilding.beginPath();
+        ctxBuilding.roundRect(lx - 12, y - 5, (rx - lx) + 24, 10, 4);
+        ctxBuilding.fill();
+        ctxBuilding.stroke();
+
+        // Etiqueta del nivel
+        ctxBuilding.fillStyle = isDark ? '#f1f5f9' : '#0f172a';
+        ctxBuilding.font = 'bold 10px JetBrains Mono';
+        ctxBuilding.textAlign = 'center';
+        ctxBuilding.fillText(label, (lx + rx) / 2, y + 3.5);
+      }
+      drawFloorBeam(f1LeftX, f1RightX, floor1Y, 'NIVEL 1', 'm');
+      drawFloorBeam(f2LeftX, f2RightX, floor2Y, 'NIVEL 2 (TECHO)', 'm');
+
+      // 5. Rótulas Plásticas en Extremos de Columnas
+      function drawHinge(x, y, isYielded, duct) {
+        const radius = isYielded ? 6 : 4;
+        ctxBuilding.beginPath();
+        ctxBuilding.arc(x, y, radius, 0, Math.PI * 2);
+
+        if (isYielded) {
+          ctxBuilding.fillStyle = isDark ? '#fb7185' : '#e11d48';
+          ctxBuilding.strokeStyle = '#ffffff';
+          ctxBuilding.lineWidth = 1.5;
+          ctxBuilding.fill();
+          ctxBuilding.stroke();
+
+          // Resplandor de rótula
+          ctxBuilding.shadowColor = isDark ? '#f43f5e' : '#e11d48';
+          ctxBuilding.shadowBlur = 8;
+          ctxBuilding.stroke();
+          ctxBuilding.shadowBlur = 0; // Reset
+        } else {
+          ctxBuilding.fillStyle = isDark ? '#0284c7' : '#38bdf8';
+          ctxBuilding.strokeStyle = isDark ? '#082f49' : '#ffffff';
+          ctxBuilding.lineWidth = 1;
+          ctxBuilding.fill();
+          ctxBuilding.stroke();
+        }
+      }
+
+      // Rótulas Piso 1
+      drawHinge(baseLeftX, groundY - 8, cur.yield1, cur.duct1);
+      drawHinge(baseRightX, groundY - 8, cur.yield1, cur.duct1);
+      drawHinge(f1LeftX, floor1Y + 7, cur.yield1, cur.duct1);
+      drawHinge(f1RightX, floor1Y + 7, cur.yield1, cur.duct1);
+
+      // Rótulas Piso 2
+      drawHinge(f1LeftX, floor1Y - 7, cur.yield2, cur.duct2);
+      drawHinge(f1RightX, floor1Y - 7, cur.yield2, cur.duct2);
+      drawHinge(f2LeftX, floor2Y + 7, cur.yield2, cur.duct2);
+      drawHinge(f2RightX, floor2Y + 7, cur.yield2, cur.duct2);
+
+      // 6. Flechas de Fuerzas Laterales Aplicadas (P1 y P2)
+      function drawForceArrow(startX, targetX, y, label, color) {
+        const arrowLen = Math.max(22, (targetX - startX));
+        const headLen = 8;
+
+        ctxBuilding.strokeStyle = color;
+        ctxBuilding.fillStyle = color;
+        ctxBuilding.lineWidth = 2.5;
+
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(startX, y);
+        ctxBuilding.lineTo(startX + arrowLen, y);
+        ctxBuilding.stroke();
+
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(startX + arrowLen, y);
+        ctxBuilding.lineTo(startX + arrowLen - headLen, y - 4);
+        ctxBuilding.lineTo(startX + arrowLen - headLen, y + 4);
+        ctxBuilding.closePath();
+        ctxBuilding.fill();
+
+        // Texto
+        ctxBuilding.font = 'bold 10px JetBrains Mono';
+        ctxBuilding.textAlign = 'right';
+        ctxBuilding.fillText(label, startX - 5, y + 3.5);
+      }
+
+      const forceScale = 0.55; // Pixeles por kN
+      const arrowStartLeft = baseLeftX - 55;
+
+      // P1 en Nivel 1
+      if (cur.P1 > 0.05) {
+        drawForceArrow(
+          arrowStartLeft,
+          arrowStartLeft + Math.min(85, cur.P1 * forceScale),
+          floor1Y,
+          `P₁=${cur.P1.toFixed(1)} kN`,
+          isDark ? '#fbbf24' : '#d97706'
+        );
+      }
+
+      // P2 en Nivel 2
+      if (cur.P2 > 0.05) {
+        drawForceArrow(
+          arrowStartLeft,
+          arrowStartLeft + Math.min(100, cur.P2 * forceScale),
+          floor2Y,
+          `P₂=${cur.P2.toFixed(1)} kN`,
+          isDark ? '#fbbf24' : '#d97706'
+        );
+      }
+
+      // Reacción de Cortante Basal Vb en la base (Flecha hacia la izquierda)
+      if (cur.lambda > 0.1) {
+        const rx = baseRightX + 55;
+        const arrowLen = Math.min(65, cur.lambda * forceScale * 0.4);
+        ctxBuilding.strokeStyle = isDark ? '#f43f5e' : '#be123c';
+        ctxBuilding.fillStyle = isDark ? '#f43f5e' : '#be123c';
+        ctxBuilding.lineWidth = 2.5;
+
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(rx, groundY + 22);
+        ctxBuilding.lineTo(rx - arrowLen, groundY + 22);
+        ctxBuilding.stroke();
+
+        ctxBuilding.beginPath();
+        ctxBuilding.moveTo(rx - arrowLen, groundY + 22);
+        ctxBuilding.lineTo(rx - arrowLen + 6, groundY + 18);
+        ctxBuilding.lineTo(rx - arrowLen + 6, groundY + 26);
+        ctxBuilding.closePath();
+        ctxBuilding.fill();
+
+        ctxBuilding.font = 'bold 10px JetBrains Mono';
+        ctxBuilding.textAlign = 'left';
+        ctxBuilding.fillText(`Vb = ${cur.lambda.toFixed(1)} kN`, rx + 6, groundY + 25);
+      }
+
+      // Cotas de Desplazamientos a la derecha
+      ctxBuilding.strokeStyle = isDark ? '#64748b' : '#94a3b8';
+      ctxBuilding.lineWidth = 1;
+      ctxBuilding.setLineDash([2, 2]);
+
+      // Guía nivel 1
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(f1RightX + 15, floor1Y);
+      ctxBuilding.lineTo(width - 25, floor1Y);
+      ctxBuilding.stroke();
+
+      // Guía nivel 2
+      ctxBuilding.beginPath();
+      ctxBuilding.moveTo(f2RightX + 15, floor2Y);
+      ctxBuilding.lineTo(width - 25, floor2Y);
+      ctxBuilding.stroke();
+      ctxBuilding.setLineDash([]);
+
+      ctxBuilding.fillStyle = isDark ? '#cbd5e1' : '#334155';
+      ctxBuilding.font = '10px JetBrains Mono';
+      ctxBuilding.textAlign = 'right';
+      ctxBuilding.fillText(`u₁ = ${cur.u1.toFixed(2)} mm`, width - 28, floor1Y - 4);
+      ctxBuilding.fillText(`u₂ = ${cur.u2.toFixed(2)} mm`, width - 28, floor2Y - 4);
+    }
+
+    // --- Renderizado 2: Curva de Capacidad Pushover (Vb vs u2) ---
+    function renderPushoverCanvas() {
+      const { width, height } = setupCanvasDPI(canvasPushover, ctxPushover);
+      const isDark = document.body.classList.contains('dark-theme');
+
+      ctxPushover.clearRect(0, 0, width, height);
+
+      const padLeft = 65;
+      const padRight = 35;
+      const padTop = 30;
+      const padBottom = 45;
+
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      const cur = pushoverState.history[pushoverState.currentStepIndex] || pushoverState.history[0];
+      const maxTarget = pushoverState.targetDisp;
+
+      // Calcular límites de ejes
+      let maxVb = 150.0;
+      for (const h of pushoverState.history) {
+        if (h.lambda > maxVb) maxVb = h.lambda;
+      }
+      maxVb *= 1.15; // Margen superior
+
+      const maxU = maxTarget * 1.1;
+
+      // Funciones de mapeo de coordenadas
+      function mapX(u) {
+        return padLeft + (u / maxU) * plotW;
+      }
+      function mapY(v) {
+        return (height - padBottom) - (v / maxVb) * plotH;
+      }
+
+      // 1. Zonas de Desempeño Sísmico de Fondo (ASCE 41: IO, LS, CP)
+      // Definidas en función de la primera fluencia esperada
+      const uyEstimate = pushoverState.fy1 / pushoverState.k01 * (11 / 6); // Aprox ~1.83 mm
+      const xIO = mapX(Math.min(maxU, uyEstimate * 1.2));
+      const xLS = mapX(Math.min(maxU, uyEstimate * 3.5));
+      const xCP = mapX(Math.min(maxU, uyEstimate * 6.0));
+
+      // Zona IO (Ocupación Inmediata - Verde)
+      ctxPushover.fillStyle = isDark ? 'rgba(16, 185, 129, 0.05)' : 'rgba(5, 150, 105, 0.04)';
+      ctxPushover.fillRect(padLeft, padTop, Math.max(0, xIO - padLeft), plotH);
+
+      // Zona LS (Seguridad de Vida - Ámbar)
+      ctxPushover.fillStyle = isDark ? 'rgba(245, 158, 11, 0.05)' : 'rgba(217, 119, 6, 0.04)';
+      ctxPushover.fillRect(xIO, padTop, Math.max(0, xLS - xIO), plotH);
+
+      // Zona CP (Prevención de Colapso - Rojo)
+      ctxPushover.fillStyle = isDark ? 'rgba(244, 63, 94, 0.05)' : 'rgba(225, 29, 72, 0.04)';
+      ctxPushover.fillRect(xLS, padTop, Math.max(0, xCP - xLS), plotH);
+
+      // Etiquetas de zonas
+      ctxPushover.font = '600 9px Inter';
+      ctxPushover.fillStyle = isDark ? '#64748b' : '#94a3b8';
+      ctxPushover.textAlign = 'center';
+      if (xIO > padLeft + 25) ctxPushover.fillText('IO (Ocup. Inmediata)', (padLeft + xIO) / 2, padTop + 14);
+      if (xLS > xIO + 35) ctxPushover.fillText('LS (Seg. de Vida)', (xIO + xLS) / 2, padTop + 14);
+      if (xCP > xLS + 35) ctxPushover.fillText('CP (Prev. Colapso)', (xLS + xCP) / 2, padTop + 14);
+
+      // 2. Grilla y Ejes
+      ctxPushover.strokeStyle = isDark ? '#1e293b' : '#e2e8f0';
+      ctxPushover.lineWidth = 1;
+
+      // Líneas verticales de u2
+      const uStep = maxU > 20 ? 5 : 2.5;
+      for (let u = 0; u <= maxU; u += uStep) {
+        const x = mapX(u);
+        ctxPushover.beginPath();
+        ctxPushover.moveTo(x, padTop);
+        ctxPushover.lineTo(x, height - padBottom);
+        ctxPushover.stroke();
+
+        ctxPushover.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctxPushover.font = '10px JetBrains Mono';
+        ctxPushover.textAlign = 'center';
+        ctxPushover.fillText(u.toFixed(1), x, height - padBottom + 16);
+      }
+
+      // Líneas horizontales de Vb
+      const vbStep = maxVb > 150 ? 50 : 25;
+      for (let v = 0; v <= maxVb; v += vbStep) {
+        const y = mapY(v);
+        ctxPushover.beginPath();
+        ctxPushover.moveTo(padLeft, y);
+        ctxPushover.lineTo(width - padRight, y);
+        ctxPushover.stroke();
+
+        ctxPushover.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctxPushover.font = '10px JetBrains Mono';
+        ctxPushover.textAlign = 'right';
+        ctxPushover.fillText(v.toFixed(0), padLeft - 8, y + 3.5);
+      }
+
+      // Marco de los ejes
+      ctxPushover.strokeStyle = isDark ? '#475569' : '#cbd5e1';
+      ctxPushover.lineWidth = 1.5;
+      ctxPushover.beginPath();
+      ctxPushover.moveTo(padLeft, padTop);
+      ctxPushover.lineTo(padLeft, height - padBottom);
+      ctxPushover.lineTo(width - padRight, height - padBottom);
+      ctxPushover.stroke();
+
+      // Título de los ejes
+      ctxPushover.fillStyle = isDark ? '#cbd5e1' : '#334155';
+      ctxPushover.font = 'bold 11px Inter';
+      ctxPushover.textAlign = 'center';
+      ctxPushover.fillText('Desplazamiento de Azotea u₂ (mm)', padLeft + plotW / 2, height - 10);
+
+      ctxPushover.save();
+      ctxPushover.translate(16, padTop + plotH / 2);
+      ctxPushover.rotate(-Math.PI / 2);
+      ctxPushover.fillText('Cortante Basal Vb = λ (kN)', 0, 0);
+      ctxPushover.restore();
+
+      // 3. Línea Vertical del Desplazamiento Objetivo D_target
+      const xTarget = mapX(maxTarget);
+      ctxPushover.strokeStyle = isDark ? '#c084fc' : '#7c3aed';
+      ctxPushover.lineWidth = 2;
+      ctxPushover.setLineDash([5, 4]);
+      ctxPushover.beginPath();
+      ctxPushover.moveTo(xTarget, padTop);
+      ctxPushover.lineTo(xTarget, height - padBottom);
+      ctxPushover.stroke();
+      ctxPushover.setLineDash([]);
+
+      // Badge de D_target
+      ctxPushover.fillStyle = isDark ? '#c084fc' : '#7c3aed';
+      ctxPushover.font = 'bold 10px JetBrains Mono';
+      ctxPushover.textAlign = 'center';
+      ctxPushover.fillText(`D_target=${maxTarget.toFixed(1)}mm`, xTarget, padTop - 8);
+
+      // 4. Curva de Capacidad Completa (Línea tenue de fondo proyectada)
+      ctxPushover.strokeStyle = isDark ? 'rgba(124, 58, 237, 0.25)' : 'rgba(124, 58, 237, 0.2)';
+      ctxPushover.lineWidth = 2;
+      ctxPushover.beginPath();
+      for (let i = 0; i < pushoverState.history.length; i++) {
+        const pt = pushoverState.history[i];
+        const x = mapX(pt.u2);
+        const y = mapY(pt.lambda);
+        if (i === 0) ctxPushover.moveTo(x, y);
+        else ctxPushover.lineTo(x, y);
+      }
+      ctxPushover.stroke();
+
+      // 5. Curva Pushover Trazada hasta el Paso Actual
+      const curIdx = pushoverState.currentStepIndex;
+      ctxPushover.strokeStyle = isDark ? '#a855f7' : '#7c3aed';
+      ctxPushover.lineWidth = 3.5;
+      ctxPushover.beginPath();
+      for (let i = 0; i <= curIdx; i++) {
+        const pt = pushoverState.history[i];
+        const x = mapX(pt.u2);
+        const y = mapY(pt.lambda);
+        if (i === 0) ctxPushover.moveTo(x, y);
+        else ctxPushover.lineTo(x, y);
+      }
+      ctxPushover.stroke();
+
+      // Relleno bajo la curva recorrida
+      if (curIdx > 0) {
+        ctxPushover.fillStyle = isDark ? 'rgba(168, 85, 247, 0.12)' : 'rgba(124, 58, 237, 0.08)';
+        ctxPushover.beginPath();
+        ctxPushover.moveTo(mapX(0), mapY(0));
+        for (let i = 0; i <= curIdx; i++) {
+          const pt = pushoverState.history[i];
+          ctxPushover.lineTo(mapX(pt.u2), mapY(pt.lambda));
+        }
+        ctxPushover.lineTo(mapX(pushoverState.history[curIdx].u2), height - padBottom);
+        ctxPushover.lineTo(mapX(0), height - padBottom);
+        ctxPushover.closePath();
+        ctxPushover.fill();
+      }
+
+      // 6. Marcas Notables: Primera Fluencia y Segunda Fluencia
+      let firstYieldFound = false;
+      let secondYieldFound = false;
+
+      for (let i = 0; i < pushoverState.history.length; i++) {
+        const pt = pushoverState.history[i];
+        if (!firstYieldFound && (pt.yield1 || pt.yield2)) {
+          firstYieldFound = true;
+          const xY = mapX(pt.u2);
+          const yY = mapY(pt.lambda);
+
+          // Punto de primera fluencia
+          ctxPushover.fillStyle = isDark ? '#fbbf24' : '#d97706';
+          ctxPushover.beginPath();
+          ctxPushover.arc(xY, yY, 5, 0, Math.PI * 2);
+          ctxPushover.fill();
+
+          ctxPushover.font = 'bold 9px JetBrains Mono';
+          ctxPushover.textAlign = 'right';
+          ctxPushover.fillText(`1ª Fluencia (${pt.yield1 ? 'P1' : 'P2'})`, xY - 8, yY - 6);
+        }
+
+        if (firstYieldFound && !secondYieldFound && pt.yield1 && pt.yield2) {
+          secondYieldFound = true;
+          const xY2 = mapX(pt.u2);
+          const yY2 = mapY(pt.lambda);
+
+          ctxPushover.fillStyle = isDark ? '#f43f5e' : '#e11d48';
+          ctxPushover.beginPath();
+          ctxPushover.arc(xY2, yY2, 5, 0, Math.PI * 2);
+          ctxPushover.fill();
+
+          ctxPushover.font = 'bold 9px JetBrains Mono';
+          ctxPushover.textAlign = 'left';
+          ctxPushover.fillText('2ª Fluencia (P2)', xY2 + 8, yY2 - 6);
+        }
+      }
+
+      // 7. Retícula del Punto Actual Operativo
+      const curX = mapX(cur.u2);
+      const curY = mapY(cur.lambda);
+
+      // Líneas guía hacia los ejes
+      ctxPushover.strokeStyle = isDark ? 'rgba(168, 85, 247, 0.6)' : 'rgba(124, 58, 237, 0.5)';
+      ctxPushover.lineWidth = 1;
+      ctxPushover.setLineDash([3, 3]);
+      ctxPushover.beginPath();
+      ctxPushover.moveTo(curX, height - padBottom);
+      ctxPushover.lineTo(curX, curY);
+      ctxPushover.lineTo(padLeft, curY);
+      ctxPushover.stroke();
+      ctxPushover.setLineDash([]);
+
+      // Punto activo con resplandor
+      ctxPushover.fillStyle = isDark ? '#38bdf8' : '#0284c7';
+      ctxPushover.beginPath();
+      ctxPushover.arc(curX, curY, 6.5, 0, Math.PI * 2);
+      ctxPushover.fill();
+      ctxPushover.strokeStyle = '#ffffff';
+      ctxPushover.lineWidth = 2;
+      ctxPushover.stroke();
+    }
+
+    // --- Renderizado 3: Curvas Constitutivas de Entrepiso (V1 vs d1 y V2 vs d2) ---
+    function renderStoryCanvas(canvas, ctx, curDelta, k0, fy, alpha, title, isStory1) {
+      const { width, height } = setupCanvasDPI(canvas, ctx);
+      const isDark = document.body.classList.contains('dark-theme');
+
+      ctx.clearRect(0, 0, width, height);
+
+      const padLeft = 48;
+      const padRight = 20;
+      const padTop = 18;
+      const padBottom = 28;
+
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      const uy = fy / k0;
+      const maxDelta = Math.max(uy * 3.5, Math.abs(curDelta) * 1.35, 2.5);
+      const maxV = (fy + alpha * k0 * (maxDelta - uy)) * 1.25 || 150;
+
+      function mapX(d) {
+        return padLeft + (d / maxDelta) * plotW;
+      }
+      function mapY(v) {
+        return (height - padBottom) - (v / maxV) * plotH;
+      }
+
+      // Ejes
+      ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padLeft, padTop);
+      ctx.lineTo(padLeft, height - padBottom);
+      ctx.lineTo(width - padRight, height - padBottom);
+      ctx.stroke();
+
+      // Línea de fluencia vertical uy
+      const xUy = mapX(uy);
+      ctx.strokeStyle = isDark ? '#475569' : '#cbd5e1';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(xUy, padTop);
+      ctx.lineTo(xUy, height - padBottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Curva constitutiva bilineal teórica
+      ctx.strokeStyle = isStory1 ? (isDark ? '#34d399' : '#059669') : (isDark ? '#fb923c' : '#ea580c');
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(mapX(0), mapY(0));
+      ctx.lineTo(xUy, mapY(fy));
+      ctx.lineTo(mapX(maxDelta), mapY(fy + alpha * k0 * (maxDelta - uy)));
+      ctx.stroke();
+
+      // Punto actual
+      const sp = evaluateStorySpring(curDelta, k0, fy, alpha);
+      const curX = mapX(Math.abs(curDelta));
+      const curY = mapY(Math.abs(sp.V));
+
+      ctx.fillStyle = sp.state === 'Plástico' ? (isDark ? '#fb7185' : '#e11d48') : (isDark ? '#38bdf8' : '#0284c7');
+      ctx.beginPath();
+      ctx.arc(curX, curY, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Etiquetas
+      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.font = '9px JetBrains Mono';
+      ctx.textAlign = 'right';
+      ctx.fillText(`V = ${sp.V.toFixed(1)} kN`, width - padRight, padTop + 10);
+      ctx.fillText(`Δ = ${curDelta.toFixed(2)} mm`, width - padRight, padTop + 22);
+
+      ctx.textAlign = 'center';
+      ctx.fillText(`uy=${uy.toFixed(2)}`, xUy, height - padBottom + 12);
+    }
+
+    // --- Actualización de la Interfaz Completa (HUD, Tablas, Textos) ---
+    function updateUI() {
+      // Guardar posición actual de scroll de la ventana para prevenir cualquier salto involuntario
+      const savedScrollX = window.scrollX || window.pageXOffset || 0;
+      const savedScrollY = window.scrollY || window.pageYOffset || 0;
+
+      const cur = pushoverState.history[pushoverState.currentStepIndex] || pushoverState.history[0];
+      const target = pushoverState.targetDisp;
+
+      // 1. HUD Telemetría
+      hudU2.textContent = cur.u2.toFixed(2);
+      hudVb.textContent = cur.lambda.toFixed(1);
+      hudU1.textContent = cur.u1.toFixed(2);
+      hudD1.textContent = cur.d1.toFixed(2);
+      hudD2.textContent = cur.d2.toFixed(2);
+      hudP1.textContent = cur.P1.toFixed(1);
+      hudP2.textContent = cur.P2.toFixed(1);
+      hudKpush.textContent = cur.kpush.toFixed(2);
+
+      // Progreso hacia el objetivo
+      const progressPercent = Math.min(100, Math.max(0, (cur.u2 / (target || 1)) * 100));
+      hudProgressFill.style.width = `${progressPercent}%`;
+
+      // Overlays
+      overlayVb.textContent = cur.lambda.toFixed(1);
+      overlayU2.textContent = cur.u2.toFixed(2);
+      overlayBuildingInfo.textContent = `u₁ = ${cur.u1.toFixed(2)} mm | u₂ = ${cur.u2.toFixed(2)} mm`;
+      badgeBuildingStep.textContent = `Paso ${cur.step} de ${pushoverState.history.length - 1}`;
+      lblTargetBadge.textContent = `${target.toFixed(1)} mm`;
+
+      // 2. Estado Global y Badges
+      globalStatusBadge.className = 'status-badge';
+      if (!cur.yield1 && !cur.yield2) {
+        globalStatusBadge.classList.add('elastic');
+        globalStatusText.textContent = 'Régimen Totalmente Elástico';
+      } else if (cur.yield1 && !cur.yield2) {
+        globalStatusBadge.classList.add('yielding');
+        globalStatusText.textContent = 'Piso 1 en Fluencia Plástica (Piso 2 Elástico)';
+      } else if (!cur.yield1 && cur.yield2) {
+        globalStatusBadge.classList.add('yielding');
+        globalStatusText.textContent = 'Piso 2 en Fluencia Plástica (Piso 1 Elástico)';
+      } else {
+        globalStatusBadge.classList.add('mechanism');
+        globalStatusText.textContent = 'Mecanismo de Plastificación Pleno (Ambos Pisos)';
+      }
+
+      if (cur.u2 >= target - 1e-4) {
+        globalStatusBadge.className = 'status-badge completed';
+        globalStatusText.textContent = `✅ Desplazamiento Objetivo Alcanzado (${cur.u2.toFixed(2)} mm)`;
+      }
+
+      badgeStory1State.textContent = cur.state1;
+      badgeStory1State.style.color = cur.yield1 ? 'var(--rose-400)' : 'var(--emerald-400)';
+      badgeStory2State.textContent = cur.state2;
+      badgeStory2State.style.color = cur.yield2 ? 'var(--rose-400)' : 'var(--emerald-400)';
+
+      // 3. Derivas de Entrepiso y Barras
+      const drift1Percent = (cur.d1 / pushoverState.h1) * 100;
+      const drift2Percent = (cur.d2 / pushoverState.h2) * 100;
+
+      lblDrift1Val.textContent = `${drift1Percent.toFixed(2)}% (${cur.d1.toFixed(2)} mm)`;
+      lblDrift2Val.textContent = `${drift2Percent.toFixed(2)}% (${cur.d2.toFixed(2)} mm)`;
+
+      // Ancho relativo a límite normativo (1.0% de deriva de NSR-10)
+      const driftLimit = 1.0;
+      const fill1Width = Math.min(100, (drift1Percent / driftLimit) * 100);
+      const fill2Width = Math.min(100, (drift2Percent / driftLimit) * 100);
+
+      drift1Fill.style.width = `${fill1Width}%`;
+      drift2Fill.style.width = `${fill2Width}%`;
+
+      drift1Fill.style.background = drift1Percent > 1.0 ? 'var(--rose-400)' : (drift1Percent > 0.6 ? 'var(--amber-400)' : 'var(--emerald-400)');
+      drift2Fill.style.background = drift2Percent > 1.0 ? 'var(--rose-400)' : (drift2Percent > 0.6 ? 'var(--amber-400)' : 'var(--emerald-400)');
+
+      // 4. Desglose Numérico Matemático con KaTeX
+      breakdownStepTitle.textContent = `Paso ${cur.step}`;
+      mathU2Val.textContent = cur.u2.toFixed(3);
+
+      // Ecuación 1: Cierre para u1
+      const texEqU1 = `V_1(u_1) - \\frac{3}{2} V_2(${cur.u2.toFixed(3)} - u_1) = 0`;
+      renderTexToElement(mathEqU1, texEqU1, true);
+      mathU1SolutionText.innerHTML = `Solución hallada: <strong style="color:var(--purple-400);">u₁ = ${cur.u1.toFixed(4)} mm</strong> &bull; Deriva 1 = ${cur.d1.toFixed(3)} mm, Deriva 2 = ${cur.d2.toFixed(3)} mm`;
+
+      // Ecuación 2: Cortantes y cortante basal
+      const texLambda = `\\begin{aligned} V_1 &= ${cur.V1.toFixed(2)}\\text{ kN}, \\quad V_2 = ${cur.V2.toFixed(2)}\\text{ kN} \\\\[3pt] \\lambda &= V_1 = \\frac{3}{2}V_2 = \\mathbf{${cur.lambda.toFixed(2)}\\text{ kN}} \\end{aligned}`;
+      renderTexToElement(mathCalcLambda, texLambda, true);
+      if (mathCalcForcesText) {
+        mathCalcForcesText.innerHTML = `Fuerzas aplicadas: <strong>P₁ = ${cur.P1.toFixed(2)} kN</strong> (⅓&lambda;), <strong>P₂ = ${cur.P2.toFixed(2)} kN</strong> (⅔&lambda;); Cortante Basal <strong>V<sub>b</sub> = ${cur.lambda.toFixed(2)} kN</strong>`;
+      }
+
+      // Ecuación 3: Pendiente tangente Pushover
+      const texKpush = `K_{\\text{push}} = \\frac{3(${cur.kt1.toFixed(1)})(${cur.kt2.toFixed(1)})}{2(${cur.kt1.toFixed(1)}) + 3(${cur.kt2.toFixed(1)})} = \\mathbf{${cur.kpush.toFixed(2)}\\text{ kN/mm}}`;
+      renderTexToElement(mathCalcKpush, texKpush, true);
+      mathStatesText.innerHTML = `Piso 1: <span style="color:${cur.yield1 ? 'var(--rose-400)' : 'var(--emerald-400)'}; font-weight:700;">${cur.state1} (k<sub>t1</sub> = ${cur.kt1.toFixed(1)} kN/mm)</span> &bull; Piso 2: <span style="color:${cur.yield2 ? 'var(--rose-400)' : 'var(--emerald-400)'}; font-weight:700;">${cur.state2} (k<sub>t2</sub> = ${cur.kt2.toFixed(1)} kN/mm)</span>`;
+
+      // Ecuación 4: Matriz de Rigidez Tangente Kt
+      if (mathCalcMatrix) {
+        const k11 = (cur.kt1 + cur.kt2).toFixed(1);
+        const k12 = (-cur.kt2).toFixed(1);
+        const k22 = cur.kt2.toFixed(1);
+        const texMatrix = `\\mathbf{K}_t = \\begin{bmatrix} k_{t1} + k_{t2} & -k_{t2} \\\\[2pt] -k_{t2} & k_{t2} \\end{bmatrix} = \\begin{bmatrix} ${k11} & ${k12} \\\\[2pt] ${k12} & ${k22} \\end{bmatrix} \\text{ kN/mm}`;
+        renderTexToElement(mathCalcMatrix, texMatrix, true);
+      }
+
+      // 5. Tabla de Pasos del Pushover
+      renderPushoverTable();
+
+      // 6. Renderizar Canvas
+      renderBuildingCanvas();
+      renderPushoverCanvas();
+      renderStoryCanvas(canvasStory1, ctxStory1, cur.d1, pushoverState.k01, pushoverState.fy1, pushoverState.alpha1, 'Piso 1', true);
+      renderStoryCanvas(canvasStory2, ctxStory2, cur.d2, pushoverState.k02, pushoverState.fy2, pushoverState.alpha2, 'Piso 2', false);
+
+      // Restaurar con total precisión la posición de scroll de la ventana
+      if (window.scrollY !== savedScrollY || window.scrollX !== savedScrollX) {
+        window.scrollTo(savedScrollX, savedScrollY);
+      }
+    }
+
+    // --- Renderizado de la Tabla de Datos ---
+    function renderPushoverTable() {
+      lblTotalSteps.textContent = pushoverState.history.length;
+
+      let html = '';
+      const curIdx = pushoverState.currentStepIndex;
+
+      for (let i = 0; i < pushoverState.history.length; i++) {
+        const row = pushoverState.history[i];
+        const isCurrent = (i === curIdx);
+        const isYield = (row.yield1 || row.yield2) && (i > 0 && (!pushoverState.history[i-1].yield1 || !pushoverState.history[i-1].yield2));
+
+        let rowClass = '';
+        if (isCurrent) rowClass = 'current-row';
+        else if (isYield) rowClass = 'yield-row';
+
+        html += `
+          <tr class="${rowClass}" onclick="jumpToStep(${i})" style="cursor:pointer;" title="Clic para ver este paso">
+            <td style="text-align:center; font-weight:700;">${row.step}</td>
+            <td>${row.u2.toFixed(2)}</td>
+            <td>${row.u1.toFixed(2)}</td>
+            <td>${row.d1.toFixed(2)}</td>
+            <td>${row.d2.toFixed(2)}</td>
+            <td>${row.V1.toFixed(1)}</td>
+            <td>${row.V2.toFixed(1)}</td>
+            <td style="font-weight:700; color:var(--purple-400);">${row.lambda.toFixed(1)}</td>
+            <td>${row.kpush.toFixed(2)}</td>
+            <td style="text-align:center; color:${row.yield1 ? 'var(--rose-400)' : 'inherit'};">${row.state1}</td>
+            <td style="text-align:center; color:${row.yield2 ? 'var(--rose-400)' : 'inherit'};">${row.state2}</td>
+          </tr>
+        `;
+      }
+
+      tablePushoverBody.innerHTML = html;
+
+      // Auto-scroll INTERNO en el contenedor de la tabla SIN mover la ventana del navegador
+      const tableContainer = document.querySelector('.table-container');
+      const activeRow = tablePushoverBody.querySelector('.current-row');
+      if (tableContainer && activeRow) {
+        const rowRect = activeRow.getBoundingClientRect();
+        const containerRect = tableContainer.getBoundingClientRect();
+
+        if (rowRect.top < containerRect.top) {
+          tableContainer.scrollTop -= (containerRect.top - rowRect.top);
+        } else if (rowRect.bottom > containerRect.bottom) {
+          tableContainer.scrollTop += (rowRect.bottom - containerRect.bottom);
+        }
+      }
+    }
+
+    // --- Salto Directo a un Paso ---
+    function jumpToStep(stepIdx) {
+      if (stepIdx >= 0 && stepIdx < pushoverState.history.length) {
+        pushoverState.currentStepIndex = stepIdx;
+        updateUI();
+      }
+    }
+
+    // --- Control de Pasos (Adelante / Atrás / Todo) ---
+    function stepForward() {
+      const savedScrollY = window.scrollY || window.pageYOffset || 0;
+      if (pushoverState.currentStepIndex < pushoverState.history.length - 1) {
+        pushoverState.currentStepIndex++;
+        updateUI();
+      } else {
+        stopPlayAnimation();
+      }
+      if (window.scrollY !== savedScrollY) {
+        window.scrollTo(0, savedScrollY);
+      }
+    }
+
+    function stepBackward() {
+      if (pushoverState.currentStepIndex > 0) {
+        pushoverState.currentStepIndex--;
+        updateUI();
+      }
+    }
+
+    function solveAll() {
+      stopPlayAnimation();
+      pushoverState.currentStepIndex = pushoverState.history.length - 1;
+      updateUI();
+    }
+
+    function resetPushover() {
+      stopPlayAnimation();
+      pushoverState.currentStepIndex = 0;
+      updateUI();
+    }
+
+    // --- Animación Continua de Empuje (Play / Pause) ---
+    function togglePlayAnimation() {
+      if (pushoverState.isPlaying) {
+        stopPlayAnimation();
+      } else {
+        startPlayAnimation();
+      }
+    }
+
+    function startPlayAnimation() {
+      if (pushoverState.currentStepIndex >= pushoverState.history.length - 1) {
+        pushoverState.currentStepIndex = 0;
+      }
+      pushoverState.isPlaying = true;
+      playIcon.textContent = '⏸️';
+      playText.textContent = 'Pausar';
+      btnPlayPause.classList.add('btn-primary');
+
+      pushoverState.animationTimer = setInterval(() => {
+        if (pushoverState.currentStepIndex < pushoverState.history.length - 1) {
+          pushoverState.currentStepIndex++;
+          updateUI();
+        } else {
+          stopPlayAnimation();
+        }
+      }, pushoverState.playSpeed);
+    }
+
+    function stopPlayAnimation() {
+      pushoverState.isPlaying = false;
+      playIcon.textContent = '⏯️';
+      playText.textContent = 'Animar Empuje';
+      btnPlayPause.classList.remove('btn-primary');
+      if (pushoverState.animationTimer) {
+        clearInterval(pushoverState.animationTimer);
+        pushoverState.animationTimer = null;
+      }
+    }
+
+    // --- Exportar Datos a CSV ---
+    function exportToCSV() {
+      const headers = ['Paso', 'u2_techo_mm', 'u1_mm', 'Delta1_mm', 'Delta2_mm', 'V1_kN', 'V2_kN', 'Vb_lambda_kN', 'P1_kN', 'P2_kN', 'Kpush_kN_mm', 'Estado_P1', 'Estado_P2'];
+      const rows = pushoverState.history.map(r => [
+        r.step,
+        r.u2.toFixed(3),
+        r.u1.toFixed(3),
+        r.d1.toFixed(3),
+        r.d2.toFixed(3),
+        r.V1.toFixed(2),
+        r.V2.toFixed(2),
+        r.lambda.toFixed(2),
+        r.P1.toFixed(2),
+        r.P2.toFixed(2),
+        r.kpush.toFixed(3),
+        r.state1,
+        r.state2
+      ]);
+
+      let csvContent = 'data:text/csv;charset=utf-8,' + headers.join(',') + '\n';
+      rows.forEach(row => {
+        csvContent += row.join(',') + '\n';
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `curva_pushover_2dof_${pushoverState.targetDisp}mm.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // --- Presets Didácticos ---
+    function applyPreset(type) {
+      stopPlayAnimation();
+
+      if (type === 'base') {
+        // Caso Base: 1/3, 2/3, K01=100, Fy1=100, K02=80, Fy2=90, alpha=0.05
+        pushoverState.s1 = 1.0 / 3.0;
+        pushoverState.s2 = 2.0 / 3.0;
+        pushoverState.k01 = 100.0;
+        pushoverState.fy1 = 100.0;
+        pushoverState.alpha1 = 0.05;
+        pushoverState.k02 = 80.0;
+        pushoverState.fy2 = 90.0;
+        pushoverState.alpha2 = 0.05;
+        pushoverState.targetDisp = 15.0;
+        valLoadPattern.textContent = '[1/3, 2/3]';
+      } else if (type === 'uniform') {
+        // Uniforme: s = [0.5, 0.5]
+        pushoverState.s1 = 0.5;
+        pushoverState.s2 = 0.5;
+        valLoadPattern.textContent = '[1/2, 1/2]';
+      } else if (type === 'top') {
+        // Carga puntual en azotea: s = [0, 1]
+        pushoverState.s1 = 0.0;
+        pushoverState.s2 = 1.0;
+        valLoadPattern.textContent = '[0, 1]';
+      } else if (type === 'weak2') {
+        // Segundo piso débil: Fy2 = 60 kN
+        pushoverState.s1 = 1.0 / 3.0;
+        pushoverState.s2 = 2.0 / 3.0;
+        pushoverState.fy2 = 60.0;
+        valLoadPattern.textContent = '[1/3, 2/3]';
+      } else if (type === 'elasto') {
+        // Elastoplástico perfecto (alpha = 0)
+        pushoverState.alpha1 = 0.0;
+        pushoverState.alpha2 = 0.0;
+      }
+
+      // Sincronizar sliders con estado
+      sliderUTarget.value = pushoverState.targetDisp;
+      sliderDeltaU.value = pushoverState.deltaU;
+      sliderK01.value = pushoverState.k01;
+      sliderFy1.value = pushoverState.fy1;
+      sliderAlpha1.value = pushoverState.alpha1;
+      sliderK02.value = pushoverState.k02;
+      sliderFy2.value = pushoverState.fy2;
+      sliderAlpha2.value = pushoverState.alpha2;
+
+      valUTarget.textContent = `${pushoverState.targetDisp.toFixed(1)} mm`;
+      valDeltaU.textContent = `${pushoverState.deltaU.toFixed(2)} mm`;
+      valK01.textContent = `${pushoverState.k01.toFixed(1)} kN/mm`;
+      valFy1.textContent = `${pushoverState.fy1.toFixed(1)} kN`;
+      valAlpha1.textContent = `${pushoverState.alpha1.toFixed(2)} (${(pushoverState.alpha1*100).toFixed(0)}%)`;
+      valK02.textContent = `${pushoverState.k02.toFixed(1)} kN/mm`;
+      valFy2.textContent = `${pushoverState.fy2.toFixed(1)} kN`;
+      valAlpha2.textContent = `${pushoverState.alpha2.toFixed(2)} (${(pushoverState.alpha2*100).toFixed(0)}%)`;
+
+      recomputeFullPushoverHistory();
+      pushoverState.currentStepIndex = 0;
+      updateUI();
+    }
+
+    // --- Conexión de Event Listeners ---
+    sliderUTarget.addEventListener('input', (e) => {
+      pushoverState.targetDisp = parseFloat(e.target.value);
+      valUTarget.textContent = `${pushoverState.targetDisp.toFixed(1)} mm`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    sliderDeltaU.addEventListener('input', (e) => {
+      pushoverState.deltaU = parseFloat(e.target.value);
+      valDeltaU.textContent = `${pushoverState.deltaU.toFixed(2)} mm`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    // Sliders Piso 1
+    sliderK01.addEventListener('input', (e) => {
+      pushoverState.k01 = parseFloat(e.target.value);
+      valK01.textContent = `${pushoverState.k01.toFixed(1)} kN/mm`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    sliderFy1.addEventListener('input', (e) => {
+      pushoverState.fy1 = parseFloat(e.target.value);
+      valFy1.textContent = `${pushoverState.fy1.toFixed(1)} kN`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    sliderAlpha1.addEventListener('input', (e) => {
+      pushoverState.alpha1 = parseFloat(e.target.value);
+      valAlpha1.textContent = `${pushoverState.alpha1.toFixed(2)} (${(pushoverState.alpha1*100).toFixed(0)}%)`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    // Sliders Piso 2
+    sliderK02.addEventListener('input', (e) => {
+      pushoverState.k02 = parseFloat(e.target.value);
+      valK02.textContent = `${pushoverState.k02.toFixed(1)} kN/mm`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    sliderFy2.addEventListener('input', (e) => {
+      pushoverState.fy2 = parseFloat(e.target.value);
+      valFy2.textContent = `${pushoverState.fy2.toFixed(1)} kN`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    sliderAlpha2.addEventListener('input', (e) => {
+      pushoverState.alpha2 = parseFloat(e.target.value);
+      valAlpha2.textContent = `${pushoverState.alpha2.toFixed(2)} (${(pushoverState.alpha2*100).toFixed(0)}%)`;
+      recomputeFullPushoverHistory();
+      updateUI();
+    });
+
+    // Tabs
+    tabStory1.addEventListener('click', () => {
+      tabStory1.classList.add('active');
+      tabStory2.classList.remove('active');
+      controlsStory1.style.display = 'block';
+      controlsStory2.style.display = 'none';
+    });
+
+    tabStory2.addEventListener('click', () => {
+      tabStory2.classList.add('active');
+      tabStory1.classList.remove('active');
+      controlsStory2.style.display = 'block';
+      controlsStory1.style.display = 'none';
+    });
+
+    // Botones de ejecución
+    btnStepForward.addEventListener('click', (e) => { e.preventDefault(); stepForward(); });
+    btnStepBack.addEventListener('click', (e) => { e.preventDefault(); stepBackward(); });
+    btnSolveAll.addEventListener('click', (e) => { e.preventDefault(); solveAll(); });
+    btnPlayPause.addEventListener('click', (e) => { e.preventDefault(); togglePlayAnimation(); });
+    btnReset.addEventListener('click', (e) => { e.preventDefault(); resetPushover(); });
+    btnExportCsv.addEventListener('click', (e) => { e.preventDefault(); exportToCSV(); });
+
+    // Presets
+    document.getElementById('btn-preset-base').addEventListener('click', (e) => { e.preventDefault(); applyPreset('base'); });
+    document.getElementById('btn-preset-uniform').addEventListener('click', (e) => { e.preventDefault(); applyPreset('uniform'); });
+    document.getElementById('btn-preset-top').addEventListener('click', (e) => { e.preventDefault(); applyPreset('top'); });
+    document.getElementById('btn-preset-weak2').addEventListener('click', (e) => { e.preventDefault(); applyPreset('weak2'); });
+    document.getElementById('btn-preset-elasto').addEventListener('click', (e) => { e.preventDefault(); applyPreset('elasto'); });
+
+    // Theme Toggle (Modo Claro / Oscuro)
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+
+    themeToggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.body.classList.toggle('dark-theme');
+      const isDark = document.body.classList.contains('dark-theme');
+      themeIcon.textContent = isDark ? '☀️' : '🌙';
+      themeLabel.textContent = isDark ? 'Modo Claro' : 'Modo Oscuro';
+      updateUI();
+    });
+
+    // Acordeón de Preguntas Socráticas
+    document.querySelectorAll('.socratic-question').forEach(item => {
+      item.addEventListener('click', () => {
+        const parent = item.parentElement;
+        parent.classList.toggle('open');
+        if (parent.classList.contains('open')) {
+          initKaTeX();
+        }
+      });
+    });
+
+    // Redibujar canvas al cambiar tamaño de ventana
+    window.addEventListener('resize', () => {
+      updateUI();
+    });
+
+    // --- Inicialización Robusta al Cargar ---
+    function startLaboratory() {
+      recomputeFullPushoverHistory();
+      updateUI();
+      initKaTeX();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startLaboratory);
+    } else {
+      startLaboratory();
+    }
+
+    window.addEventListener('load', () => {
+      initKaTeX();
+      updateUI();
+      initKaTeX();
+    });
+
+    // Sondeo de respaldo para sincronizar KaTeX si hay latencia de red desde el CDN
+    let katexPollCount = 0;
+    const katexPollTimer = setInterval(() => {
+      katexPollCount++;
+      if (typeof window !== 'undefined' && (window.renderMathInElement || window.katex)) {
+        initKaTeX();
+        updateUI();
+        initKaTeX();
+        clearInterval(katexPollTimer);
+      } else if (katexPollCount > 35) {
+        clearInterval(katexPollTimer);
+      }
+    }, 120);
+  </script>
+</body>
+</html>

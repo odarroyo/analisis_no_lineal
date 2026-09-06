@@ -33,6 +33,14 @@ Plataforma educativa y conjunto de laboratorios computacionales interactivos dis
   * **Inspector Matricial y Desglose Operacional Paso a Paso:** Identificación física de cada elemento estructural en el ensamblaje de la matriz de rigidez tangente $\mathbf{K}_t$, cálculo de residuos nodales $\mathbf{r}$, determinante, y correcciones cinemáticas $\delta \mathbf{u}$.
   * **Mini-Simulador 1D Interactivo:** Intuición geométrica de las tangentes y residuos con autoescala dinámica (sin desbordamientos visuales) y control de pendiente post-fluencia.
 
+### 3. [Clase 03 — Análisis Estático No Lineal: Pushover](https://odarroyo.github.io/analisis_no_lineal/03_analisis_pushover.html)
+* **Objetivo:** Determinar la curva de capacidad resistente y la ductilidad global de una estructura sometida a un patrón de cargas laterales triangular proporcional a la altura mediante control por desplazamiento.
+* **Características:**
+  * Edificio cortante de 2 pisos (2-DOF) sometido a un vector de fuerzas laterales proporcionales $F_1 = \lambda/3$, $F_2 = 2\lambda/3$ donde el factor de carga $\lambda$ es una incógnita del equilibrio.
+  * **Algoritmo de Control por Desplazamiento:** Incrementos secuenciales de desplazamiento objetivo en el techo $\Delta u_2$ y resolución iterativa de $\lambda$ y $u_1$ con Newton-Raphson bajo restricción cinemática.
+  * **Curva de Capacidad Pushover en Tiempo Real:** Gráfica interactiva de cortante basal $V_b$ vs. desplazamiento de techo $u_2$ con puntos de estado marcados paso a paso.
+  * **Inspector Matricial y Secuencia de Plastificación:** Desglose interactivo de las ecuaciones ampliadas, determinación del estado elasto-plástico por entrepiso y visualización física de la estructura deformada.
+
 ---
 
 ## 🎨 Características de Diseño

@@ -155,6 +155,8 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
     }
 
     .brand-badge {
@@ -205,6 +207,34 @@
       color: var(--cyan-400);
       background: rgba(2, 132, 199, 0.1);
       border-color: rgba(2, 132, 199, 0.3);
+    }
+
+    .nav-external {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-left: 1px solid var(--border-subtle);
+      padding-left: 0.75rem;
+      margin-left: 0.5rem;
+    }
+
+    .nav-ext-btn {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      text-decoration: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .nav-ext-btn:hover {
+      color: var(--cyan-400);
+      border-color: var(--cyan-400);
     }
 
     /* Botón Selector de Tema */
@@ -866,10 +896,10 @@
   <!-- Encabezado / Barra Superior -->
   <header>
     <div class="header-inner">
-      <div class="brand">
+      <a href="index.html" class="brand" title="Volver al Índice de Laboratorios">
         <span class="brand-badge">Clase 01</span>
         <span class="brand-title">Análisis No Lineal de Estructuras</span>
-      </div>
+      </a>
       <nav style="display: flex; align-items: center;">
         <ul class="nav-links">
           <li><a href="#laboratorio" class="nav-btn active">🔬 Laboratorio SDOF</a></li>
@@ -877,6 +907,9 @@
           <li><a href="#matematica" class="nav-btn">📐 Formulación Constitutiva</a></li>
           <li><a href="#socratico" class="nav-btn">💡 Preguntas de Clase</a></li>
         </ul>
+        <div class="nav-external">
+          <a href="index.html" class="nav-ext-btn" title="Volver al Índice de Laboratorios">🏠 Inicio</a>
+        </div>
         <!-- Botón de Alternancia Modo Claro / Modo Oscuro -->
         <button id="theme-toggle" class="theme-toggle-btn" title="Alternar entre modo claro y oscuro">
           <span id="theme-icon">🌙</span> <span id="theme-label">Modo Oscuro</span>
@@ -1338,10 +1371,10 @@
   <footer>
     <div style="max-width: 1440px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
       <div>
-        <strong>Curso de Análisis No Lineal de Estructuras</strong> | Material Docente Interactivo
+        <strong>Curso de Análisis No Lineal de Estructuras</strong> | Clase 01: La Trayectoria Importa
       </div>
       <div>
-        Diseñado para docencia universitaria de posgrado en ingeniería estructural.
+        <a href="index.html" style="color: var(--cyan-400); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">🏠 Volver al Índice Principal</a>
       </div>
     </div>
   </footer>
