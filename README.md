@@ -52,6 +52,16 @@ Plataforma educativa y conjunto de laboratorios computacionales interactivos dis
   * **Demostración de Descarga Elástica (*Springback*):** En la rama descendente C–D, al degradarse la rótula, la fuerza lateral $V$ cae y el fuste elástico se endereza ($\Delta_{\text{el}}$ disminuye), mientras la rotación plástica $\theta_h$ crece aceleradamente para acomodar el desplazamiento global $\Delta$.
   * Inspector numérico de equilibrio en vivo con residuo exacto $|V \cdot 0.95L - M_h| = 0.00\text{ kN}\cdot\text{m}$ y módulo socrático interactivo con retroalimentación conceptual inmediata.
 
+### 5. [Clase 05 — Regularización Basada en la Energía de Fractura: Coleman y Spacone (2001)](https://odarroyo.github.io/analisis_no_lineal/05_regularizacion_energia_fractura.html)
+* **Objetivo:** Resolver la patología de localización espuria de deformaciones en elementos basados en fuerzas (FBE) con ablandamiento (*strain-softening*), demostrando cómo el criterio de energía de fractura en compresión ($G_f^c$) rescata la objetividad de malla y cómo aplicar el post-procesamiento geométrico de curvaturas.
+* **Características:**
+  * **Principio Físico Rector:** Preservación de la energía requerida para quebrar el material ($G_f^c = \int \sigma du = \text{constante}$). Al refinar la integración ($L_{IP} = w_1 L \to 0$), la rama de ablandamiento constitutivo se estira a la derecha ($\varepsilon_{20} \propto 1/L_{IP}$).
+  * **El Modelo Constitutivo Interactivo:** Curva de Kent & Park (1971) con calibración analítica de $\varepsilon_{20}$ mediante la Ec. (9) de Coleman & Spacone, con visualización dual $\sigma - \varepsilon$ (variable) y $\sigma - u_i$ (invariante con área fija $= G_f^c$).
+  * **La Gran Batalla de Objetividad Pushover ($V-\Delta$):** Demostración interactiva comparando curvas no regularizadas (falso colapso ultrafrágil a mayor $NIP$) vs. regularizadas con $NIP = 3, 4, 5, 6, 8$ (convergencia a una única curva objetiva).
+  * **Perfil Espacial de Curvaturas $\phi(x)$:** Visualización del confinamiento del daño en el primer punto de Gauss-Lobatto ($L_{IP}$) y descarga elástica simultánea del resto del fuste debido al equilibrio estricto $M(x) = V(L-x)$.
+  * **Post-procesamiento Geométrico de Curvaturas:** Escalado de la curvatura numérica $\phi^{\text{MODEL}}$ hacia la curvatura física $\phi^{\text{PREDICT}}$ sobre la longitud de rótula de Paulay & Priestley ($L_p$).
+  * Presets reales del artículo (Pila de puente Tanaka & Park #7, Viga sobrerreforzada RILEM 148 SSC de Ulfkjaer), auto-escalado dinámico de momentos en tiempo real y módulo socrático de evaluación formativa.
+
 ---
 
 ## 🎨 Características de Diseño

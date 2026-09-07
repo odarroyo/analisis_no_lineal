@@ -343,6 +343,10 @@
       background: linear-gradient(90deg, #059669, #0284c7);
     }
 
+    .class-card.card-05::before {
+      background: linear-gradient(90deg, #e11d48, #f43f5e);
+    }
+
     .class-card.card-upcoming::before {
       background: linear-gradient(90deg, #94a3b8, #cbd5e1);
     }
@@ -379,6 +383,11 @@
     .card-04 .class-number {
       background: rgba(5, 150, 105, 0.12);
       color: var(--emerald-400);
+    }
+
+    .card-05 .class-number {
+      background: rgba(225, 29, 72, 0.12);
+      color: var(--rose-400);
     }
 
     .card-upcoming .class-number {
@@ -445,6 +454,10 @@
 
     .card-04 .feature-icon {
       color: var(--emerald-400);
+    }
+
+    .card-05 .feature-icon {
+      color: var(--rose-400);
     }
 
     .card-footer {
@@ -638,7 +651,7 @@
     <h1 class="hero-title">Laboratorios Interactivos de Análisis No Lineal de Estructuras</h1>
     <p class="hero-subtitle">
       Plataforma interactiva para la exploración rigurosa de conceptos fundamentales: memoria estructural, 
-      dependencia de trayectoria inelástica, solución iterativa del equilibrio (Newton-Raphson), análisis estático no lineal (Pushover) y rótulas plásticas ASCE 41.
+      dependencia de trayectoria inelástica, solución iterativa del equilibrio (Newton-Raphson), análisis estático no lineal (Pushover), rótulas plásticas ASCE 41 y regularización por energía de fractura (Coleman & Spacone).
     </p>
 
     <div class="hero-badges">
@@ -826,6 +839,50 @@
         </div>
       </article>
 
+      <!-- Clase 05: Regularización Basada en la Energía de Fractura -->
+      <article class="class-card card-05">
+        <div>
+          <div class="class-header">
+            <span class="class-number">Clase 05</span>
+            <span class="class-status">● Disponible</span>
+          </div>
+          <h3 class="class-title">Regularización Basada en la Energía de Fractura: Coleman y Spacone (2001)</h3>
+          <p class="class-desc">
+            Resuelve la patología de localización espuria en elementos basados en fuerzas (FBE) con ablandamiento: demuestra por qué la energía de fractura \(G_f^c\) exige estirar la curva constitutiva y cómo recuperar la objetividad numérica y local.
+          </p>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Principio físico rector: conservación de la energía de fractura en compresión \(G_f^c = \int \sigma du = \text{cte}\) independientemente de la discretización.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>El Modelo Constitutivo: calibración de \(\varepsilon_{20}(L_{IP})\) para la ley de Kent & Park según la Ec. (9) de Coleman & Spacone.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Comparativa de objetividad pushover: curvas no regularizadas (colapso frágil espurio) vs. regularizadas con \(NIP = 3, 4, 5, 6, 8\).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Perfil espacial \(\phi(x)\) demostrando el confinamiento de daño en el primer punto de Gauss-Lobatto (\(L_{IP} = w_1 L\)) y descarga elástica del fuste.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>Post-procesamiento geométrico de curvaturas con la longitud de rótula física de Paulay & Priestley (\(L_p\)).</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <a href="05_regularizacion_energia_fractura.html" class="btn-launch" style="background: linear-gradient(135deg, #e11d48, #be123c);">
+            <span>Iniciar Clase 05</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </article>
+
     </div>
 
     <!-- Banner Informativo -->
@@ -857,6 +914,7 @@
         <li><a href="02_equilibrio_newton_raphson.html">Clase 02</a></li>
         <li><a href="03_analisis_pushover.html">Clase 03</a></li>
         <li><a href="04_rotula_plastica_asce41.html">Clase 04</a></li>
+        <li><a href="05_regularizacion_energia_fractura.html">Clase 05</a></li>
         <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">Repositorio</a></li>
       </ul>
     </div>

@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 05: Regularización Basada en la Energía de Fractura | Análisis No Lineal</title>
+  <meta name="description" content="Laboratorio interactivo y simulador pedagógico de la regularización basada en la energía de fractura de Coleman & Spacone (2001) para elementos basados en fuerzas con ablandamiento (strain-softening).">
+
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       SISTEMA DE DISEÑO Y PALETA DE COLORES (MODO CLARO Y OSCURO)
+       TEMA CLASE 05: CRIMSON / RUBÍ / FRACTURA (#e11d48 / #be123c / #f43f5e)
+       ========================================================================== */
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #e11d48;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #fff1f2 50%, #f8fafc 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 30%, #e11d48 70%, #be123c 100%);
+
+      --crimson-400: #f43f5e;
+      --crimson-500: #e11d48;
+      --crimson-600: #be123c;
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --blue-400: #2563eb;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --purple-400: #7c3aed;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(225, 29, 72, 0.2);
+    }
+
+    body.dark-theme {
+      --bg-base: #090d16;
+      --bg-surface: #101726;
+      --bg-card: #172238;
+      --bg-card-hover: #202e4a;
+      --border-subtle: #1e2c47;
+      --border-accent: #fb7185;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(16, 23, 38, 0.95);
+      --hero-bg: linear-gradient(135deg, rgba(190, 18, 60, 0.25) 0%, rgba(23, 34, 56, 0.9) 60%, rgba(16, 23, 38, 0.95) 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 30%, #fb7185 70%, #f43f5e 100%);
+
+      --crimson-400: #fb7185;
+      --crimson-500: #f43f5e;
+      --crimson-600: #e11d48;
+      --cyan-400: #38bdf8;
+      --cyan-500: #0ea5e9;
+      --blue-400: #60a5fa;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --purple-400: #c084fc;
+
+      --canvas-bg: #0c121e;
+      --canvas-grid: #1e2c47;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(251, 113, 133, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* ENCABEZADO Y NAVEGACIÓN */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.75rem 1.5rem;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--crimson-500), var(--crimson-600));
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    .nav-btn.active {
+      background: rgba(225, 29, 72, 0.12);
+      color: var(--crimson-500);
+      border-color: rgba(225, 29, 72, 0.3);
+      font-weight: 600;
+    }
+
+    .theme-toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--border-accent);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 2.25rem 1.5rem 2rem 1.5rem;
+    }
+
+    .hero-container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--crimson-500);
+      margin-bottom: 0.6rem;
+    }
+
+    .hero-title {
+      font-size: 2.15rem;
+      font-weight: 800;
+      line-height: 1.2;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 1050px;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-quote-box {
+      background: rgba(225, 29, 72, 0.07);
+      border-left: 4px solid var(--crimson-500);
+      border-radius: 0 8px 8px 0;
+      padding: 0.85rem 1.2rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.92rem;
+      color: var(--text-main);
+      font-style: italic;
+    }
+
+    .hero-quote-box strong {
+      font-style: normal;
+      color: var(--crimson-500);
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .hero-tag {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    .hero-tag.highlight {
+      border-color: var(--crimson-400);
+      color: var(--crimson-500);
+      background: rgba(225, 29, 72, 0.08);
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    .main-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* BARRA DE PRESETS PEDAGÓGICOS */
+    .presets-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .presets-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.65rem;
+    }
+
+    .btn-preset {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.82rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .btn-preset:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--crimson-400);
+      transform: translateY(-1px);
+    }
+
+    .btn-preset.active {
+      background: rgba(225, 29, 72, 0.1);
+      border-color: var(--crimson-500);
+      box-shadow: 0 0 0 1px var(--crimson-500);
+    }
+
+    .preset-name {
+      font-weight: 700;
+      color: var(--crimson-500);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .preset-desc {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* CONTENEDOR DE LA SIMULACIÓN */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .sim-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* PANEL LATERAL DE CONTROLES */
+    .controls-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .panel-section-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-value {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--crimson-500);
+      font-weight: 700;
+    }
+
+    .slider-input {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-card-hover);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--crimson-500);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .control-hint {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+    }
+
+    /* TOGGLE SWITCH REGULARIZACIÓN */
+    .toggle-regularization-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: all 0.25s ease;
+    }
+
+    .toggle-regularization-card.active {
+      border-color: var(--emerald-500);
+      background: rgba(5, 150, 105, 0.08);
+    }
+
+    .toggle-regularization-card.inactive {
+      border-color: var(--crimson-500);
+      background: rgba(225, 29, 72, 0.08);
+    }
+
+    .toggle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toggle-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-switch {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--crimson-500);
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .slider-switch:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider-switch {
+      background-color: var(--emerald-500);
+    }
+
+    input:checked + .slider-switch:before {
+      transform: translateX(20px);
+    }
+
+    .toggle-status-text {
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .status-active {
+      color: var(--emerald-500);
+    }
+
+    .status-inactive {
+      color: var(--crimson-500);
+    }
+
+    /* BOTONES DE ANIMACIÓN PUSHOVER */
+    .anim-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.4rem;
+      margin-top: 0.35rem;
+    }
+
+    .btn-anim {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      transition: all 0.2s;
+    }
+
+    .btn-anim:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--crimson-400);
+    }
+
+    .btn-anim.primary {
+      background: linear-gradient(135deg, var(--crimson-500), var(--crimson-600));
+      color: #fff;
+      border: none;
+    }
+
+    .btn-anim.primary:hover {
+      background: linear-gradient(135deg, var(--crimson-400), var(--crimson-500));
+    }
+
+    /* SELECTOR DE NIP (PUNTOS DE INTEGRACIÓN) */
+    .nip-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.35rem;
+    }
+
+    .btn-nip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.45rem 0.25rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      font-family: var(--font-mono);
+    }
+
+    .btn-nip:hover {
+      border-color: var(--crimson-400);
+      background: var(--bg-card-hover);
+    }
+
+    .btn-nip.active {
+      background: var(--crimson-500);
+      color: #ffffff;
+      border-color: var(--crimson-600);
+      box-shadow: 0 0 10px rgba(225, 29, 72, 0.3);
+    }
+
+    /* ÁREA DE VISUALIZACIÓN: LIENZOS */
+    .canvas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .canvas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .canvas-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.15rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+    }
+
+    .canvas-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .canvas-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .canvas-controls-inline {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-mini-tab {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .btn-mini-tab.active {
+      background: var(--crimson-500);
+      color: #fff;
+      border-color: var(--crimson-600);
+    }
+
+    .canvas-legend {
+      display: flex;
+      gap: 0.6rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .canvas-wrapper {
+      width: 100%;
+      height: 320px;
+      position: relative;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* PANEL DE MÉTRICAS Y BALANZA ENERGÉTICA */
+    .metrics-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metrics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .metrics-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .metric-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.75rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      transition: all 0.2s;
+    }
+
+    .metric-item:hover {
+      border-color: var(--crimson-400);
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .metric-unit {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 0.2rem;
+    }
+
+    .metric-sub {
+      font-size: 0.68rem;
+      color: var(--text-faint);
+    }
+
+    /* BALANZA DE ENERGÍA Y OBJETIVIDAD */
+    .balance-box {
+      margin-top: 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .balance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .balance-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .badge-objective {
+      background: rgba(5, 150, 105, 0.15);
+      color: var(--emerald-500);
+      border: 1px solid rgba(5, 150, 105, 0.3);
+    }
+
+    .badge-nonobjective {
+      background: rgba(225, 29, 72, 0.15);
+      color: var(--crimson-500);
+      border: 1px solid rgba(225, 29, 72, 0.3);
+      animation: pulse-alert 2s infinite;
+    }
+
+    @keyframes pulse-alert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .balance-equation-box {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: var(--bg-surface);
+      padding: 0.65rem 0.85rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      color: var(--text-muted);
+    }
+
+    /* SECCIÓN DE TEORÍA Y FORMULACIÓN */
+    .theory-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theory-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 2px solid rgba(225, 29, 72, 0.25);
+      padding-bottom: 0.6rem;
+    }
+
+    .theory-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.75rem;
+    }
+
+    @media (max-width: 900px) {
+      .theory-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .theory-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .theory-block h4 {
+      font-size: 1.05rem;
+      color: var(--text-main);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .theory-callout {
+      background: rgba(225, 29, 72, 0.08);
+      border-left: 4px solid var(--crimson-500);
+      border-radius: 0 8px 8px 0;
+      padding: 0.85rem 1.15rem;
+      font-size: 0.86rem;
+      color: var(--text-main);
+      margin: 0.5rem 0;
+    }
+
+    .theory-callout.tip {
+      background: rgba(5, 150, 105, 0.08);
+      border-left-color: var(--emerald-500);
+    }
+
+    .theory-callout.formula-focus {
+      background: var(--bg-card);
+      border-left: 4px solid var(--purple-400);
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+    }
+
+    /* MÓDULO SOCRÁTICO */
+    .socratic-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .socratic-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .socratic-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .socratic-subtitle {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+
+    .socratic-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .socratic-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .quiz-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .quiz-num {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--crimson-500);
+      letter-spacing: 0.05em;
+    }
+
+    .quiz-question {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .quiz-opt {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .quiz-opt:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--crimson-400);
+      color: var(--text-main);
+    }
+
+    .quiz-opt.correct {
+      background: rgba(5, 150, 105, 0.15) !important;
+      border-color: var(--emerald-500) !important;
+      color: var(--emerald-600) !important;
+      font-weight: 700;
+    }
+
+    .quiz-opt.wrong {
+      background: rgba(225, 29, 72, 0.15) !important;
+      border-color: var(--crimson-500) !important;
+      color: var(--crimson-500) !important;
+    }
+
+    .quiz-feedback {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      padding: 0.65rem 0.85rem;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .quiz-feedback.show-correct {
+      display: block;
+      background: rgba(5, 150, 105, 0.1);
+      color: var(--emerald-600);
+      border: 1px solid rgba(5, 150, 105, 0.25);
+    }
+
+    .quiz-feedback.show-wrong {
+      display: block;
+      background: rgba(225, 29, 72, 0.1);
+      color: var(--crimson-500);
+      border: 1px solid rgba(225, 29, 72, 0.25);
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 2.25rem 1.5rem;
+      margin-top: 3rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--crimson-400);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER NAVEGACIÓN -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">Clase 05</span>
+        <span class="brand-title">Análisis No Lineal • Regularización de Energía de Fractura</span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-btn">← Portal</a></li>
+          <li><a href="01_la_trayectoria_importa.html" class="nav-btn">Clase 01</a></li>
+          <li><a href="02_equilibrio_newton_raphson.html" class="nav-btn">Clase 02</a></li>
+          <li><a href="03_analisis_pushover.html" class="nav-btn">Clase 03</a></li>
+          <li><a href="04_rotula_plastica_asce41.html" class="nav-btn">Clase 04</a></li>
+          <li><a href="05_regularizacion_energia_fractura.html" class="nav-btn active">Clase 05</a></li>
+        </ul>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <button id="theme-toggle" class="theme-toggle-btn" title="Alternar Modo Claro / Oscuro">
+          <span id="theme-icon">🌙</span> <span id="theme-text">Modo Oscuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO PRESENTACIÓN -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-meta">
+        <span>Laboratorio Interactivo 05</span>
+        <span>•</span>
+        <span>Elementos Basados en Fuerzas (FBE)</span>
+        <span>•</span>
+        <span>Mecánica de Fractura del Concreto</span>
+      </div>
+      <h1 class="hero-title">Regularización Basada en la Energía de Fractura: Coleman y Spacone (2001)</h1>
+      <p class="hero-subtitle">
+        Descubre cómo resolver la patología de localización espuria de deformaciones en modelos no lineales con ablandamiento (<em>strain-softening</em>).
+        Aprende por qué al refinar la malla numérica la estructura parecería colapsar sin disipar energía, y cómo la preservación de la energía de fractura en compresión (\(G_f^c\)) rescata la objetividad física de las simulaciones estructurales.
+      </p>
+
+      <div class="hero-quote-box">
+        💡 <strong>Principio Físico Rector:</strong> "Por más que queramos hacer todo lo discreto que queramos un elemento, la energía que se necesita físicamente para romper un volumen de material es una propiedad constante e invariante (\(G_f^c\)). Por lo tanto, si la celda numérica se encoge, <strong>la curva constitutiva tensión-deformación se debe estirar a la derecha</strong> para disipar exactamente la misma energía."
+      </div>
+
+      <div class="hero-tags">
+        <span class="hero-tag highlight">🎯 Coleman & Spacone (2001)</span>
+        <span class="hero-tag highlight">📐 Energía de Fractura \(G_f^c\)</span>
+        <span class="hero-tag">🔗 Elementos Basados en Fuerzas</span>
+        <span class="hero-tag">⚡ Gauss-Lobatto \(L_{IP} = w_1 L\)</span>
+        <span class="hero-tag">🛡️ Objetividad de Malla</span>
+        <span class="hero-tag">📏 Rótula Paulay & Priestley \(L_p\)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- PRESETS PEDAGÓGICOS -->
+    <section class="presets-card">
+      <div class="presets-title">
+        <span>🧪 Casos de Estudio y Presets Pedagógicos</span>
+      </div>
+      <div class="presets-grid">
+        <button class="btn-preset active" id="preset-accordion" onclick="loadPreset('accordion')">
+          <span class="preset-name">💡 1. El Modelo Constitutivo</span>
+          <span class="preset-desc">Demostración pura de cómo \(\sigma-\varepsilon\) se estira al variar NIP mientras \(\sigma-u_i\) permanece estrictamente invariante.</span>
+        </button>
+
+        <button class="btn-preset" id="preset-cantilever" onclick="loadPreset('cantilever')">
+          <span class="preset-name">🏢 2. Columna en Voladizo (Demostración)</span>
+          <span class="preset-desc">Comparativa directa de curvas pushover con y sin regularización para \(NIP = 3, 4, 5, 6, 8\).</span>
+        </button>
+
+        <button class="btn-preset" id="preset-bridge" onclick="loadPreset('bridge')">
+          <span class="preset-name">🌉 3. Pila de Puente RC (Tanaka & Park #7)</span>
+          <span class="preset-desc">Ejemplo del paper: \(L=1.65\text{ m}\), carga axial alta \(P=0.3 f'_c A_g\), \(f'_c=39\text{ MPa}\), \(G_f^c=180\text{ N/mm}\).</span>
+        </button>
+
+        <button class="btn-preset" id="preset-rilem" onclick="loadPreset('rilem')">
+          <span class="preset-name">🔬 4. Viga Sobrerr armada RILEM 148 SSC</span>
+          <span class="preset-desc">Flexión en 4 puntos de Ulfkjaer (1997): momento constante central donde una imperfección mínima desencadena el colapso localizado.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ÁREA DE SIMULACIÓN -->
+    <div class="sim-layout">
+
+      <!-- PANEL DE PARÁMETROS Y CONTROLES -->
+      <aside class="controls-panel">
+        
+        <!-- SWITCH MAESTRO DE REGULARIZACIÓN -->
+        <div class="toggle-regularization-card active" id="reg-card">
+          <div class="toggle-header">
+            <span class="toggle-title">🛡️ Regularización \(G_f^c\)</span>
+            <label class="switch">
+              <input type="checkbox" id="check-regularization" checked onchange="toggleRegularization(this.checked)">
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+          <div class="toggle-status-text status-active" id="reg-status-label">
+            ● ACTIVADA: Criterio Coleman & Spacone (\(\varepsilon_{20}\) variable)
+          </div>
+          <p class="control-hint" id="reg-status-desc">
+            La curva \(\sigma-\varepsilon\) se calibra automáticamente según \(L_{IP}\) para conservar la energía disipada.
+          </p>
+        </div>
+
+        <!-- SELECTOR DE NÚMERO DE PUNTOS DE INTEGRACIÓN (NIP) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span>Puntos de Integración (NIP)</span>
+            <span class="control-value" id="val-nip-display">5 IP</span>
+          </div>
+          <div class="nip-selector-grid">
+            <button class="btn-nip" onclick="setNIP(3)">3 IP</button>
+            <button class="btn-nip" onclick="setNIP(4)">4 IP</button>
+            <button class="btn-nip active" onclick="setNIP(5)">5 IP</button>
+            <button class="btn-nip" onclick="setNIP(6)">6 IP</button>
+            <button class="btn-nip" onclick="setNIP(7)">7 IP</button>
+            <button class="btn-nip" onclick="setNIP(8)">8 IP</button>
+          </div>
+          <span class="control-hint">Gauss-Lobatto: el punto base tiene peso \(w_1 = \frac{1}{N(N-1)}\).</span>
+        </div>
+
+        <!-- CONTROL DE DESPLAZAMIENTO PUSHOVER -->
+        <div class="control-group">
+          <div class="panel-section-title">🕹️ Control de Desplazamiento Lateral</div>
+          <div class="control-label-row">
+            <span>Desplazamiento en Punta (\(\Delta\))</span>
+            <span class="control-value" id="val-delta">0.00 mm</span>
+          </div>
+          <input type="range" id="slider-delta" class="slider-input" min="0" max="80" step="0.5" value="0" oninput="onDeltaScrub(this.value)">
+          
+          <div class="anim-buttons">
+            <button class="btn-anim primary" id="btn-play" onclick="togglePlay()" title="Iniciar / Pausar Animación">
+              <span id="play-icon">▶</span> <span id="play-text">Play</span>
+            </button>
+            <button class="btn-anim" onclick="stepSim(-1)" title="Paso Atrás">⏮ -1</button>
+            <button class="btn-anim" onclick="stepSim(1)" title="Paso Adelante">⏭ +1</button>
+            <button class="btn-anim" onclick="resetSim()" title="Reiniciar a Cero">🔄 Cero</button>
+          </div>
+        </div>
+
+        <!-- PARÁMETROS MATERIALES DEL CONCRETO -->
+        <div class="control-group">
+          <div class="panel-section-title">🧱 Propiedades del Concreto (Kent-Park)</div>
+          
+          <div class="control-label-row">
+            <span>Energía de Fractura (\(G_f^c\))</span>
+            <span class="control-value" id="val-gfc">180 N/mm</span>
+          </div>
+          <input type="range" id="slider-gfc" class="slider-input" min="20" max="250" step="5" value="180" oninput="onParamChange()">
+          <span class="control-hint">Simple: 20-30 N/mm • Confinado: 150-200 N/mm.</span>
+
+          <div class="control-label-row" style="margin-top: 0.5rem;">
+            <span>Resistencia Compresión (\(f'_c\))</span>
+            <span class="control-value" id="val-fc">39.0 MPa</span>
+          </div>
+          <input type="range" id="slider-fc" class="slider-input" min="20" max="60" step="1" value="39" oninput="onParamChange()">
+
+          <div class="control-label-row" style="margin-top: 0.5rem;">
+            <span>Deformación Pico (\(\varepsilon_0\))</span>
+            <span class="control-value" id="val-eps0">0.0024</span>
+          </div>
+          <input type="range" id="slider-eps0" class="slider-input" min="0.0015" max="0.0040" step="0.0001" value="0.0024" oninput="onParamChange()">
+        </div>
+
+        <!-- PARÁMETROS GEOMÉTRICOS Y CARGA AXIAL -->
+        <div class="control-group">
+          <div class="panel-section-title">📐 Geometría y Carga Axial</div>
+          
+          <div class="control-label-row">
+            <span>Altura del Voladizo (\(L\))</span>
+            <span class="control-value" id="val-length">1.65 m</span>
+          </div>
+          <input type="range" id="slider-length" class="slider-input" min="1.0" max="5.0" step="0.05" value="1.65" oninput="onParamChange()">
+
+          <div class="control-label-row" style="margin-top: 0.5rem;">
+            <span>Ratio Carga Axial (\(\nu = P / f'_c A_g\))</span>
+            <span class="control-value" id="val-axial">0.30</span>
+          </div>
+          <input type="range" id="slider-axial" class="slider-input" min="0.0" max="0.60" step="0.02" value="0.30" oninput="onParamChange()">
+          <span class="control-hint">Mayor carga axial acelera el aplastamiento en la base.</span>
+        </div>
+
+      </aside>
+
+      <!-- ÁREA DE LOS CUATRO LIENZOS INTERACTIVOS -->
+      <div class="canvas-grid">
+
+        <!-- LIENZO 1: EL MODELO CONSTITUTIVO (TENSIÓN VS DEFORMACIÓN/DESPLAZAMIENTO) -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <span class="canvas-title">
+              <span>📊 1. El Modelo Constitutivo (Kent-Park)</span>
+            </span>
+            <div class="canvas-controls-inline">
+              <button class="btn-mini-tab active" id="tab-curve-eps" onclick="setCurveView('eps')">\(\sigma - \varepsilon\)</button>
+              <button class="btn-mini-tab" id="tab-curve-u" onclick="setCurveView('u')">\(\sigma - u_i\)</button>
+            </div>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-constitutive"></canvas>
+          </div>
+          <div class="canvas-legend">
+            <div class="legend-item"><div class="legend-dot" style="background: var(--crimson-500);"></div><span id="legend-c1-desc">Curva Kent-Park estirada según \(L_{IP}\)</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background: rgba(225, 29, 72, 0.25);"></div><span>Área disipada \(= G_f^c\)</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--cyan-500);"></div><span>Punto de estado base</span></div>
+          </div>
+        </div>
+
+        <!-- LIENZO 2: VOLADIZO FÍSICO Y PERFIL DE CURVATURAS ESPACIALES PHI(X) -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <span class="canvas-title">
+              <span>🏗️ 2. Columna FBE y Perfil de Curvaturas \(\phi(x)\)</span>
+            </span>
+            <span class="metric-sub" id="info-lip-display">\(L_{IP} = 82.5\text{ mm}\)</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-column"></canvas>
+          </div>
+          <div class="canvas-legend">
+            <div class="legend-item"><div class="legend-dot" style="background: var(--crimson-500);"></div><span>Zona Localizada \(IP_1\) (\(L_{IP}\))</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--cyan-500);"></div><span>Descarga Elástica en \(x > L_{IP}\)</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--purple-400);"></div><span>Puntos Gauss-Lobatto</span></div>
+          </div>
+        </div>
+
+        <!-- LIENZO 3: LA GRAN PRUEBA DE OBJETIVIDAD GLOBAL PUSHOVER (V VS DELTA) -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <span class="canvas-title">
+              <span>⚖️ 3. Respuesta Pushover Global (\(V - \Delta\))</span>
+            </span>
+            <span class="metric-sub" id="pushover-mode-indicator">Modo Regularizado (Objetivo)</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-pushover"></canvas>
+          </div>
+          <div class="canvas-legend">
+            <div class="legend-item"><div class="legend-dot" style="background: var(--crimson-500);"></div><span>Modelo Actual (<span id="legend-nip-curr">5 IP</span>)</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--text-faint);"></div><span>Envolvente multi-NIP (3, 4, 5, 6, 8 IP)</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--emerald-500);"></div><span>Punto Actual</span></div>
+          </div>
+        </div>
+
+        <!-- LIENZO 4: MOMENTO-CURVATURA Y ESCALADO GEOMÉTRICO DE RÓTULA -->
+        <div class="canvas-box">
+          <div class="canvas-title-row">
+            <span class="canvas-title">
+              <span>📐 4. Momento - Curvatura Base y Escalado \(L_p\)</span>
+            </span>
+            <span class="metric-sub" id="info-lp-display">\(L_p = 390\text{ mm}\)</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvas-moment-curv"></canvas>
+          </div>
+          <div class="canvas-legend">
+            <div class="legend-item"><div class="legend-dot" style="background: var(--crimson-500);"></div><span>\(\phi^{\text{MODEL}}\) (Numérica directa en \(L_{IP}\))</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--emerald-500);"></div><span>\(\phi^{\text{PREDICT}}\) (Escalada a \(L_p\) Paulay-Priestley)</span></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PANEL DE MÉTRICAS NUMÉRICAS Y BALANZA ENERGÉTICA -->
+    <section class="metrics-card">
+      <div class="metrics-header">
+        <span class="metrics-title">
+          <span>⚡ Métricas en Tiempo Real y Balanza Energética de Coleman & Spacone</span>
+        </span>
+        <div class="balance-badge badge-objective" id="badge-objectivity">
+          ✅ Respuesta Objetiva
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <span class="metric-label">Peso Gauss-Lobatto Base (\(w_1\))</span>
+          <span class="metric-value" id="m-w1">0.0500<span class="metric-unit">(\(1/20\))</span></span>
+          <span class="metric-sub">Fórmula: \(1 / [N(N-1)]\)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Longitud Tributaria (\(L_{IP}\))</span>
+          <span class="metric-value" id="m-lip">82.5<span class="metric-unit">mm</span></span>
+          <span class="metric-sub">\(L_{IP} = w_1 \cdot L\)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Deformación Última (\(\varepsilon_{20}\))</span>
+          <span class="metric-value" id="m-eps20" style="color: var(--crimson-500);">0.0946</span>
+          <span class="metric-sub" id="m-eps20-sub">Calibrada vía Ec. (9) Coleman-Spacone</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Energía Fractura \(G_f^c\) Teórica</span>
+          <span class="metric-value" id="m-gfc-theo">180.0<span class="metric-unit">N/mm</span></span>
+          <span class="metric-sub">Propiedad física invariante</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Energía Numérica \(\int \sigma du\)</span>
+          <span class="metric-value" id="m-gfc-num">179.8<span class="metric-unit">N/mm</span></span>
+          <span class="metric-sub" id="m-gfc-err">Error numérico: &lt; 0.2%</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Trabajo Externo Disipado (\(W\))</span>
+          <span class="metric-value" id="m-work">28.4<span class="metric-unit">kJ</span></span>
+          <span class="metric-sub">\(\int V \, d\Delta\) bajo la curva pushover</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Rótula Paulay & Priestley (\(L_p\))</span>
+          <span class="metric-value" id="m-lp">390<span class="metric-unit">mm</span></span>
+          <span class="metric-sub">\(0.08L + 0.022 f_y d_b\)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Factor Escala Curvatura</span>
+          <span class="metric-value" id="m-scalefactor">0.264</span>
+          <span class="metric-sub">Coleman & Spacone Ec. (14)</span>
+        </div>
+      </div>
+
+      <div class="balance-box">
+        <div class="balance-header">
+          <strong style="font-size: 0.85rem; color: var(--text-main);">⚖️ Verificación Matemática de la Ecuación de Coleman & Spacone:</strong>
+          <span id="balance-check-text" style="font-size: 0.78rem; font-weight: 700; color: var(--emerald-500);">
+            ✓ La energía se conserva al 100% independientemente del número de puntos de integración.
+          </span>
+        </div>
+        <div class="balance-equation-box">
+          <span>\(G_f^c = L_{IP} \left[ 0.6 f'_c (\varepsilon_{20} - \varepsilon_0) + \frac{0.8 {f'_c}^2}{E} \right] \equiv \text{constante}\)</span>
+          <span>•</span>
+          <span id="balance-eval-text">\(82.5\text{ mm} \times [0.6(39.0)(0.0946 - 0.0024) + 0.8(39)^2 / 30000] = 180.0\text{ N/mm}\)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN DE TEORÍA Y FORMULACIÓN MATEMÁTICA DETALLADA -->
+    <section class="theory-section">
+      <h3 class="theory-title">
+        <span>📖 Marco Teórico y Formulación Matemática Rigurosa</span>
+      </h3>
+
+      <div class="theory-grid">
+
+        <!-- BLOQUE 1: LA PATOLOGÍA EN FBE -->
+        <div class="theory-block">
+          <h4>1. Elementos Basados en Fuerzas y el Porqué de la Localización</h4>
+          <p>
+            En la formulación de elementos finitos de pórtico basados en fuerzas (<em>Force-Based Elements</em>, Spacone et al. 1996), los campos de fuerzas internas satisfacen el equilibrio de manera <strong>exacta e independiente del comportamiento del material</strong>:
+          </p>
+          <div class="theory-callout formula-focus">
+            $$\mathbf{s}(x) = \mathbf{N}_Q(x) \mathbf{Q} \implies M(x) = V \cdot (L - x)$$
+          </div>
+          <p>
+            Al emplear integración numérica de Gauss-Lobatto para evaluar la compatibilidad de desplazamientos:
+          </p>
+          <div class="theory-callout formula-focus">
+            $$\mathbf{U} = \sum_{IP=1}^{NIP} w_{IP} L \cdot \mathbf{N}_Q^T(x_{IP}) \mathbf{e}(x_{IP})$$
+          </div>
+          <p>
+            El primer punto de integración (\(IP_1\)) coincide exactamente con la base (\(x=0\)), donde el momento es máximo (\(M_{\max} = V \cdot L\)). Su longitud tributaria asociada es \(L_{IP} = w_1 L\).
+          </p>
+          <div class="theory-callout">
+            ⚠️ <strong>El Origen de la Localización:</strong> En cuanto la sección base alcanza su momento resistente máximo \(M_p\) y entra en régimen de ablandamiento (pendiente negativa), el cortante resistente \(V\) disminuye. Al ser \(M(x) = V(L-x)\) estrictamente decreciente a lo largo de todo el fuste, <em>todos los demás puntos de integración descargan elásticamente</em>. ¡Toda la rotación inelástica queda forzada a confinarse en ese único punto \(L_{IP}\)!
+          </div>
+        </div>
+
+        <!-- BLOQUE 2: LA SOLUCIÓN DE COLEMAN Y SPACONE -->
+        <div class="theory-block">
+          <h4>2. El Criterio de Energía de Fractura Constante (\(G_f^c\))</h4>
+          <p>
+            Físicamente, aplastar una probeta de concreto en compresión requiere una cantidad finita de energía por unidad de área, denominada <strong>energía de fractura en compresión (\(G_f^c\))</strong>:
+          </p>
+          <div class="theory-callout formula-focus">
+            $$G_f^c = \int \sigma \, d u_i = L_{IP} \int \sigma \, d\varepsilon_i = \text{constante}$$
+          </div>
+          <p>
+            Si una celda de integración tiene longitud \(L_{IP}\), el desplazamiento inelástico es \(u_i = L_{IP} \cdot \varepsilon_i\). Por consiguiente:
+          </p>
+          <div class="theory-callout tip">
+            💡 <strong>La Razón de "Estirar la Curva":</strong> Si duplicamos el número de puntos de integración, \(L_{IP}\) se reduce a la mitad. Si mantuviéramos fija la curva \(\sigma-\varepsilon\), la energía disipada sería la mitad. Para que la energía física total disipada sea invariante con la discretización, la deformación última \(\varepsilon_{20}\) <strong>debe estirarse proporcionalmente a \(1 / L_{IP}\)</strong>.
+          </div>
+          <p>
+            Integrando la rama de ablandamiento lineal de la ley de Kent & Park (1971) desde la tensión pico \(f'_c\) (a deformación \(\varepsilon_0\)) hasta el 20% residual \(0.2 f'_c\) (a deformación \(\varepsilon_{20}\)), Coleman y Spacone obtienen la fórmula canónica:
+          </p>
+          <div class="theory-callout formula-focus">
+            $$\varepsilon_{20} = \frac{G_f^c}{0.6 f'_c L_{IP}} - \frac{0.8 f'_c}{E} + \varepsilon_0$$
+          </div>
+        </div>
+
+        <!-- BLOQUE 3: COMPARATIVA DE LOS TRES REGÍMENES -->
+        <div class="theory-block">
+          <h4>3. Clasificación del Comportamiento Seccional</h4>
+          <p>
+            Coleman & Spacone clasifican la respuesta de rótulas en tres categorías fundamentales:
+          </p>
+          <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li>
+              <strong>Endurecimiento Plástico (<em>Strain-Hardening</em>):</strong> La plastificación se propaga a múltiples puntos de integración adyacentes. La respuesta es <em>objetiva</em> tanto a nivel global como local; sólo se requiere un número suficiente de puntos (e.g. \(NIP \ge 4\)) para integrar la parábola con precisión.
+            </li>
+            <li>
+              <strong>Perfectamente Plástico:</strong> El momento se mantiene constante en \(M_p\). La curva global \(V-\Delta\) es objetiva, pero la curvatura numérica en la base se concentra en \(L_{IP}\) y varía con el número de puntos de integración.
+            </li>
+            <li>
+              <strong>Ablandamiento (<em>Strain-Softening</em>):</strong> Severa pérdida de objetividad global y local sin regularización. La curva pushover se vuelve extremadamente frágil a mayor \(NIP\) e incluso presenta <em>snap-back</em> numérico espurio.
+            </li>
+          </ul>
+        </div>
+
+        <!-- BLOQUE 4: ESCALADO GEOMÉTRICO DE CURVATURAS -->
+        <div class="theory-block">
+          <h4>4. Post-procesamiento Geométrico de Curvaturas</h4>
+          <p>
+            Aunque el criterio de \(G_f^c\) regulariza la respuesta global fuerza-desplazamiento (\(V-\Delta\)), la curvatura calculada en el análisis (\(\phi^{\text{MODEL}}\)) sigue estando asociada a la longitud numérica arbitraria \(L_{IP} = w_1 L\), que no coincide con la longitud física de la rótula plástica (\(L_p\)).
+          </p>
+          <p>
+            Para comparar con los límites de deformación de normas como ASCE 41 o FEMA, se aplica el <strong>factor de escala geométrico</strong> para voladizos (simple curvatura, Ec. 14):
+          </p>
+          <div class="theory-callout formula-focus">
+            $$\text{scale factor} = \frac{w_1 L (2 - w_1)}{L_p (2 - L_p / L)}, \quad \phi^{\text{PREDICT}} = \phi_e + (\text{scale factor}) \cdot \phi_i^{\text{MODEL}}$$
+          </div>
+          <p>
+            Donde la longitud física de rótula se estima mediante ecuaciones experimentales como la de Paulay & Priestley (1992): \(L_p = 0.08 L + 0.022 f_y d_b\).
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- MÓDULO SOCRÁTICO: DESAFÍOS DIDÁCTICOS -->
+    <section class="socratic-section">
+      <div class="socratic-header">
+        <h3 class="socratic-title">
+          <span>🧠 Desafíos Socráticos: Comprueba tu Comprensión Física</span>
+        </h3>
+        <p class="socratic-subtitle">
+          Pon a prueba tu intuición mecánica respondiendo a estas preguntas fundamentales sobre la regularización por energía de fractura.
+        </p>
+      </div>
+
+      <div class="socratic-grid">
+
+        <!-- PREGUNTA 1 -->
+        <div class="quiz-card" id="quiz-1">
+          <span class="quiz-num">Desafío 01 • La Paradoja de Malla</span>
+          <p class="quiz-question">
+            Si un ingeniero no regulariza el modelo y aumenta el número de puntos de integración de 3 a 8 en un elemento con ablandamiento, ¿qué predice numéricamente su simulación pushover?
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(1, 0)">Una mayor ductilidad y mayor disipación de energía por tener más puntos de cálculo.</button>
+            <button class="quiz-opt" onclick="checkQuiz(1, 1)">Una respuesta idéntica, porque los elementos basados en fuerzas son exactos.</button>
+            <button class="quiz-opt" onclick="checkQuiz(1, 2)">Una respuesta falsamente frágil y catastrófica que disipa mucha menos energía.</button>
+            <button class="quiz-opt" onclick="checkQuiz(1, 3)">Una mayor rigidez inicial elástica antes de alcanzar la fluencia.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-1"></div>
+        </div>
+
+        <!-- PREGUNTA 2 -->
+        <div class="quiz-card" id="quiz-2">
+          <span class="quiz-num">Desafío 02 • Mecánica de Localización</span>
+          <p class="quiz-question">
+            ¿Por qué en un voladizo bajo fuerza lateral la deformación inelástica se concentra exclusivamente en el primer punto de Gauss-Lobatto (\(IP_1\)) durante el ablandamiento?
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(2, 0)">Porque el momento flector decrece con la altura y, al caer la resistencia de la base, los puntos superiores quedan por debajo de su capacidad y descargan elásticamente.</button>
+            <button class="quiz-opt" onclick="checkQuiz(2, 1)">Porque Gauss-Lobatto asigna peso cero a los puntos intermedios.</button>
+            <button class="quiz-opt" onclick="checkQuiz(2, 2)">Porque el concreto solo resiste compresión en el apoyo empotrado.</button>
+            <button class="quiz-opt" onclick="checkQuiz(2, 3)">Porque la formulación basada en fuerzas viola el equilibrio estático de flexión.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-2"></div>
+        </div>
+
+        <!-- PREGUNTA 3 -->
+        <div class="quiz-card" id="quiz-3">
+          <span class="quiz-num">Desafío 03 • La Intuición de la Curva</span>
+          <p class="quiz-question">
+            ¿Por qué se debe "estirar la curva hacia la derecha" (aumentar \(\varepsilon_{20}\)) cuando la longitud tributaria \(L_{IP}\) disminuye?
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(3, 0)">Para aumentar artificialmente la resistencia a compresión del concreto \(f'_c\).</button>
+            <button class="quiz-opt" onclick="checkQuiz(3, 1)">Porque el trabajo físico de rotura es el área \(\int \sigma du = L_{IP} \int \sigma d\varepsilon = G_f^c\); al reducir la base \(L_{IP}\), la deformación unitaria debe crecer para mantener el área constante.</button>
+            <button class="quiz-opt" onclick="checkQuiz(3, 2)">Para evitar que el módulo de elasticidad inicial \(E\) se vuelva negativo.</button>
+            <button class="quiz-opt" onclick="checkQuiz(3, 3)">Para cumplir con el recubrimiento mínimo de armadura según la norma ACI 318.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-3"></div>
+        </div>
+
+        <!-- PREGUNTA 4 -->
+        <div class="quiz-card" id="quiz-4">
+          <span class="quiz-num">Desafío 04 • Confinamiento y \(G_f^c\)</span>
+          <p class="quiz-question">
+            ¿Por qué para una columna confinada con estribos cerrados (como la pila de puente de Tanaka & Park) se adopta un \(G_f^c \approx 180\text{ N/mm}\) frente a los \(20-30\text{ N/mm}\) del concreto simple?
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(4, 0)">Porque el acero transversal retrasa el colapso de las bandas de corte y multiplica la disipación plástica en la masa de concreto.</button>
+            <button class="quiz-opt" onclick="checkQuiz(4, 1)">Porque el confinamiento incrementa la longitud del elemento estructural.</button>
+            <button class="quiz-opt" onclick="checkQuiz(4, 2)">Porque la energía de fractura no depende del material sino de la carga gravitacional.</button>
+            <button class="quiz-opt" onclick="checkQuiz(4, 3)">Porque los estribos impiden que el elemento experimente curvaturas en la base.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-4"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <strong>Análisis No Lineal de Estructuras</strong> • Escuela de Ingeniería Civil • UIS<br>
+        <span style="font-size: 0.78rem; color: var(--text-faint);">
+          Basado en Coleman & Spacone (2001), <em>Journal of Structural Engineering</em>, ASCE.
+        </span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="index.html">Portal de Clases</a></li>
+        <li><a href="04_rotula_plastica_asce41.html">Clase Anterior (04)</a></li>
+        <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       LÓGICA JAVASCRIPT: SIMULADOR NUMÉRICO, CANVAS 2D Y REGULARIZACIÓN
+       ========================================================================== -->
+  <script>
+    /* ESTADO GLOBAL DE LA SIMULACIÓN */
+    const state = {
+      // Opciones de control
+      nip: 5,
+      isRegularized: true,
+      curveView: 'eps', // 'eps' o 'u'
+      currentDelta: 0.0, // mm
+      maxDelta: 80.0,    // mm
+      isPlaying: false,
+      animTimer: null,
+
+      // Propiedades de concreto y material
+      fc: 39.0,         // MPa (f'c)
+      Gfc: 180.0,       // N/mm (Energía de fractura)
+      eps0: 0.0024,     // Deformación en pico
+      E: 30000.0,       // MPa (Módulo de elasticidad concreto)
+      GfcPlain: 25.0,   // N/mm para concreto simple
+      GfcConfined: 180.0,// N/mm para confinado
+
+      // Propiedades del elemento columna
+      L: 1.65,          // m (Altura del voladizo)
+      b: 0.55,          // m (Base de la sección)
+      d: 0.55,          // m (Peralte de la sección)
+      axialRatio: 0.30, // nu = P / (f'c * Ag)
+      fy: 420.0,        // MPa
+      db: 20.0,         // mm (Diámetro varilla longitudinal)
+
+      // Resultados calculados
+      w1: 0.05,
+      Lip: 82.5,        // mm
+      eps20: 0.0946,    // mm/mm
+      eps20Unreg: 0.0248, // mm/mm constante sin regularizar
+      Lp: 390.0,        // mm (Rótula Paulay & Priestley)
+      scaleFactor: 0.264
+    };
+
+    /* TABLA DE PESOS DE GAUSS-LOBATTO ENDPOINTS (w1 = 1 / [N(N-1)]) */
+    function getGaussLobattoWeight(n) {
+      return 1.0 / (n * (n - 1));
+    }
+
+    /* CALCULAR EPS_20 MEDIANTE LA ECUACIÓN 9 DE COLEMAN & SPACONE */
+    function calcEps20(fc, Lip_mm, Gfc, E, eps0) {
+      // Ec 9: eps20 = Gfc / (0.6 * fc * Lip) - (0.8 * fc / E) + eps0
+      const term1 = Gfc / (0.6 * fc * Lip_mm);
+      const term2 = (0.8 * fc) / E;
+      const eps20 = term1 - term2 + eps0;
+      return Math.max(eps20, eps0 * 1.5);
+    }
+
+    /* LEY DE KENT & PARK EN COMPRESIÓN */
+    function kentParkStress(eps, fc, eps0, eps20) {
+      if (eps <= 0) return 0;
+      if (eps <= eps0) {
+        // Parábola ascendente pre-pico
+        const r = eps / eps0;
+        return fc * (2.0 * r - r * r);
+      } else if (eps <= eps20) {
+        // Rama lineal de ablandamiento
+        const Z = 0.8 / (eps20 - eps0);
+        return fc * Math.max(0.2, 1.0 - Z * (eps - eps0));
+      } else {
+        // Meseta residual del 20%
+        return 0.2 * fc;
+      }
+    }
+
+    /* ENERGÍA DISIPADA INTEGRADA NUMÉRICAMENTE */
+    function computeIntegratedFractureEnergy(fc, eps0, eps20, Lip_mm, E) {
+      // Regla de Simpson / Trapezoidal en 200 subdivisiones de eps0 a eps20
+      const steps = 200;
+      const deps = (eps20 - eps0) / steps;
+      let area = 0;
+      for (let i = 0; i <= steps; i++) {
+        const e = eps0 + i * deps;
+        const s = kentParkStress(e, fc, eps0, eps20);
+        const weight = (i === 0 || i === steps) ? 0.5 : 1.0;
+        area += s * deps * weight;
+      }
+      // Sumar componente elástica recuperada (0.8 * fc^2 / E)
+      const elRecov = (0.8 * fc * fc) / E;
+      return (area + elRecov) * Lip_mm;
+    }
+
+    /* ESTIMAR LONGITUD DE RÓTULA PAULAY & PRIESTLEY (1992) */
+    function calcLpPaulayPriestley(L_m, fy, db_mm) {
+      // Lp = 0.08*L + 0.022*fy*db (kN, mm) -> L en mm
+      const L_mm = L_m * 1000.0;
+      return 0.08 * L_mm + 0.022 * fy * db_mm;
+    }
+
+    /* FACTOR DE ESCALA GEOMÉTRICO (COLEMAN & SPACONE EC. 14) */
+    function calcScaleFactor(w1, L_m, Lp_mm) {
+      const L_mm = L_m * 1000.0;
+      const num = w1 * L_mm * (2.0 - w1);
+      const den = Lp_mm * (2.0 - Lp_mm / L_mm);
+      return num / den;
+    }
+
+    /* RECALCULAR ESTADO INTERNO DEL MODELO */
+    function recalculateModel() {
+      state.w1 = getGaussLobattoWeight(state.nip);
+      state.Lip = state.w1 * (state.L * 1000.0); // mm
+
+      if (state.isRegularized) {
+        state.eps20 = calcEps20(state.fc, state.Lip, state.Gfc, state.E, state.eps0);
+      } else {
+        // En análisis sin regularizar, eps20 se mantiene constante (p. ej. 0.0248 como en Tanaka & Park)
+        state.eps20 = state.eps20Unreg;
+      }
+
+      state.Lp = calcLpPaulayPriestley(state.L, state.fy, state.db);
+      state.scaleFactor = calcScaleFactor(state.w1, state.L, state.Lp);
+
+      updateDOMMetrics();
+      redrawAllCanvases();
+    }
+
+    /* ACTUALIZAR LOS TEXTOS Y MÉTRICAS DEL DOM */
+    function updateDOMMetrics() {
+      // Panel lateral
+      document.getElementById('val-nip-display').textContent = `${state.nip} IP (w₁ = ${(state.w1).toFixed(4)})`;
+      document.getElementById('val-delta').textContent = `${state.currentDelta.toFixed(2)} mm`;
+      document.getElementById('slider-delta').value = state.currentDelta;
+      document.getElementById('val-gfc').textContent = `${Math.round(state.Gfc)} N/mm`;
+      document.getElementById('slider-gfc').value = state.Gfc;
+      document.getElementById('val-fc').textContent = `${state.fc.toFixed(1)} MPa`;
+      document.getElementById('slider-fc').value = state.fc;
+      document.getElementById('val-eps0').textContent = `${state.eps0.toFixed(4)}`;
+      document.getElementById('slider-eps0').value = state.eps0;
+      document.getElementById('val-length').textContent = `${state.L.toFixed(2)} m`;
+      document.getElementById('slider-length').value = state.L;
+      document.getElementById('val-axial').textContent = `${state.axialRatio.toFixed(2)}`;
+      document.getElementById('slider-axial').value = state.axialRatio;
+
+      // Badges superiores de canvas
+      document.getElementById('info-lip-display').textContent = `L_IP = ${state.Lip.toFixed(1)} mm`;
+      document.getElementById('info-lp-display').textContent = `L_p = ${Math.round(state.Lp)} mm`;
+      document.getElementById('legend-nip-curr').textContent = `${state.nip} IP`;
+
+      // Panel de métricas cuantitativas
+      document.getElementById('m-w1').innerHTML = `${state.w1.toFixed(4)} <span class="metric-unit">(1/${state.nip*(state.nip-1)})</span>`;
+      document.getElementById('m-lip').innerHTML = `${state.Lip.toFixed(1)} <span class="metric-unit">mm</span>`;
+      document.getElementById('m-eps20').textContent = state.eps20.toFixed(4);
+      document.getElementById('m-eps20-sub').textContent = state.isRegularized ? "Calibrada vía Ec. (9) Coleman-Spacone" : "Fija (Sin regularizar: no objetiva)";
+      document.getElementById('m-gfc-theo').innerHTML = `${state.Gfc.toFixed(1)} <span class="metric-unit">N/mm</span>`;
+
+      // Verificación numérica integral
+      const gfcNum = computeIntegratedFractureEnergy(state.fc, state.eps0, state.eps20, state.Lip, state.E);
+      document.getElementById('m-gfc-num').innerHTML = `${gfcNum.toFixed(1)} <span class="metric-unit">N/mm</span>`;
+      
+      const gfcErr = Math.abs(gfcNum - state.Gfc) / state.Gfc * 100.0;
+      document.getElementById('m-gfc-err').textContent = state.isRegularized 
+        ? `Error analítico: ${gfcErr.toFixed(2)}%` 
+        : `Energía real disipada: ¡${((gfcNum / state.Gfc)*100).toFixed(0)}% de Gfc!`;
+
+      // Trabajo externo disipado
+      const workKJ = computeWorkDissipated(state.currentDelta, state.nip, state.isRegularized);
+      document.getElementById('m-work').innerHTML = `${workKJ.toFixed(2)} <span class="metric-unit">kJ</span>`;
+
+      document.getElementById('m-lp').innerHTML = `${Math.round(state.Lp)} <span class="metric-unit">mm</span>`;
+      document.getElementById('m-scalefactor').textContent = state.scaleFactor.toFixed(3);
+
+      // Balanza de objetividad
+      const badge = document.getElementById('badge-objectivity');
+      const balanceText = document.getElementById('balance-check-text');
+      const evalText = document.getElementById('balance-eval-text');
+      const pushoverMode = document.getElementById('pushover-mode-indicator');
+
+      if (state.isRegularized) {
+        badge.className = 'balance-badge badge-objective';
+        badge.textContent = '✅ Respuesta Objetiva';
+        balanceText.textContent = '✓ La energía se conserva al 100% independientemente del número de puntos de integración.';
+        balanceText.style.color = 'var(--emerald-500)';
+        evalText.textContent = `${state.Lip.toFixed(1)} mm × [0.6(${state.fc.toFixed(1)})(${state.eps20.toFixed(4)} - ${state.eps0.toFixed(4)}) + 0.8(${state.fc.toFixed(0)})² / ${state.E}] = ${gfcNum.toFixed(1)} N/mm`;
+        pushoverMode.textContent = 'Modo Regularizado (Objetivo)';
+        pushoverMode.style.color = 'var(--emerald-500)';
+      } else {
+        badge.className = 'balance-badge badge-nonobjective';
+        badge.textContent = '❌ Pérdida de Objetividad';
+        balanceText.textContent = '⚠️ Patología numérica: a mayor NIP, menor energía se disipa (colapso frágil espurio).';
+        balanceText.style.color = 'var(--crimson-500)';
+        evalText.textContent = `Energía disipada por la celda: ${gfcNum.toFixed(1)} N/mm (debería ser ${state.Gfc.toFixed(1)} N/mm)`;
+        pushoverMode.textContent = 'Modo Sin Regularizar (Patología Numérica)';
+        pushoverMode.style.color = 'var(--crimson-500)';
+      }
+    }
+
+    /* CAPACIDAD A FLEXO-COMPRESIÓN DINÁMICA DE LA SECCIÓN */
+    function getSectionPeakMoment() {
+      // Momento resistente que varía con f'c y carga axial nu
+      const fc_ratio = Math.max(0.4, state.fc / 39.0);
+      const nu = state.axialRatio;
+      // Interacción normalizada P-M representativa
+      const p_factor = Math.max(0.5, 1.0 + 1.6 * nu - 2.0 * nu * nu) / (1.0 + 1.6 * 0.30 - 2.0 * 0.09);
+      return 990.0 * Math.pow(fc_ratio, 0.75) * p_factor;
+    }
+
+    function getPeakShear() {
+      return getSectionPeakMoment() / state.L;
+    }
+
+    /* CURVA DE CAPACIDAD PUSHOVER TEÓRICA ANALÍTICA V(DELTA) */
+    function getPushoverForce(delta_mm, nipVal, isReg) {
+      // Basado en el comportamiento de Tanaka & Park (Fig. 14 de Coleman & Spacone):
+      const deltaPeak = 14.0; // mm
+      const Vpeak = getPeakShear();
+      const K0 = Vpeak / deltaPeak;
+
+      if (delta_mm <= deltaPeak) {
+        // Rama elasto-plástica ascendente
+        const ratio = delta_mm / deltaPeak;
+        return Vpeak * (1.15 * ratio - 0.15 * Math.pow(ratio, 2.5));
+      }
+
+      // Rama descendente post-pico
+      // La pendiente descendente depende fuertemente de eps20
+      const Lip_mm = getGaussLobattoWeight(nipVal) * (state.L * 1000.0);
+      const eps20Val = isReg 
+        ? calcEps20(state.fc, Lip_mm, state.Gfc, state.E, state.eps0)
+        : state.eps20Unreg;
+
+      // El desplazamiento último de la rótula es delta_u = delta_peak + theta_p * L
+      // donde theta_p = phi_p * Lip y phi_p = (eps20 - eps0) / (0.8 * peralte)
+      const phi_p = (eps20Val - state.eps0) / (0.8 * state.d * 1000.0);
+      const delta_softening_span = Math.max(5.0, phi_p * Lip_mm * (state.L * 1000.0) * 1.8);
+      
+      const delta_post = delta_mm - deltaPeak;
+      if (delta_post <= delta_softening_span) {
+        const drop = (delta_post / delta_softening_span) * (0.8 * Vpeak);
+        return Math.max(0.2 * Vpeak, Vpeak - drop);
+      } else {
+        return 0.2 * Vpeak;
+      }
+    }
+
+    /* CÁLCULO DE TRABAJO EXTERNO DISIPADO (kJ) */
+    function computeWorkDissipated(currentDelta, nipVal, isReg) {
+      if (currentDelta <= 0) return 0;
+      const steps = 100;
+      const dD = currentDelta / steps;
+      let work = 0;
+      for (let i = 0; i <= steps; i++) {
+        const D = i * dD;
+        const V = getPushoverForce(D, nipVal, isReg);
+        const w = (i === 0 || i === steps) ? 0.5 : 1.0;
+        work += V * dD * w; // kN * mm = Joules
+      }
+      return work / 1000.0; // kJ
+    }
+
+    /* ==========================================================================
+       RENDERIZADO DE LOS CUATRO LIENZOS GRÁFICOS (CANVAS 2D CON AUTOPREVENCIÓN HIDPI)
+       ========================================================================== */
+    function setupHiDPICanvas(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+      ctx.scale(dpr, dpr);
+      return { ctx, width: rect.width, height: rect.height };
+    }
+
+    /* LIENZO 1: EL MODELO CONSTITUTIVO (SIGMA VS EPS / U) */
+    function drawConstitutiveCanvas() {
+      const canvas = document.getElementById('canvas-constitutive');
+      const { ctx, width, height } = setupHiDPICanvas(canvas);
+
+      const isDark = document.body.classList.contains('dark-theme');
+      const axisColor = isDark ? '#475569' : '#94a3b8';
+      const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Márgenes
+      const padL = 50, padR = 25, padT = 25, padB = 40;
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      // Límites
+      const maxSigma = state.fc * 1.15; // MPa
+      const isEpsView = state.curveView === 'eps';
+      const maxAbscissa = isEpsView ? 0.16 : 12.0; // max eps (0.16) o max u (12 mm)
+
+      // Transformaciones
+      const toX = val => padL + (val / maxAbscissa) * plotW;
+      const toY = sig => padT + (1 - sig / maxSigma) * plotH;
+
+      // Cuadrícula y Ejes
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      for (let s = 0; s <= maxSigma; s += 10) {
+        const y = toY(s);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(width - padR, y);
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${s}`, padL - 8, y + 3);
+      }
+
+      const xStep = isEpsView ? 0.04 : 3.0;
+      for (let xVal = 0; xVal <= maxAbscissa; xVal += xStep) {
+        const x = toX(xVal);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, height - padB);
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(isEpsView ? xVal.toFixed(2) : `${xVal.toFixed(0)}`, x, height - padB + 14);
+      }
+
+      // Ejes principales
+      ctx.strokeStyle = axisColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, height - padB);
+      ctx.lineTo(width - padR, height - padB);
+      ctx.stroke();
+
+      // Etiquetas de ejes
+      ctx.fillStyle = textColor;
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(isEpsView ? 'Deformación Unitaria en la Base, ε (mm/mm)' : 'Desplazamiento Inelástico en la Base, u_i = L_IP · ε (mm)', padL + plotW / 2, height - 10);
+
+      ctx.save();
+      ctx.translate(14, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Tensión de Compresión, σ (MPa)', 0, 0);
+      ctx.restore();
+
+      // Dibujar área sombreada bajo la curva (Gfc)
+      const numPts = 150;
+      const pts = [];
+      for (let i = 0; i <= numPts; i++) {
+        const eps = (i / numPts) * (state.eps20 * 1.2);
+        const sig = kentParkStress(eps, state.fc, state.eps0, state.eps20);
+        const xVal = isEpsView ? eps : (eps - state.eps0) * state.Lip;
+        pts.push({ xVal: Math.max(0, xVal), sig });
+      }
+
+      ctx.fillStyle = 'rgba(225, 29, 72, 0.15)';
+      ctx.beginPath();
+      ctx.moveTo(toX(pts[0].xVal), toY(0));
+      for (let pt of pts) {
+        if (pt.xVal <= maxAbscissa) {
+          ctx.lineTo(toX(pt.xVal), toY(pt.sig));
+        }
+      }
+      ctx.lineTo(toX(Math.min(maxAbscissa, pts[pts.length - 1].xVal)), toY(0));
+      ctx.closePath();
+      ctx.fill();
+
+      // Dibujar curva Kent-Park
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      let first = true;
+      for (let pt of pts) {
+        if (pt.xVal <= maxAbscissa) {
+          const px = toX(pt.xVal);
+          const py = toY(pt.sig);
+          if (first) { ctx.moveTo(px, py); first = false; }
+          else ctx.lineTo(px, py);
+        }
+      }
+      ctx.stroke();
+
+      // Marcadores clave (fc, eps0, eps20, 0.2fc)
+      const xEps0 = isEpsView ? toX(state.eps0) : toX(0);
+      const yFc = toY(state.fc);
+      ctx.fillStyle = '#be123c';
+      ctx.beginPath();
+      ctx.arc(xEps0, yFc, 4.5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = textColor;
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.fillText(`f'c=${state.fc} MPa`, xEps0 + 8, yFc - 6);
+
+      const xEps20 = isEpsView ? toX(state.eps20) : toX((state.eps20 - state.eps0) * state.Lip);
+      const yResid = toY(0.2 * state.fc);
+      if (xEps20 <= width - padR) {
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.arc(xEps20, yResid, 4.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillText(`ε₂₀=${state.eps20.toFixed(4)}`, xEps20 - 5, yResid - 8);
+      }
+
+      // Punto de estado dinámico actual según el desplazamiento pushover
+      const deltaRatio = Math.min(1.0, state.currentDelta / state.maxDelta);
+      const currEps = state.eps0 + deltaRatio * (state.eps20 - state.eps0) * 1.1;
+      const currSig = kentParkStress(currEps, state.fc, state.eps0, state.eps20);
+      const currX = isEpsView ? currEps : Math.max(0, (currEps - state.eps0) * state.Lip);
+
+      if (currX <= maxAbscissa) {
+        const px = toX(currX);
+        const py = toY(currSig);
+
+        // Línea vertical punteada
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(px, height - padB);
+        ctx.lineTo(px, py);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Punto de estado
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.fillText(`σ=${currSig.toFixed(1)} MPa`, px + 8, py - 4);
+      }
+    }
+
+    /* LIENZO 2: VOLADIZO FÍSICO Y PERFIL DE CURVATURAS ESPACIALES PHI(X) */
+    function drawColumnCanvas() {
+      const canvas = document.getElementById('canvas-column');
+      const { ctx, width, height } = setupHiDPICanvas(canvas);
+
+      const isDark = document.body.classList.contains('dark-theme');
+      const axisColor = isDark ? '#475569' : '#94a3b8';
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Dividir el lienzo en dos zonas: Izquierda (Columna física deformada), Derecha (Gráfica de curvatura phi(x))
+      const splitX = width * 0.42;
+
+      // ==================== ZONA IZQUIERDA: VOLADIZO FÍSICO ====================
+      const baseY = height - 45;
+      const topY = 35;
+      const colHeightPx = baseY - topY;
+      const colBaseX = splitX * 0.38;
+
+      // Apoyo empotrado
+      ctx.fillStyle = isDark ? '#334155' : '#cbd5e1';
+      ctx.fillRect(colBaseX - 35, baseY, 70, 10);
+      ctx.strokeStyle = axisColor;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(colBaseX - 35, baseY, 70, 10);
+
+      // Hachurado de empotramiento
+      for (let hx = colBaseX - 30; hx <= colBaseX + 30; hx += 10) {
+        ctx.beginPath();
+        ctx.moveTo(hx, baseY + 10);
+        ctx.lineTo(hx - 8, baseY + 18);
+        ctx.stroke();
+      }
+
+      // Desplazamiento lateral en la punta
+      const tipDeflPx = (state.currentDelta / state.maxDelta) * (splitX * 0.35);
+
+      // Altura del primer punto de integración Lip
+      const lipRatio = state.Lip / (state.L * 1000.0);
+      const lipPx = colHeightPx * lipRatio;
+
+      // Dibujar zona de daño / plasticidad concentrada en Lip (Rojo)
+      ctx.fillStyle = 'rgba(225, 29, 72, 0.35)';
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.rect(colBaseX - 12, baseY - lipPx, 24, lipPx);
+      ctx.fill();
+      ctx.stroke();
+
+      // Cota de Lip
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(colBaseX - 22, baseY);
+      ctx.lineTo(colBaseX - 22, baseY - lipPx);
+      ctx.moveTo(colBaseX - 26, baseY);
+      ctx.lineTo(colBaseX - 18, baseY);
+      ctx.moveTo(colBaseX - 26, baseY - lipPx);
+      ctx.lineTo(colBaseX - 18, baseY - lipPx);
+      ctx.stroke();
+
+      ctx.fillStyle = '#e11d48';
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`L_IP`, colBaseX - 28, baseY - lipPx / 2 + 3);
+
+      // Fuste de la columna deformada
+      ctx.strokeStyle = isDark ? '#94a3b8' : '#334155';
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(colBaseX, baseY - lipPx);
+      // Curvatura concentrated at base, elastic straight line above
+      ctx.lineTo(colBaseX + tipDeflPx, topY);
+      ctx.stroke();
+
+      // Puntos de integración de Gauss-Lobatto a lo largo de la columna
+      const nip = state.nip;
+      ctx.fillStyle = '#c084fc';
+      for (let i = 0; i < nip; i++) {
+        // Posiciones canónicas aproximadas de Gauss-Lobatto en [0, 1]
+        let xi = 0;
+        if (i === 0) xi = 0;
+        else if (i === nip - 1) xi = 1.0;
+        else {
+          // Raíces aproximadas para GL
+          xi = 0.5 * (1.0 - Math.cos((Math.PI * i) / (nip - 1)));
+        }
+        const py = baseY - xi * colHeightPx;
+        const px = (xi <= lipRatio) ? colBaseX : (colBaseX + tipDeflPx * ((xi - lipRatio) / (1 - lipRatio)));
+        
+        ctx.beginPath();
+        ctx.arc(px, py, (i === 0) ? 5 : 3.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Flecha de fuerza y desplazamiento en la punta (orientada hacia la derecha →)
+      if (state.currentDelta > 0.5) {
+        ctx.strokeStyle = '#0284c7';
+        ctx.fillStyle = '#0284c7';
+        ctx.lineWidth = 2.5;
+        const tipX = colBaseX + tipDeflPx;
+        const arrStartX = tipX + 4;
+        const arrEndX = tipX + 34;
+        ctx.beginPath();
+        ctx.moveTo(arrStartX, topY);
+        ctx.lineTo(arrEndX, topY);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(arrEndX, topY);
+        ctx.lineTo(arrEndX - 6, topY - 4);
+        ctx.lineTo(arrEndX - 6, topY + 4);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Δ=${state.currentDelta.toFixed(1)}mm`, arrEndX + 6, topY + 3);
+      }
+
+      // ==================== ZONA DERECHA: PERFIL PHI(X) ====================
+      const gPadL = splitX + 45;
+      const gPadR = 25;
+      const gPadT = 30;
+      const gPadB = 40;
+      const gW = width - gPadL - gPadR;
+      const gH = height - gPadT - gPadB;
+
+      // Ejes de curvatura
+      ctx.strokeStyle = axisColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gPadL, gPadT);
+      ctx.lineTo(gPadL, height - gPadB);
+      ctx.lineTo(width - gPadR, height - gPadB);
+      ctx.stroke();
+
+      ctx.fillStyle = textColor;
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Curvatura, φ (rad/m)', gPadL + gW / 2, height - 12);
+
+      ctx.save();
+      ctx.translate(gPadL - 32, gPadT + gH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Altura, x (m)', 0, 0);
+      ctx.restore();
+
+      // Curvatura base inelástica
+      const deltaRatio = Math.min(1.0, state.currentDelta / state.maxDelta);
+      const phiYield = 0.012; // rad/m fluencia aproximada
+      const phiPeak = phiYield * (1 + deltaRatio * (state.eps20 / state.eps0) * 0.7);
+      const maxPhiGraph = 0.15; // rad/m
+
+      const toPhiX = phi => gPadL + (phi / maxPhiGraph) * gW;
+      const toHeightY = x_m => (height - gPadB) - (x_m / state.L) * gH;
+
+      // Gráfica de phi(x): Enorme pico en L_IP, luego elástico lineal
+      ctx.fillStyle = 'rgba(225, 29, 72, 0.2)';
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 2.5;
+
+      const yLip = toHeightY(state.Lip / 1000.0);
+      const yBase = toHeightY(0);
+      const xPhiBase = toPhiX(Math.min(maxPhiGraph, phiPeak));
+      const xPhiElastic = toPhiX(phiYield * (1 - state.Lip / (state.L * 1000.0)));
+
+      ctx.beginPath();
+      ctx.moveTo(gPadL, yBase);
+      ctx.lineTo(xPhiBase, yBase);
+      ctx.lineTo(xPhiBase, yLip);
+      ctx.lineTo(xPhiElastic, yLip);
+      ctx.lineTo(gPadL, toHeightY(state.L));
+      ctx.stroke();
+
+      ctx.fill();
+
+      // Marcadores en la gráfica
+      ctx.fillStyle = '#e11d48';
+      ctx.beginPath();
+      ctx.arc(xPhiBase, yBase, 4, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`φ_base=${phiPeak.toFixed(3)}`, Math.min(width - 90, xPhiBase + 6), yBase - 4);
+    }
+
+    /* LIENZO 3: PUSHOVER GLOBAL (V VS DELTA) Y COMPARATIVA MULTI-NIP */
+    function drawPushoverCanvas() {
+      const canvas = document.getElementById('canvas-pushover');
+      const { ctx, width, height } = setupHiDPICanvas(canvas);
+
+      const isDark = document.body.classList.contains('dark-theme');
+      const axisColor = isDark ? '#475569' : '#94a3b8';
+      const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+
+      ctx.clearRect(0, 0, width, height);
+
+      const padL = 55, padR = 25, padT = 25, padB = 40;
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      const maxD = state.maxDelta; // 80 mm
+      const Vpeak = getPeakShear();
+      const targetMaxV = Math.max(350.0, Vpeak * 1.25);
+      let vStep = 100;
+      if (targetMaxV <= 400) vStep = 50;
+      else if (targetMaxV <= 1000) vStep = 100;
+      else if (targetMaxV <= 2000) vStep = 250;
+      else vStep = 500;
+      const maxV = Math.ceil(targetMaxV / vStep) * vStep;
+
+      const toX = d => padL + (d / maxD) * plotW;
+      const toY = v => padT + (1 - v / maxV) * plotH;
+
+      // Cuadrícula horizontal dinámica (V)
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      for (let v = 0; v <= maxV + 0.1; v += vStep) {
+        const y = toY(v);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(width - padR, y);
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${Math.round(v)}`, padL - 8, y + 3);
+      }
+
+      // Cuadrícula vertical (Delta)
+      for (let d = 0; d <= maxD; d += 20) {
+        const x = toX(d);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, height - padB);
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${d}`, x, height - padB + 14);
+      }
+
+      // Ejes
+      ctx.strokeStyle = axisColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, height - padB);
+      ctx.lineTo(width - padR, height - padB);
+      ctx.stroke();
+
+      ctx.fillStyle = textColor;
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Desplazamiento Lateral en Punta, Δ (mm)', padL + plotW / 2, height - 10);
+
+      ctx.save();
+      ctx.translate(16, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Cortante Basal, V (kN)', 0, 0);
+      ctx.restore();
+
+      // Dibujar curvas de referencia para otros NIP (3, 4, 6, 8) en líneas tenues
+      const testNIPs = [3, 4, 6, 8];
+      const colors = isDark 
+        ? ['#38bdf8', '#fbbf24', '#a855f7', '#94a3b8']
+        : ['#0284c7', '#d97706', '#7c3aed', '#64748b'];
+
+      testNIPs.forEach((nipTest, idx) => {
+        if (nipTest !== state.nip) {
+          ctx.strokeStyle = state.isRegularized ? 'rgba(100, 116, 139, 0.35)' : colors[idx];
+          ctx.lineWidth = state.isRegularized ? 1.0 : 1.5;
+          if (!state.isRegularized) ctx.setLineDash([4, 3]);
+
+          ctx.beginPath();
+          for (let d = 0; d <= maxD; d += 1) {
+            const V = getPushoverForce(d, nipTest, state.isRegularized);
+            const px = toX(d);
+            const py = toY(V);
+            if (d === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+
+      // Dibujar curva del modelo ACTUAL (gruesa en carmesí)
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let d = 0; d <= maxD; d += 1) {
+        const V = getPushoverForce(d, state.nip, state.isRegularized);
+        const px = toX(d);
+        const py = toY(V);
+        if (d === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Punto actual en la curva
+      const currV = getPushoverForce(state.currentDelta, state.nip, state.isRegularized);
+      const currX = toX(state.currentDelta);
+      const currY = toY(currV);
+
+      // Líneas guía
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(currX, height - padB);
+      ctx.lineTo(currX, currY);
+      ctx.lineTo(padL, currY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Marcador
+      ctx.fillStyle = '#059669';
+      ctx.beginPath();
+      ctx.arc(currX, currY, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#059669';
+      ctx.font = 'bold 10px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`V=${currV.toFixed(1)} kN`, currX + 8, currY - 6);
+    }
+
+    /* LIENZO 4: MOMENTO-CURVATURA LOCAL (M VS PHI) Y POST-PROCESAMIENTO LP */
+    function drawMomentCurvatureCanvas() {
+      const canvas = document.getElementById('canvas-moment-curv');
+      const { ctx, width, height } = setupHiDPICanvas(canvas);
+
+      const isDark = document.body.classList.contains('dark-theme');
+      const axisColor = isDark ? '#475569' : '#94a3b8';
+      const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+
+      ctx.clearRect(0, 0, width, height);
+
+      const padL = 55, padR = 25, padT = 25, padB = 40;
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+
+      // Momento máximo previsto para la escala vertical según sliders
+      const Mpeak = getSectionPeakMoment();
+
+      // AUTO-ESCALA DINÁMICA DEL EJE VERTICAL (M)
+      const targetMaxM = Math.max(400.0, Mpeak * 1.30);
+      let mStep = 200;
+      if (targetMaxM <= 600) mStep = 100;
+      else if (targetMaxM <= 1200) mStep = 200;
+      else if (targetMaxM <= 2500) mStep = 500;
+      else if (targetMaxM <= 5000) mStep = 1000;
+      else mStep = 2000;
+
+      const maxM = Math.ceil(targetMaxM / mStep) * mStep;
+
+      // AUTO-ESCALA DINÁMICA DEL EJE HORIZONTAL (PHI)
+      const phiYield = 0.012; // rad/m
+      const phiUltModel = phiYield + (state.eps20 - state.eps0) / (0.8 * state.d);
+      const phiUltPredict = phiYield + state.scaleFactor * (phiUltModel - phiYield);
+      const targetMaxPhi = Math.max(phiUltModel, phiUltPredict) * 1.25;
+      let phiStep = 0.04;
+      if (targetMaxPhi > 0.4) phiStep = 0.10;
+      else if (targetMaxPhi > 0.2) phiStep = 0.05;
+      const maxPhi = Math.max(0.16, Math.ceil(targetMaxPhi / phiStep) * phiStep);
+
+      const toX = phi => padL + (phi / maxPhi) * plotW;
+      const toY = m => padT + (1 - m / maxM) * plotH;
+
+      // Cuadrícula horizontal dinámica (M)
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      for (let m = 0; m <= maxM + 0.1; m += mStep) {
+        const y = toY(m);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(width - padR, y);
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${Math.round(m)}`, padL - 8, y + 3);
+      }
+
+      // Cuadrícula vertical dinámica (Phi)
+      for (let phi = 0; phi <= maxPhi + 0.001; phi += phiStep) {
+        const x = toX(phi);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, height - padB);
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(phi.toFixed(2), x, height - padB + 14);
+      }
+
+      // Ejes
+      ctx.strokeStyle = axisColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, height - padB);
+      ctx.lineTo(width - padR, height - padB);
+      ctx.stroke();
+
+      ctx.fillStyle = textColor;
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Curvatura en la Base, φ (rad/m)', padL + plotW / 2, height - 10);
+
+      ctx.save();
+      ctx.translate(16, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Momento Basal, M (kN·m)', 0, 0);
+      ctx.restore();
+
+      // Curva 1: Curvatura Numérica Directa phi_model en L_IP (Carmesí)
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(toX(0), toY(0));
+      ctx.lineTo(toX(phiYield), toY(Mpeak));
+      ctx.lineTo(toX(Math.min(maxPhi, phiUltModel)), toY(0.4 * Mpeak));
+      ctx.lineTo(toX(maxPhi), toY(0.4 * Mpeak));
+      ctx.stroke();
+
+      // Curva 2: Curvatura Escalada a Lp de Paulay & Priestley phi_predict (Verde Esmeralda)
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(toX(0), toY(0));
+      ctx.lineTo(toX(phiYield), toY(Mpeak));
+      ctx.lineTo(toX(Math.min(maxPhi, phiUltPredict)), toY(0.4 * Mpeak));
+      ctx.lineTo(toX(maxPhi), toY(0.4 * Mpeak));
+      ctx.stroke();
+
+      // Marcador de estado actual
+      const deltaRatio = Math.min(1.0, state.currentDelta / state.maxDelta);
+      const currV = getPushoverForce(state.currentDelta, state.nip, state.isRegularized);
+      const currM = currV * state.L;
+      const currPhiModel = phiYield + deltaRatio * (phiUltModel - phiYield);
+      const currPhiPredict = phiYield + state.scaleFactor * (currPhiModel - phiYield);
+
+      if (currPhiModel <= maxPhi && currM <= maxM) {
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.arc(toX(currPhiModel), toY(currM), 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      if (currPhiPredict <= maxPhi && currM <= maxM) {
+        ctx.fillStyle = '#059669';
+        ctx.beginPath();
+        ctx.arc(toX(currPhiPredict), toY(currM), 5, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = '#059669';
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        const labelX = Math.min(width - padR - 150, Math.max(padL + 6, toX(currPhiPredict) + 6));
+        const labelY = Math.max(padT + 12, toY(currM) - 6);
+        ctx.fillText(`M=${currM.toFixed(0)} kN·m, φ=${currPhiPredict.toFixed(3)}`, labelX, labelY);
+      }
+    }
+
+    /* REDIBUJAR TODOS LOS LIENZOS */
+    function redrawAllCanvases() {
+      drawConstitutiveCanvas();
+      drawColumnCanvas();
+      drawPushoverCanvas();
+      drawMomentCurvatureCanvas();
+    }
+
+    /* ==========================================================================
+       CONTROLADORES DE EVENTOS E INTERACCIÓN DE USUARIO
+       ========================================================================== */
+    function setNIP(nipVal) {
+      state.nip = nipVal;
+      document.querySelectorAll('.btn-nip').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === `${nipVal} IP`);
+      });
+      recalculateModel();
+    }
+
+    function toggleRegularization(isChecked) {
+      state.isRegularized = isChecked;
+      const card = document.getElementById('reg-card');
+      const label = document.getElementById('reg-status-label');
+      const desc = document.getElementById('reg-status-desc');
+
+      if (isChecked) {
+        card.className = 'toggle-regularization-card active';
+        label.className = 'toggle-status-text status-active';
+        label.textContent = '● ACTIVADA: Criterio Coleman & Spacone (ε₂₀ variable)';
+        desc.textContent = 'La curva σ-ε se calibra automáticamente según L_IP para conservar la energía disipada.';
+      } else {
+        card.className = 'toggle-regularization-card inactive';
+        label.className = 'toggle-status-text status-inactive';
+        label.textContent = '● DESACTIVADA: Patología Numérica (ε₂₀ constante)';
+        desc.textContent = 'La curva σ-ε permanece fija; a mayor NIP, la estructura colapsa más frágilmente con menor energía.';
+      }
+      recalculateModel();
+    }
+
+    function setCurveView(view) {
+      state.curveView = view;
+      document.getElementById('tab-curve-eps').classList.toggle('active', view === 'eps');
+      document.getElementById('tab-curve-u').classList.toggle('active', view === 'u');
+      
+      const legendDesc = document.getElementById('legend-c1-desc');
+      if (view === 'eps') {
+        legendDesc.textContent = `Curva Kent-Park estirada según L_IP (${state.Lip.toFixed(1)} mm)`;
+      } else {
+        legendDesc.textContent = `Curva σ-u_i invariante (Área idéntica = ${state.Gfc.toFixed(0)} N/mm)`;
+      }
+      drawConstitutiveCanvas();
+    }
+
+    function onDeltaScrub(val) {
+      state.currentDelta = parseFloat(val);
+      updateDOMMetrics();
+      redrawAllCanvases();
+    }
+
+    function onParamChange() {
+      state.Gfc = parseFloat(document.getElementById('slider-gfc').value);
+      state.fc = parseFloat(document.getElementById('slider-fc').value);
+      state.eps0 = parseFloat(document.getElementById('slider-eps0').value);
+      state.L = parseFloat(document.getElementById('slider-length').value);
+      state.axialRatio = parseFloat(document.getElementById('slider-axial').value);
+      recalculateModel();
+    }
+
+    function togglePlay() {
+      if (state.isPlaying) {
+        pauseSim();
+      } else {
+        playSim();
+      }
+    }
+
+    function playSim() {
+      state.isPlaying = true;
+      document.getElementById('play-icon').textContent = '⏸';
+      document.getElementById('play-text').textContent = 'Pausa';
+      
+      if (state.currentDelta >= state.maxDelta) {
+        state.currentDelta = 0;
+      }
+
+      state.animTimer = setInterval(() => {
+        state.currentDelta += 0.8;
+        if (state.currentDelta >= state.maxDelta) {
+          state.currentDelta = state.maxDelta;
+          pauseSim();
+        }
+        updateDOMMetrics();
+        redrawAllCanvases();
+      }, 35);
+    }
+
+    function pauseSim() {
+      state.isPlaying = false;
+      document.getElementById('play-icon').textContent = '▶';
+      document.getElementById('play-text').textContent = 'Play';
+      if (state.animTimer) {
+        clearInterval(state.animTimer);
+        state.animTimer = null;
+      }
+    }
+
+    function stepSim(dir) {
+      pauseSim();
+      state.currentDelta = Math.max(0, Math.min(state.maxDelta, state.currentDelta + dir * 2.5));
+      updateDOMMetrics();
+      redrawAllCanvases();
+    }
+
+    function resetSim() {
+      pauseSim();
+      state.currentDelta = 0;
+      updateDOMMetrics();
+      redrawAllCanvases();
+    }
+
+    /* PRESETS PEDAGÓGICOS DEL ARTÍCULO */
+    function loadPreset(presetKey) {
+      document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`preset-${presetKey}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      pauseSim();
+
+      if (presetKey === 'accordion') {
+        // Enfoque puro en el concepto del modelo constitutivo
+        state.L = 2.0;
+        state.fc = 35.0;
+        state.Gfc = 150.0;
+        state.eps0 = 0.0022;
+        state.axialRatio = 0.15;
+        state.isRegularized = true;
+        setNIP(5);
+        setCurveView('eps');
+        state.currentDelta = 25.0;
+      } else if (presetKey === 'cantilever') {
+        // Demostración clásica de voladizo
+        state.L = 3.0;
+        state.fc = 30.0;
+        state.Gfc = 120.0;
+        state.eps0 = 0.0020;
+        state.axialRatio = 0.20;
+        state.isRegularized = true;
+        setNIP(5);
+        setCurveView('eps');
+        state.currentDelta = 35.0;
+      } else if (presetKey === 'bridge') {
+        // Pila de puente de Tanaka & Park (Specimen 7, Coleman & Spacone Fig. 13 y 14)
+        state.L = 1.65;
+        state.fc = 39.0;
+        state.Gfc = 180.0; // Concreto fuertemente confinado por estribos
+        state.eps0 = 0.0024;
+        state.b = 0.55;
+        state.d = 0.55;
+        state.axialRatio = 0.30;
+        state.isRegularized = true;
+        setNIP(5);
+        setCurveView('eps');
+        state.currentDelta = 45.0;
+      } else if (presetKey === 'rilem') {
+        // Viga sobrerreforzada RILEM 148 SSC (Ulfkjaer 1997, Fig. 15 y 18)
+        state.L = 1.0;
+        state.fc = 45.0;
+        state.Gfc = 25.0; // Concreto simple unconfined
+        state.eps0 = 0.0022;
+        state.axialRatio = 0.05;
+        state.isRegularized = true;
+        setNIP(3);
+        setCurveView('eps');
+        state.currentDelta = 18.0;
+      }
+
+      document.getElementById('check-regularization').checked = state.isRegularized;
+      toggleRegularization(state.isRegularized);
+      recalculateModel();
+    }
+
+    /* MÓDULO SOCRÁTICO DE PREGUNTAS */
+    const quizAnswers = {
+      1: {
+        correct: 2,
+        feedback: "¡Exacto! Sin regularización, a mayor NIP el volumen del punto de integración disminuye (Lip → 0), por lo que la energía disipada colapsa artificialmente, simulando un fallo catastrófico y espurio."
+      },
+      2: {
+        correct: 0,
+        feedback: "¡Brillante! En elementos basados en fuerzas rige el equilibrio exacto M(x) = V(L-x). Al degradarse la base, V cae y todo el fuste superior pasa a momentos menores a su límite elástico, descargando elásticamente."
+      },
+      3: {
+        correct: 1,
+        feedback: "¡Esa es la clave física de Coleman & Spacone! Dado que la energía física de rotura por unidad de área Gfc es un invariante del material, si la longitud numérica Lip se achica, la deformación unitaria debe estirarse a la derecha para compensar."
+      },
+      4: {
+        correct: 0,
+        feedback: "¡Muy bien! Los estribos cerrados restringen la dilatación transversal del concreto y evitan el deslizamiento prematuro de las bandas de cizallamiento, multiplicando enormemente la energía de fractura efectiva en compresión."
+      }
+    };
+
+    function checkQuiz(quizId, optIdx) {
+      const qCard = document.getElementById(`quiz-${quizId}`);
+      const opts = qCard.querySelectorAll('.quiz-opt');
+      const fb = document.getElementById(`feedback-${quizId}`);
+      const data = quizAnswers[quizId];
+
+      opts.forEach((btn, idx) => {
+        btn.classList.remove('correct', 'wrong');
+        if (idx === data.correct) {
+          btn.classList.add('correct');
+        } else if (idx === optIdx) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      if (optIdx === data.correct) {
+        fb.className = 'quiz-feedback show-correct';
+        fb.textContent = data.feedback;
+      } else {
+        fb.className = 'quiz-feedback show-wrong';
+        fb.textContent = "Incorrecto. Reflexiona sobre la conservación de la energía física y el equilibrio estricto del elemento.";
+      }
+    }
+
+    /* ALTERNAR TEMA CLARO / OSCURO */
+    const themeBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeText = document.getElementById('theme-text');
+
+    function applyTheme(isDark) {
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+        themeIcon.textContent = '☀️';
+        themeText.textContent = 'Modo Claro';
+      } else {
+        document.body.classList.remove('dark-theme');
+        themeIcon.textContent = '🌙';
+        themeText.textContent = 'Modo Oscuro';
+      }
+      redrawAllCanvases();
+    }
+
+    themeBtn.addEventListener('click', () => {
+      const isDark = !document.body.classList.contains('dark-theme');
+      applyTheme(isDark);
+      localStorage.setItem('theme_c05', isDark ? 'dark' : 'light');
+    });
+
+    // Cargar preferencia guardada
+    const savedTheme = localStorage.getItem('theme_c05');
+    if (savedTheme === 'dark') {
+      applyTheme(true);
+    } else {
+      applyTheme(false);
+    }
+
+    // Inicialización al cargar la ventana
+    window.addEventListener('resize', () => {
+      redrawAllCanvases();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Renderizar fórmulas con KaTeX
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+
+      recalculateModel();
+    });
+  </script>
+</body>
+</html>
