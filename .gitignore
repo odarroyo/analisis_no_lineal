@@ -33,3 +33,11 @@ Thumbs.db
 *.nav
 *.snm
 *.vrb
+
+# Papers and external reading materials (no sync to GitHub)
+papers_reading/
+
+# Python cache & workspace
+__pycache__/
+*.pyc
+*.code-workspace

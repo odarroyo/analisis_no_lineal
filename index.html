@@ -347,6 +347,10 @@
       background: linear-gradient(90deg, #e11d48, #f43f5e);
     }
 
+    .class-card.card-06::before {
+      background: linear-gradient(90deg, #4f46e5, #6366f1);
+    }
+
     .class-card.card-upcoming::before {
       background: linear-gradient(90deg, #94a3b8, #cbd5e1);
     }
@@ -388,6 +392,11 @@
     .card-05 .class-number {
       background: rgba(225, 29, 72, 0.12);
       color: var(--rose-400);
+    }
+
+    .card-06 .class-number {
+      background: rgba(79, 70, 229, 0.12);
+      color: #6366f1;
     }
 
     .card-upcoming .class-number {
@@ -460,6 +469,10 @@
       color: var(--rose-400);
     }
 
+    .card-06 .feature-icon {
+      color: #6366f1;
+    }
+
     .card-footer {
       padding-top: 1.25rem;
       border-top: 1px solid var(--border-subtle);
@@ -524,6 +537,26 @@
       box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
     }
 
+    .card-05 .btn-launch {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+    }
+
+    .card-05 .btn-launch:hover {
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35);
+    }
+
+    .card-06 .btn-launch {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .card-06 .btn-launch:hover {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+    }
+
     .btn-disabled {
       background: var(--bg-card);
       color: var(--text-faint);
@@ -536,6 +569,155 @@
       transform: none;
       box-shadow: none;
       background: var(--bg-card);
+    }
+
+    /* Sección Ecosistema OpenSeesPy */
+    .opensees-hub-section {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .opensees-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .opensees-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .opensees-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--cyan-400);
+    }
+
+    .opensees-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--cyan-400), var(--blue-500));
+    }
+
+    .opensees-card.card-yt::before {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+    }
+
+    .opensees-card.card-lib::before {
+      background: linear-gradient(90deg, #4f46e5, #0284c7);
+    }
+
+    .opensees-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .opensees-card-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(2, 132, 199, 0.12);
+      color: var(--cyan-400);
+      font-family: var(--font-mono);
+    }
+
+    .card-yt .opensees-card-badge {
+      background: rgba(239, 68, 68, 0.12);
+      color: #ef4444;
+    }
+
+    .card-lib .opensees-card-badge {
+      background: rgba(79, 70, 229, 0.12);
+      color: #6366f1;
+    }
+
+    .opensees-card-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.65rem;
+      line-height: 1.35;
+    }
+
+    .opensees-card-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .opensees-card-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .opensees-mini-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s ease;
+    }
+
+    .opensees-mini-link:hover {
+      color: var(--cyan-400);
+      border-color: var(--cyan-400);
+      background: rgba(2, 132, 199, 0.08);
+      transform: translateX(3px);
+    }
+
+    .opensees-cta-banner {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(79, 70, 229, 0.08));
+      border: 1px solid rgba(2, 132, 199, 0.3);
+      border-radius: 14px;
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .opensees-cta-info h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+
+    .opensees-cta-info p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
     }
 
     /* Banner de Notas Teóricas */
@@ -634,6 +816,9 @@
         </div>
       </a>
       <div class="header-actions">
+        <a href="recursos_openseespy.html" class="btn-icon" style="background: rgba(2, 132, 199, 0.1); color: var(--cyan-400); border-color: rgba(2, 132, 199, 0.3); font-weight: 700;">
+          <span>🐍 OpenSeesPy</span>
+        </a>
         <button class="btn-icon" id="theme-toggle" title="Alternar tema de color">
           <span id="theme-icon">🌙</span> <span id="theme-text">Modo Oscuro</span>
         </button>
@@ -651,7 +836,7 @@
     <h1 class="hero-title">Laboratorios Interactivos de Análisis No Lineal de Estructuras</h1>
     <p class="hero-subtitle">
       Plataforma interactiva para la exploración rigurosa de conceptos fundamentales: memoria estructural, 
-      dependencia de trayectoria inelástica, solución iterativa del equilibrio (Newton-Raphson), análisis estático no lineal (Pushover), rótulas plásticas ASCE 41 y regularización por energía de fractura (Coleman & Spacone).
+      dependencia de trayectoria inelástica, solución iterativa del equilibrio (Newton-Raphson), análisis estático no lineal (Pushover), rótulas plásticas ASCE 41, regularización por energía de fractura (Coleman & Spacone) y ensamblaje de la matriz de rigidez en elementos de fibras basados en flexibilidad (Spacone et al., 1996).
     </p>
 
     <div class="hero-badges">
@@ -659,6 +844,7 @@
       <div class="hero-badge">📐 Formulación KaTeX Rigurosa</div>
       <div class="hero-badge">🖥️ Canvas 2D HiDPI con Autoescala</div>
       <div class="hero-badge">☀️ Modo Proyección en Aula</div>
+      <a href="recursos_openseespy.html" class="hero-badge" style="text-decoration: none; border-color: var(--cyan-400); color: var(--cyan-400); font-weight: 700; background: rgba(2, 132, 199, 0.08);">🐍 Hub OpenSeesPy & opseestools →</a>
     </div>
   </section>
 
@@ -883,7 +1069,191 @@
         </div>
       </article>
 
+      <!-- Clase 06: Matriz de Rigidez de Elementos de Fibras -->
+      <article class="class-card card-06">
+        <div>
+          <div class="class-header">
+            <span class="class-number">Clase 06</span>
+            <span class="class-status">● Disponible</span>
+          </div>
+          <h3 class="class-title">Matriz de Rigidez de un Elemento de Fibras: Formulación de Flexibilidad (Spacone et al., 1996)</h3>
+          <p class="class-desc">
+            Desglosa la jerarquía multiescala del elemento viga-columna no lineal: integración de fibras uniaxiales a rigidez seccional [\(\mathbf{k}_{\text{sec}}\)], cuadratura de Gauss-Lobatto para ensamblar la flexibilidad [\(\mathbf{F}\)], inversión a [\(\mathbf{K}_{\text{basic}}\)], y el algoritmo de determinación de estado que satisface equilibrio estricto sin bloqueo de curvatura.
+          </p>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Jerarquía multiescala completa:</strong> Deformación de Bernoulli en fibras \(\to\) rigidez seccional \(\mathbf{k}_{\text{sec}} \to\) flexibilidad del elemento \(\mathbf{F} \to \mathbf{K}_{\text{basic}} = \mathbf{F}^{-1}\).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Acoplamiento axial-flexión (\(ES_{\text{tan}}\)):</strong> Demostración física de cómo el agrietamiento del concreto o fluencia asimétrica activa términos cruzados fuera de la diagonal.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Cuadratura de Gauss-Lobatto:</strong> Integración numérica con puntos obligatorios en los extremos (\(x=0, L\)), capturando las rótulas plásticas sin subestimar su demanda.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Comparativa FBE vs. DBE:</strong> Por qué 1 solo elemento basado en fuerzas satisface el equilibrio exacto frente al <em>curvature locking</em> de los elementos en desplazamientos.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Algoritmo de Spacone interactivo:</strong> Visualización de las subiteraciones internas \(j\) que eliminan las deformaciones residuales sin violar el equilibrio.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Inspector matricial en vivo:</strong> Consulta en tiempo real de los valores numéricos de [\(\mathbf{k}_{\text{sec}}\)], [\(\mathbf{F}\)], [\(\mathbf{K}_{\text{basic}}\)], [\(\mathbf{T}_{\text{geom}}\)] y [\(\mathbf{K}_{\text{global}, 6\times 6}\)].</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <a href="06_matriz_rigidez_elemento_fibras.html" class="btn-launch">
+            <span>Iniciar Clase 06</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </article>
+
     </div>
+
+    <!-- ==========================================================================
+         SECCIÓN DESTACADA: ECOSISTEMA Y RECURSOS OPENSEESPY
+         ========================================================================== -->
+    <section class="opensees-hub-section" id="opensees-section">
+      <div class="section-title-wrap" style="margin-bottom: 1.5rem;">
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.65rem; border-radius: 6px; background: rgba(2, 132, 199, 0.12); color: var(--cyan-400); margin-bottom: 0.5rem;">
+          🐍 Ecosistema OpenSeesPy
+        </div>
+        <h2 class="section-title">💻 Recursos, Tutoriales y Biblioteca Científica OpenSeesPy</h2>
+        <p class="section-desc">
+          Colección de herramientas computacionales, cuadernos interactivos y serie de videos desarrollados por el <strong>Prof. Orlando Arroyo</strong> para el aprendizaje y aplicación práctica del análisis no lineal de estructuras de concreto reforzado en Python.
+        </p>
+      </div>
+
+      <div class="opensees-cards-grid">
+        
+        <!-- Tarjeta 1: Tutoriales Básicos GitHub -->
+        <article class="opensees-card">
+          <div>
+            <div class="opensees-card-header">
+              <span class="opensees-card-badge">📓 Jupyter Notebooks</span>
+              <span style="font-size: 0.75rem; color: var(--text-faint);">GitHub Repo</span>
+            </div>
+            <h3 class="opensees-card-title">Tutoriales de Inicio para OpenSeesPy</h3>
+            <p class="opensees-card-desc">
+              Serie guiada (Tutoriales 1 al 7) para modelar pórticos de concreto reforzado con elementos de fibras basados en los ejemplos de Berkeley. Desde barra elástica hasta análisis no lineal pushover y dinámico.
+            </p>
+
+            <div class="opensees-card-links">
+              <div class="opensees-mini-link">
+                <span>📁</span> <span>Jupyter Notebooks comentados</span>
+              </div>
+              <div class="opensees-mini-link">
+                <span>🧱</span> <span>Elementos de fibras de concreto y acero</span>
+              </div>
+              <div class="opensees-mini-link">
+                <span>⚡</span> <span>Modelos elásticos, pushover y dinámicos</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="https://github.com/odarroyo/openseespy_starting_tutorials" target="_blank" rel="noopener" class="btn-launch" style="background: linear-gradient(135deg, #0284c7, #0369a1); width: 100%;">
+              <span>Ver en GitHub</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- Tarjeta 2: Videos YouTube -->
+        <article class="opensees-card card-yt">
+          <div>
+            <div class="opensees-card-header">
+              <span class="opensees-card-badge">🎥 5 Videotutoriales</span>
+              <span style="font-size: 0.75rem; color: var(--text-faint);">YouTube Series</span>
+            </div>
+            <h3 class="opensees-card-title">Serie de Videos Prácticos Exclusivos</h3>
+            <p class="opensees-card-desc">
+              Explicaciones paso a paso en video que complementan los cuadernos Jupyter. Incluye desde la instalación del entorno Python hasta la ejecución de pushover no lineal en fibras.
+            </p>
+
+            <div class="opensees-card-links">
+              <a href="https://youtu.be/B2Vjc_U5NNk" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>▶️</span> <span>Instalación de OpenSeesPy</span>
+              </a>
+              <a href="https://youtu.be/f50Obb7J7vU" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>▶️</span> <span>Tutorial 1: Modelo de una barra</span>
+              </a>
+              <a href="https://youtu.be/Uwx7JbMBcN8" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>▶️</span> <span>Tutorial 2: Modelo elástico</span>
+              </a>
+              <a href="https://youtu.be/d9o-cdj1Ru0" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>▶️</span> <span>Tutorial 3: Modelo de fibras</span>
+              </a>
+              <a href="https://youtu.be/hGzWuKDobbY" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>▶️</span> <span>Tutorial 4: Modelo fibras - Pushover</span>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <a href="recursos_openseespy.html#videos-youtube" class="btn-launch" style="background: linear-gradient(135deg, #ef4444, #dc2626); width: 100%;">
+              <span>Reproducir en el Hub</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- Tarjeta 3: opseestools & Paper -->
+        <article class="opensees-card card-lib">
+          <div>
+            <div class="opensees-card-header">
+              <span class="opensees-card-badge">📦 SoftwareX (Elsevier)</span>
+              <span style="font-size: 0.75rem; color: var(--text-faint);">PyPI Package</span>
+            </div>
+            <h3 class="opensees-card-title">Biblioteca <code>opseestools</code> & Publicación</h3>
+            <p class="opensees-card-desc">
+              Paquete científico de Python desarrollado para agilizar análisis 2D/3D y curvas de fragilidad sísmica. Publicado y evaluado por pares en <em>SoftwareX</em> (Elsevier, 2024).
+            </p>
+
+            <div class="opensees-card-links">
+              <a href="https://github.com/odarroyo/opseestools" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>⭐</span> <span>GitHub: odarroyo/opseestools</span>
+              </a>
+              <a href="https://www.sciencedirect.com/science/article/pii/S2352711024002036" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>📄</span> <span>Artículo en ScienceDirect</span>
+              </a>
+              <a href="https://opseestools.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener" class="opensees-mini-link">
+                <span>📖</span> <span>Documentación (ReadTheDocs)</span>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <a href="recursos_openseespy.html#opseestools-paper" class="btn-launch" style="background: linear-gradient(135deg, #4f46e5, #4338ca); width: 100%;">
+              <span>Ver Detalles & Módulos</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- Banner de llamada a la acción hacia el Hub Dedicado -->
+      <div class="opensees-cta-banner">
+        <div class="opensees-cta-info">
+          <h3>🚀 Centro Centralizado de Recursos OpenSeesPy</h3>
+          <p>Reproduce los videos en línea, consulta los 4 módulos de opseestools y copia los comandos de instalación y citas BibTeX en un solo clic.</p>
+        </div>
+        <a href="recursos_openseespy.html" class="btn-launch" style="background: linear-gradient(135deg, #0284c7, #4f46e5); color: #fff; text-decoration: none; padding: 0.75rem 1.4rem; border-radius: 10px; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span>Explorar Hub de Recursos</span>
+          <span>&rarr;</span>
+        </a>
+      </div>
+    </section>
 
     <!-- Banner Informativo -->
     <div class="theory-banner">
@@ -915,6 +1285,8 @@
         <li><a href="03_analisis_pushover.html">Clase 03</a></li>
         <li><a href="04_rotula_plastica_asce41.html">Clase 04</a></li>
         <li><a href="05_regularizacion_energia_fractura.html">Clase 05</a></li>
+        <li><a href="06_matriz_rigidez_elemento_fibras.html">Clase 06</a></li>
+        <li><a href="recursos_openseespy.html" style="color: var(--cyan-400); font-weight: 700;">OpenSeesPy</a></li>
         <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">Repositorio</a></li>
       </ul>
     </div>
@@ -943,20 +1315,48 @@
       applyTheme(isDarkTheme() ? 'light' : 'dark');
     });
 
+    function initKaTeX() {
+      if (typeof window !== 'undefined' && typeof window.renderMathInElement === 'function') {
+        try {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+          return true;
+        } catch (e) {
+          console.warn('KaTeX render error:', e);
+        }
+      }
+      return false;
+    }
+
     window.addEventListener('load', () => {
       const saved = localStorage.getItem('nl_course_theme') || 'light';
       applyTheme(saved);
-
-      if (window.renderMathInElement) {
-        renderMathInElement(document.body, {
-          delimiters: [
-            { left: '\\[', right: '\\]', display: true },
-            { left: '\\(', right: '\\)', display: false }
-          ],
-          throwOnError: false
-        });
-      }
+      initKaTeX();
     });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initKaTeX);
+    } else {
+      initKaTeX();
+    }
+
+    let katexPollCount = 0;
+    const katexPollTimer = setInterval(() => {
+      katexPollCount++;
+      if (typeof window !== 'undefined' && window.renderMathInElement) {
+        initKaTeX();
+        clearInterval(katexPollTimer);
+      } else if (katexPollCount > 30) {
+        clearInterval(katexPollTimer);
+      }
+    }, 120);
   </script>
 </body>
 </html>

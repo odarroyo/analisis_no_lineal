@@ -1,0 +1,3678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 06: Matriz de Rigidez de un Elemento de Fibras | Análisis No Lineal</title>
+  <meta name="description" content="Laboratorio interactivo y simulador pedagógico de cómo se ensambla la matriz de rigidez de un elemento de fibras de concreto reforzado según la formulación basada en flexibilidad de Spacone, Filippou y Taucer (1996).">
+
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       SISTEMA DE DISEÑO Y PALETA DE COLORES (MODO CLARO Y OSCURO)
+       TEMA CLASE 06: ÍNDIGO / COBALTO / VIOLETA PROFUNDO (#4f46e5 / #4338ca / #6366f1)
+       ========================================================================== */
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #4f46e5;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #eef2ff 50%, #f8fafc 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 20%, #4338ca 65%, #6366f1 100%);
+
+      --indigo-400: #818cf8;
+      --indigo-500: #6366f1;
+      --indigo-600: #4f46e5;
+      --indigo-700: #4338ca;
+      
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --rose-400: #e11d48;
+      --rose-500: #be123c;
+      --purple-400: #7c3aed;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.2);
+    }
+
+    body.dark-theme {
+      --bg-base: #080c18;
+      --bg-surface: #0f172a;
+      --bg-card: #17223b;
+      --bg-card-hover: #1e2c4d;
+      --border-subtle: #243452;
+      --border-accent: #818cf8;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(15, 23, 42, 0.95);
+      --hero-bg: linear-gradient(135deg, rgba(67, 56, 202, 0.25) 0%, rgba(23, 34, 59, 0.9) 60%, rgba(15, 23, 42, 0.95) 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 20%, #a5b4fc 65%, #818cf8 100%);
+
+      --indigo-400: #a5b4fc;
+      --indigo-500: #818cf8;
+      --indigo-600: #6366f1;
+      --indigo-700: #4f46e5;
+
+      --cyan-400: #38bdf8;
+      --cyan-500: #0ea5e9;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --purple-400: #c084fc;
+
+      --canvas-bg: #0b1120;
+      --canvas-grid: #1e293b;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(129, 140, 248, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* ENCABEZADO Y NAVEGACIÓN */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.75rem 1.5rem;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--indigo-600), var(--indigo-700));
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    .nav-btn.active {
+      background: rgba(79, 70, 229, 0.12);
+      color: var(--indigo-600);
+      border-color: rgba(79, 70, 229, 0.3);
+      font-weight: 600;
+    }
+
+    .theme-toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--border-accent);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 2.25rem 1.5rem 2rem 1.5rem;
+    }
+
+    .hero-container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--indigo-600);
+      margin-bottom: 0.6rem;
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-size: 1.02rem;
+      color: var(--text-muted);
+      max-width: 1100px;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-quote-box {
+      background: rgba(79, 70, 229, 0.07);
+      border-left: 4px solid var(--indigo-600);
+      border-radius: 0 8px 8px 0;
+      padding: 0.85rem 1.2rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.92rem;
+      color: var(--text-main);
+      font-style: italic;
+    }
+
+    .hero-quote-box strong {
+      font-style: normal;
+      color: var(--indigo-600);
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .hero-tag {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .hero-nav-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    .hero-nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-nav-link:hover {
+      background: rgba(79, 70, 229, 0.1);
+      border-color: var(--indigo-400);
+      color: var(--indigo-600);
+      transform: translateY(-1px);
+    }
+
+    .hero-nav-link.active-feature {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(16, 185, 129, 0.15));
+      border-color: var(--indigo-500);
+      color: var(--indigo-600);
+      font-weight: 700;
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    .main-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* BARRA DE PRESETS PEDAGÓGICOS */
+    .presets-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .presets-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 0.65rem;
+    }
+
+    .btn-preset {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.82rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .btn-preset:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--indigo-400);
+      transform: translateY(-1px);
+    }
+
+    .btn-preset.active {
+      background: rgba(79, 70, 229, 0.1);
+      border-color: var(--indigo-600);
+      box-shadow: 0 0 0 1px var(--indigo-600);
+    }
+
+    .preset-name {
+      font-weight: 700;
+      color: var(--indigo-600);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .preset-desc {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* PESTAÑAS DEL SIMULADOR */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 0.6rem 1.1rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: var(--indigo-600);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* LAYOUT DEL SIMULADOR */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .sim-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* PANEL LATERAL DE CONTROLES */
+    .controls-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .panel-section-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-value {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--indigo-600);
+      font-weight: 700;
+    }
+
+    .slider-input {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-card-hover);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--indigo-600);
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      transition: transform 0.15s ease;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .select-input {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.45rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .select-input:focus {
+      border-color: var(--border-accent);
+    }
+
+    /* TARJETAS DE CANVAS Y GRÁFICAS */
+    .display-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .canvas-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .canvas-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .canvas-badge {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      height: 340px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .canvas-wrapper canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* DUAL CANVAS GRID */
+    .dual-canvas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .dual-canvas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* INSPECTOR MATRICIAL EN TIEMPO REAL */
+    .matrix-inspector-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .matrix-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .matrix-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--indigo-600);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .matrix-display {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      overflow-x: auto;
+      padding: 0.4rem 0;
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+    }
+
+    .matrix-table td, .matrix-table th {
+      padding: 0.35rem 0.5rem;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .matrix-table th {
+      background: rgba(79, 70, 229, 0.08);
+      color: var(--indigo-600);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .matrix-table td.highlight-cell {
+      background: rgba(79, 70, 229, 0.15);
+      font-weight: 700;
+      color: var(--indigo-600);
+    }
+
+    .matrix-desc {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* STEPPER DEL ALGORITMO DE SPACONE */
+    .stepper-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .stepper-controls {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      background: var(--indigo-600);
+      color: #ffffff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--indigo-700);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--indigo-600);
+      background: rgba(79, 70, 229, 0.08);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+    }
+
+    .step-explanation-box {
+      background: var(--bg-card);
+      border-left: 4px solid var(--indigo-600);
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    /* SECCIÓN TEÓRICA */
+    .theory-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem 1.75rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theory-section h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .theory-section h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--indigo-600);
+      margin: 1.5rem 0 0.65rem 0;
+    }
+
+    .theory-section p {
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .theory-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1rem 0;
+    }
+
+    .theory-alert {
+      border-left: 4px solid var(--amber-500);
+      background: rgba(217, 119, 6, 0.08);
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.25rem 0;
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    .theory-alert strong {
+      color: var(--amber-500);
+    }
+
+    .theory-equation {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--indigo-500);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      margin: 1.1rem 0;
+      overflow-x: auto;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .katex-display {
+      margin: 0.35rem 0 !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      padding: 0.25rem 0 !important;
+    }
+
+    .katex {
+      font-size: 1.05em !important;
+    }
+
+    /* RETOS SOCRÁTICOS / DESAFÍOS PEDAGÓGICOS (QUIZ INTERACTIVO) */
+    .socratic-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem 1.75rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+
+    .quiz-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .quiz-card:hover {
+      border-color: var(--indigo-400);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .quiz-num {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--indigo-600);
+      background: rgba(79, 70, 229, 0.1);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    .quiz-question {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .quiz-opt {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0.75rem 0.9rem;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.4;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .quiz-opt:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+      border-color: var(--indigo-400);
+      color: var(--text-main);
+    }
+
+    .quiz-opt.correct {
+      background: rgba(5, 150, 105, 0.15) !important;
+      border-color: var(--emerald-500) !important;
+      color: var(--emerald-600) !important;
+      font-weight: 700;
+    }
+
+    .quiz-opt.wrong {
+      background: rgba(220, 38, 38, 0.15) !important;
+      border-color: var(--rose-500) !important;
+      color: var(--rose-500) !important;
+    }
+
+    .quiz-card-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: -0.2rem;
+    }
+
+    .btn-reveal-answer {
+      background: transparent;
+      border: none;
+      color: var(--indigo-600);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-reveal-answer:hover {
+      background: rgba(79, 70, 229, 0.1);
+      text-decoration: underline;
+    }
+
+    .quiz-feedback {
+      font-size: 0.84rem;
+      line-height: 1.6;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .quiz-feedback.show-correct {
+      display: block;
+      background: rgba(5, 150, 105, 0.08);
+      color: var(--emerald-600);
+      border: 1px solid rgba(5, 150, 105, 0.25);
+    }
+
+    .quiz-feedback.show-wrong {
+      display: block;
+      background: rgba(220, 38, 38, 0.08);
+      color: var(--rose-500);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+    }
+
+    .quiz-feedback.show-info {
+      display: block;
+      background: rgba(79, 70, 229, 0.08);
+      color: var(--indigo-600);
+      border: 1px solid rgba(79, 70, 229, 0.25);
+    }
+
+    /* SECCIÓN DE EJEMPLO DE APLICACIÓN PRÁCTICA */
+    .worked-example-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2.25rem 2rem;
+      margin: 2.5rem 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .worked-example-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .example-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--indigo-600);
+      background: rgba(79, 70, 229, 0.1);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+
+    .example-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.4rem;
+    }
+
+    .example-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .example-params-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0 1.75rem 0;
+    }
+
+    .example-param-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1rem;
+      border-left: 3px solid var(--indigo-500);
+    }
+
+    .example-param-card h5 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+
+    .example-param-card .param-val {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .example-param-card .param-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .example-toggle-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+      background: var(--bg-surface-2);
+      padding: 0.35rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      width: fit-content;
+    }
+
+    .btn-example-case {
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-example-case.active {
+      background: var(--bg-card);
+      color: var(--indigo-600);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .example-steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .example-step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+
+    .step-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .step-badge {
+      background: var(--indigo-600);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+    }
+
+    .step-card-header h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .step-card-body {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .step-matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      margin: 1rem 0;
+      background: var(--bg-surface-2);
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+
+    .step-matrix-table th, .step-matrix-table td {
+      border: 1px solid var(--border-subtle);
+      padding: 0.55rem 0.65rem;
+      text-align: right;
+    }
+
+    .step-matrix-table th {
+      background: var(--bg-surface);
+      color: var(--indigo-600);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .step-highlight-box {
+      background: rgba(79, 70, 229, 0.06);
+      border-left: 4px solid var(--indigo-500);
+      border-radius: 0 6px 6px 0;
+      padding: 0.85rem 1.1rem;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 2rem 1.5rem;
+      margin-top: 3rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--indigo-600);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO STICKY -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">Clase 06</span>
+        <span class="brand-title">Matriz de Rigidez de Elementos de Fibras</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-btn">← Portal</a></li>
+        <li><a href="01_la_trayectoria_importa.html" class="nav-btn">01 Trayectoria</a></li>
+        <li><a href="02_equilibrio_newton_raphson.html" class="nav-btn">02 Newton-Raphson</a></li>
+        <li><a href="03_analisis_pushover.html" class="nav-btn">03 Pushover</a></li>
+        <li><a href="04_rotula_plastica_asce41.html" class="nav-btn">04 Rótula ASCE 41</a></li>
+        <li><a href="05_regularizacion_energia_fractura.html" class="nav-btn">05 Regularización</a></li>
+        <li><a href="06_matriz_rigidez_elemento_fibras.html" class="nav-btn active">06 Elemento de Fibras</a></li>
+        <li><a href="recursos_openseespy.html" class="nav-btn">🐍 OpenSeesPy</a></li>
+      </ul>
+      <button class="theme-toggle-btn" id="theme-toggle" title="Alternar Modo Claro / Oscuro">
+        <span id="theme-icon">🌙</span> <span id="theme-label">Oscuro</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-meta">
+        <span>Análisis No Lineal de Estructuras</span>
+        <span>•</span>
+        <span>Formulación de Flexibilidad (Spacone et al., 1996)</span>
+      </div>
+      <h1 class="hero-title">Cómo se Construye la Matriz de Rigidez de un Elemento de Fibras</h1>
+      <p class="hero-subtitle">
+        Desglose riguroso, paso a paso y multiescala del elemento viga-columna basado en fuerzas (FBE). 
+        Descubre cómo la cinemática de Bernoulli a nivel de fibra se integra numéricamente en la sección transversal 
+        [\(\mathbf{k}_{\text{sec}}\)], cómo se propaga por cuadratura de Gauss-Lobatto para ensamblar la flexibilidad [\(\mathbf{F}\)], 
+        y cómo su inversión produce la matriz de rigidez sin violar el equilibrio interno.
+      </p>
+      <div class="hero-quote-box">
+        "En un elemento basado en fuerzas, las funciones de interpolación \(\mathbf{b}(x)\) satisfacen rigurosamente el equilibrio en todo punto. La relación fuerza-deformación no lineal se satisface iterativamente a nivel de elemento sin bloqueo de curvatura."
+        <br>— <strong>Spacone, Filippou & Taucer (1996)</strong>, <em>Earthquake Engineering & Structural Dynamics</em>.
+      </div>
+      <div class="hero-tags">
+        <span class="hero-tag highlight">🎯 Formulación de Flexibilidad (FBE)</span>
+        <span class="hero-tag">🔬 Discretización en Fibras Uniaxiales</span>
+        <span class="hero-tag">⚖️ Acoplamiento Axial-Flexión (\(ES_{tan}\))</span>
+        <span class="hero-tag">📍 Cuadratura de Gauss-Lobatto</span>
+        <span class="hero-tag">🔄 Determinación de Estado Interno</span>
+        <span class="hero-tag">🌐 Transformación Geométrica 6-DOF</span>
+      </div>
+
+      <!-- Barra de navegación rápida entre módulos -->
+      <nav class="hero-nav-bar" aria-label="Secciones de la lección">
+        <a href="#simulador-section" class="hero-nav-link">🧪 1. Simulador FBE</a>
+        <a href="#teoria-section" class="hero-nav-link">📖 2. Teoría Spacone</a>
+        <a href="#ejemplo-section" class="hero-nav-link active-feature">📐 3. Ejemplo Resuelto: Columna Cantilever 2D</a>
+        <a href="#preguntas-section" class="hero-nav-link">❓ 4. Autoevaluación</a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- PRESETS PEDAGÓGICOS -->
+    <section class="presets-card" id="simulador-section">
+      <div class="presets-title">
+        <span>⚡ Escenarios Pedagógicos Preconfigurados</span>
+      </div>
+      <div class="presets-grid">
+        <button class="btn-preset active" id="preset-elastic">
+          <span class="preset-name">1. Estado Elástico Lineal</span>
+          <span class="preset-desc">Sección no agrietada simétrica: \(ES_{tan} = 0\), rigidez clásica \(4EI/L\), \(2EI/L\) y \(EA/L\) desacoplados.</span>
+        </button>
+        <button class="btn-preset" id="preset-cracking">
+          <span class="preset-name">2. Agrietamiento del Concreto</span>
+          <span class="preset-desc">Pérdida de tracción, migración del eje neutro y activación espontánea del acoplamiento \(N-M\) (\(ES_{tan} \neq 0\)).</span>
+        </button>
+        <button class="btn-preset" id="preset-yielding">
+          <span class="preset-name">3. Plastificación en Apoyos</span>
+          <span class="preset-desc">Momento flector elevado: fluencia del acero en los extremos \(x=0\) y \(x=L\) detectada por Gauss-Lobatto.</span>
+        </button>
+        <button class="btn-preset" id="preset-axial-flexure">
+          <span class="preset-name">4. Carga Axial Alta + Flexión</span>
+          <span class="preset-desc">Interacción \(P-M\): núcleo confinado activo en compresión, degradación de rigidez y asimetría de sección.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- PESTAÑAS DE VISUALIZACIÓN INTERACTIVA -->
+    <section>
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-section">
+          <span>🔬 1. Nivel Sección (Fibras y Acoplamiento N-M)</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-element">
+          <span>📐 2. Nivel Elemento (Gauss-Lobatto y Flexibilidad F)</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-dbe-vs-fbe">
+          <span>⚖️ 3. FBE vs. DBE (Por qué Flexibilidad)</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-state-det">
+          <span>🔄 4. Algoritmo de Spacone (Subiteraciones)</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-inspector">
+          <span>📊 5. Inspector Matricial Completo</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: SECCIÓN DE FIBRAS -->
+      <div class="tab-content active" id="tab-section">
+        <div class="sim-layout">
+          <!-- Controles de Sección -->
+          <div class="controls-panel">
+            <div class="panel-section-title">
+              <span>🎛️ Deformaciones Seccionales Impuestas</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Curvatura (\(\kappa\)):</span>
+                <span class="control-value" id="val-curv">0.000 rad/m</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-curv" min="-0.06" max="0.06" step="0.001" value="0.000">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Deformación Axial (\(\varepsilon_0\)):</span>
+                <span class="control-value" id="val-eps0">0.00000</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-eps0" min="-0.004" max="0.002" step="0.0001" value="0.0000">
+            </div>
+
+            <div class="panel-section-title" style="margin-top: 0.5rem;">
+              <span>🏗️ Parámetros de Sección</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Base \(b\) / Peralte \(h\):</span>
+                <span class="control-value">30 cm × 50 cm</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Concreto \(f'_c\):</span>
+                <span class="control-value" id="val-fc">28 MPa</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-fc" min="20" max="50" step="2" value="28">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Acero \(f_y\):</span>
+                <span class="control-value" id="val-fy">420 MPa</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Número de Fibras de Concreto:</span>
+                <span class="control-value" id="val-nfib">20 capas</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-nfib" min="10" max="40" step="2" value="20">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Tracción en Concreto:</span>
+                <select class="select-input" id="select-tension">
+                  <option value="cracked">Sin tracción (Agrietado)</option>
+                  <option value="tension-stiff">Con Tracción Elástica (Pre-agrietado)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lienzos de Sección -->
+          <div class="display-panel">
+            <div class="dual-canvas-grid">
+              <!-- Canvas Sección Transversal con Fibras -->
+              <div class="canvas-card">
+                <div class="canvas-header">
+                  <span class="canvas-title">📍 Sección Transversal Discretizada</span>
+                  <span class="canvas-badge" id="badge-na">Eje Neutro: y = 0 mm</span>
+                </div>
+                <div class="canvas-wrapper">
+                  <canvas id="canvas-section"></canvas>
+                </div>
+                <div style="font-size: 0.74rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                  <span>🟦 Concreto elástico</span>
+                  <span>🟥 Concreto aplastado</span>
+                  <span>⬜ Concreto agrietado</span>
+                  <span>🟢/🔴 Barras de acero</span>
+                </div>
+              </div>
+
+              <!-- Canvas Diagrama de Deformaciones y Esfuerzos -->
+              <div class="canvas-card">
+                <div class="canvas-header">
+                  <span class="canvas-title">📈 Perfil Cinemático \(\varepsilon(y)\) y Dinámico \(\sigma(y)\)</span>
+                  <span class="canvas-badge" id="badge-fib-status">Elasticidad</span>
+                </div>
+                <div class="canvas-wrapper">
+                  <canvas id="canvas-profiles"></canvas>
+                </div>
+                <div style="font-size: 0.74rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                  <span>Línea azul: \(\varepsilon(y) = \varepsilon_0 - y \kappa\)</span>
+                  <span>Área naranja: \(\sigma(y)\) resultante</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen de Rigidez Seccional Calculada -->
+            <div class="matrix-box">
+              <div class="matrix-title">
+                <span>Matriz de Rigidez Tangente de la Sección [\(\mathbf{k}_{\text{sec}}\)]</span>
+                <span class="canvas-badge">Unidades: kN, m</span>
+              </div>
+              <div class="matrix-display" id="sec-k-display">
+                <!-- Se inyecta dinámicamente -->
+              </div>
+              <div class="matrix-desc" id="sec-k-notes">
+                El término fuera de la diagonal \(-(ES)_{tan} = -\sum E_{t,i} y_i A_i\) representa el acoplamiento axial-flexión. 
+                Si la sección pierde simetría por agrietamiento o plastificación, \(-(ES)_{tan} \neq 0\), lo que significa que aplicar un momento flector induce deformaciones axiales obligatorias.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: NIVEL ELEMENTO (GAUSS-LOBATTO) -->
+      <div class="tab-content" id="tab-element">
+        <div class="sim-layout">
+          <!-- Controles de Elemento -->
+          <div class="controls-panel">
+            <div class="panel-section-title">
+              <span>📏 Parámetros del Elemento de Viga</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Longitud del Elemento (\(L\)):</span>
+                <span class="control-value" id="val-elem-len">4.00 m</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-elem-len" min="2.0" max="8.0" step="0.5" value="4.0">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Puntos de Integración (\(NIP\)):</span>
+                <span class="control-value" id="val-nip">5 puntos (Gauss-Lobatto)</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-nip" min="3" max="6" step="1" value="5">
+            </div>
+
+            <div class="panel-section-title" style="margin-top: 0.5rem;">
+              <span>⚡ Cargas Nocionales en Extremos (Básicas)</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Momento Inicial \(Q_1\) (Extremo 1):</span>
+                <span class="control-value" id="val-q1">120.0 kN·m</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-q1" min="-250" max="250" step="10" value="120">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Momento Final \(Q_2\) (Extremo 2):</span>
+                <span class="control-value" id="val-q2">-80.0 kN·m</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-q2" min="-250" max="250" step="10" value="-80">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Carga Axial \(Q_3 = N\):</span>
+                <span class="control-value" id="val-q3">-200 kN (Compresión)</span>
+              </div>
+              <input type="range" class="slider-input" id="slider-q3" min="-1200" max="300" step="50" value="-200">
+            </div>
+          </div>
+
+          <!-- Visualización del Elemento y Gauss-Lobatto -->
+          <div class="display-panel">
+            <div class="canvas-card">
+              <div class="canvas-header">
+                <span class="canvas-title">📍 Puntos de Control Gauss-Lobatto y Distribución de Fuerzas</span>
+                <span class="canvas-badge">Equilibrio Exacto: \(\mathbf{D}(x) = \mathbf{b}(x)\mathbf{Q}\)</span>
+              </div>
+              <div class="canvas-wrapper" style="height: 380px;">
+                <canvas id="canvas-element-gl"></canvas>
+              </div>
+              <div style="font-size: 0.76rem; color: var(--text-muted);">
+                Observe cómo Gauss-Lobatto ubica estratégicamente puntos en \(x=0\) y \(x=L\), donde los momentos flectores alcanzan sus valores extremos \(Q_1\) y \(Q_2\).
+              </div>
+            </div>
+
+            <!-- Tabla de Puntos de Gauss-Lobatto -->
+            <div class="matrix-box">
+              <div class="matrix-title">
+                <span>Pesos y Abscisas de Gauss-Lobatto (\(x_i, w_i\)) y Flexibilidad Seccional</span>
+              </div>
+              <div class="matrix-display" id="gl-points-table">
+                <!-- Se llena con JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: DBE VS FBE -->
+      <div class="tab-content" id="tab-dbe-vs-fbe">
+        <div class="canvas-card" style="margin-bottom: 1.5rem;">
+          <div class="canvas-header">
+            <span class="canvas-title">⚖️ Comparativa Clave: Elemento Basado en Fuerzas (FBE) vs. Desplazamientos (DBE)</span>
+            <span class="canvas-badge">Spacone et al. (1996)</span>
+          </div>
+          <div class="canvas-wrapper" style="height: 340px;">
+            <canvas id="canvas-dbe-fbe"></canvas>
+          </div>
+        </div>
+
+        <div class="matrix-grid">
+          <div class="matrix-box">
+            <div class="matrix-title" style="color: var(--cyan-500);">
+              <span>Displacement-Based Element (DBE)</span>
+              <span>Interpolación de Campo \(\mathbf{a}(x)\)</span>
+            </div>
+            <p class="matrix-desc">
+              • <strong>Hipótesis:</strong> Asume forma cúbica de desplazamientos (funciones hermíticas) y curvatura estrictamente lineal a lo largo del elemento.<br>
+              • <strong>Patología:</strong> En rango no lineal, la curvatura real se concentra violentamente en los extremos formando una rótula plástica. Al forzar una curvatura lineal, el DBE sobreestima masivamente la rigidez (<em>curvature locking</em>).<br>
+              • <strong>Remedio:</strong> Requiere dividir cada columna en 5 a 10 elementos finitos, disparando los grados de libertad globales.
+            </p>
+          </div>
+
+          <div class="matrix-box" style="border-color: var(--indigo-500); background: rgba(79, 70, 229, 0.05);">
+            <div class="matrix-title" style="color: var(--indigo-600);">
+              <span>Force-Based Element (FBE - Spacone 1996)</span>
+              <span>Interpolación de Fuerzas \(\mathbf{b}(x)\)</span>
+            </div>
+            <p class="matrix-desc">
+              • <strong>Hipótesis:</strong> Asume equilibrio exacto: \(\mathbf{D}(x) = \mathbf{b}(x)\mathbf{Q}\). Sin cargas distribuidas entre nudos, el diagrama de momentos flectores es matemáticamente lineal sin importar cuán inelástica sea la sección.<br>
+              • <strong>Ventaja Magistral:</strong> La no linealidad se captura libremente en la curvatura \(\mathbf{d}(x) = \mathbf{f}(x)\mathbf{D}(x)\) sin restricción cinemática espuria.<br>
+              • <strong>Eficiencia:</strong> <strong>1 solo elemento por viga o columna</strong> reproduce la respuesta no lineal exacta del miembro completo.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: ALGORITMO DE SPACONE -->
+      <div class="tab-content" id="tab-state-det">
+        <div class="stepper-card">
+          <div class="canvas-header">
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);">
+                Ciclo de Determinación de Estado Interno (Spacone 1996)
+              </h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Dado un incremento global \(\Delta \mathbf{q}\), el elemento FBE realiza subiteraciones \(j\) internas para hallar \(\mathbf{Q}_R\) y \(\mathbf{K}\) satisfaciendo equilibrio estricto y compatibilidad.
+              </p>
+            </div>
+            <div class="step-indicator" id="subiter-counter">
+              Subiteración j = 1
+            </div>
+          </div>
+
+          <div class="stepper-controls">
+            <button class="btn-action" id="btn-next-step">
+              <span>▶ Siguiente Paso del Ciclo</span>
+            </button>
+            <button class="btn-action" id="btn-converge" style="background: var(--emerald-500);">
+              <span>⚡ Iterar hasta Convergencia</span>
+            </button>
+            <button class="btn-secondary" id="btn-reset-cycle">
+              <span>↺ Reiniciar Ciclo</span>
+            </button>
+            <span style="font-size: 0.82rem; color: var(--text-muted); margin-left: auto;" id="energy-norm-text">
+              Residuo de Energía: \(1.000\)
+            </span>
+          </div>
+
+          <div class="step-explanation-box" id="step-explanation">
+            <!-- Explicación pedagógica del paso actual -->
+          </div>
+
+          <div class="canvas-card">
+            <div class="canvas-header">
+              <span class="canvas-title">🔄 Trazador de Equilibrio vs. Deformación Residual</span>
+              <span class="canvas-badge">Puntos A → B → C → D de Spacone (1996)</span>
+            </div>
+            <div class="canvas-wrapper" style="height: 320px;">
+              <canvas id="canvas-state-det"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: INSPECTOR MATRICIAL -->
+      <div class="tab-content" id="tab-inspector">
+        <div class="matrix-inspector-card">
+          <div class="canvas-header">
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);">
+                Inspector Numérico Riguroso de Matrices
+              </h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Valores numéricos exactos calculados en tiempo real según el estado actual de fibras, secciones y elemento.
+              </p>
+            </div>
+            <span class="canvas-badge">Unidades: kN, m, rad</span>
+          </div>
+
+          <div class="matrix-grid">
+            <!-- Flexibilidad Elemento F -->
+            <div class="matrix-box">
+              <div class="matrix-title">
+                <span>Matriz de Flexibilidad Básica [\(\mathbf{F}\)]\(_{3\times 3}\)</span>
+                <span class="canvas-badge">\(\mathbf{F} = \sum w_i L \mathbf{b}_i^T \mathbf{f}_i \mathbf{b}_i\)</span>
+              </div>
+              <div class="matrix-display" id="mat-f-display"></div>
+              <p class="matrix-desc">
+                Resulta de la cuadratura numérica de Gauss-Lobatto a lo largo del miembro. Representa las rotaciones y alargamientos nodales debidos a momentos unitarios.
+              </p>
+            </div>
+
+            <!-- Rigidez Básica K_basic -->
+            <div class="matrix-box">
+              <div class="matrix-title">
+                <span>Matriz de Rigidez Básica [\(\mathbf{K}_{\text{basic}}\)]\(_{3\times 3}\)</span>
+                <span class="canvas-badge">\(\mathbf{K}_{\text{basic}} = [\mathbf{F}]^{-1}\)</span>
+              </div>
+              <div class="matrix-display" id="mat-kbasic-display"></div>
+              <p class="matrix-desc">
+                Inversa directa de la matriz de flexibilidad. En el régimen elástico lineal coincide idénticamente con \(4EI/L, 2EI/L, EA/L\).
+              </p>
+            </div>
+
+            <!-- Transformación Geométrica T -->
+            <div class="matrix-box">
+              <div class="matrix-title">
+                <span>Matriz de Transformación Geométrica [\(\mathbf{T}\)]\(_{3\times 6}\)</span>
+                <span class="canvas-badge">\(\mathbf{q} = \mathbf{T} \mathbf{p}\)</span>
+              </div>
+              <div class="matrix-display" id="mat-t-display"></div>
+              <p class="matrix-desc">
+                Filtra los 3 modos de cuerpo rígido (traslación en X, Y y rotación de cuerpo rígido) y traslada desplazamientos locales a deformaciones básicas.
+              </p>
+            </div>
+
+            <!-- Rigidez Global 6x6 -->
+            <div class="matrix-box">
+              <div class="matrix-title">
+                <span>Matriz de Rigidez Local Completa [\(\mathbf{K}_{\text{local}}\)]\(_{6\times 6}\)</span>
+                <span class="canvas-badge">\(\mathbf{T}^T \mathbf{K}_{\text{basic}} \mathbf{T}\)</span>
+              </div>
+              <div class="matrix-display" id="mat-kglobal-display"></div>
+              <p class="matrix-desc">
+                Matriz simétrica de orden \(6\times 6\) con rango exacto 3. Sus 3 primeros autovalores son exactamente 0 (modos de cuerpo rígido).
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEORÍA FORMAL Y DERIVACIÓN MATEMÁTICA -->
+    <section class="theory-section" id="teoria-section">
+      <h2>Formulación Teórica Formal: Spacone, Filippou & Taucer (1996)</h2>
+      <p>
+        El modelo de viga-columna de fibras basado en flexibilidad fue desarrollado por Enrico Spacone, Filip C. Filippou y Fabio F. Taucer 
+        en la Universidad de California en Berkeley. Esta formulación revolucionó el análisis no lineal de estructuras de concreto armado 
+        al superar las severas limitaciones de los elementos finitos tradicionales basados en desplazamientos.
+      </p>
+
+      <h3>1. La Jerarquía Multiescala del Elemento de Fibras</h3>
+      <p>
+        El ensamblaje de la matriz de rigidez opera a través de tres niveles jerárquicos perfectamente acoplados:
+      </p>
+
+      <div class="theory-card">
+        <h4>Nivel 1: De Fibras a la Sección Transversal (Cinemática de Bernoulli)</h4>
+        <p>
+          Bajo la hipótesis de Euler-Bernoulli (las secciones planas permanecen planas y normales al eje neutro), la deformación longitudinal 
+          \(\varepsilon(y)\) en una fibra ubicada a distancia \(y\) del eje baricéntrico de referencia es:
+        </p>
+        <div class="theory-equation">
+          \[ \varepsilon(x, y) = \varepsilon_0(x) - y \, \kappa(x) = \mathbf{l}(y) \, \mathbf{d}(x), \quad \mathbf{l}(y) = \begin{bmatrix} -y & 1 \end{bmatrix}, \quad \mathbf{d}(x) = \begin{bmatrix} \kappa(x) \\ \varepsilon_0(x) \end{bmatrix} \]
+        </div>
+        <p>
+          A partir de la relación uniaxial de cada material, se evalúa el esfuerzo \(\sigma_{\text{fib}} = f(\varepsilon_{\text{fib}})\) y el módulo tangente \(E_{t,\text{fib}} = \frac{\partial \sigma}{\partial \varepsilon}\).
+          La integración seccional por la regla del punto medio en \(n\) fibras produce las fuerzas resistentes y la matriz de rigidez tangente:
+        </p>
+        <div class="theory-equation">
+          \[ \mathbf{D}_R(x) = \sum_{i=1}^{n} \mathbf{l}_i^T \sigma_i A_i = \begin{bmatrix} -\sum_{i=1}^n \sigma_i y_i A_i \\ \sum_{i=1}^n \sigma_i A_i \end{bmatrix} = \begin{bmatrix} M_R(x) \\ N_R(x) \end{bmatrix} \]
+        </div>
+        <div class="theory-equation">
+          \[ \mathbf{k}_{\text{sec}}(x) = \sum_{i=1}^{n} \mathbf{l}_i^T E_{t,i} \mathbf{l}_i A_i = \begin{bmatrix} \sum_{i=1}^n E_{t,i} y_i^2 A_i & -\sum_{i=1}^n E_{t,i} y_i A_i \\ -\sum_{i=1}^n E_{t,i} y_i A_i & \sum_{i=1}^n E_{t,i} A_i \end{bmatrix} = \begin{bmatrix} (EI)_{\text{tan}} & -(ES)_{\text{tan}} \\ -(ES)_{\text{tan}} & (EA)_{\text{tan}} \end{bmatrix} \]
+        </div>
+        <p>
+          Invertir la rigidez seccional produce la matriz de <strong>flexibilidad seccional</strong>: \(\mathbf{f}_{\text{sec}}(x) = [\mathbf{k}_{\text{sec}}(x)]^{-1}\).
+        </p>
+      </div>
+
+      <div class="theory-card">
+        <h4>Nivel 2: De Secciones al Elemento Básico (Cuadratura de Gauss-Lobatto)</h4>
+        <p>
+          En el sistema básico sin modos de cuerpo rígido, el vector de fuerzas nodales es \(\mathbf{Q} = [Q_1, Q_2, Q_3]^T = [M_1, M_2, N]^T\). 
+          Las funciones de interpolación de fuerzas \(\mathbf{b}(x)\) satisfacen <em>estrictamente el equilibrio</em>:
+        </p>
+        <div class="theory-equation">
+          \[ \mathbf{D}(x) = \begin{bmatrix} M(x) \\ N(x) \end{bmatrix} = \mathbf{b}(x) \mathbf{Q}, \quad \mathbf{b}(x) = \begin{bmatrix} \frac{x}{L} - 1 & \frac{x}{L} & 0 \\ 0 & 0 & 1 \end{bmatrix} \]
+        </div>
+        <p>
+          Por el principio de los trabajos virtuales complementarios o el método mixto de dos campos de Ciampi &amp; Carlesimo (1986):
+        </p>
+        <div class="theory-equation">
+          \[ \mathbf{F} = \int_0^L \mathbf{b}^T(x) \, \mathbf{f}_{\text{sec}}(x) \, \mathbf{b}(x) \, dx \approx \sum_{i=1}^{NIP} w_i L \, \mathbf{b}^T(x_i) \, \mathbf{f}_{\text{sec}}(x_i) \, \mathbf{b}(x_i) \]
+        </div>
+        <p>
+          Una vez calculada la matriz de flexibilidad \(\mathbf{F}_{3\times 3}\), la matriz de rigidez básica del elemento se obtiene como:
+        </p>
+        <div class="theory-equation">
+          \[ \mathbf{K}_{\text{basic}} = \mathbf{F}^{-1} \]
+        </div>
+      </div>
+
+      <div class="theory-alert">
+        <strong>¿Por qué Gauss-Lobatto y no Gauss-Legendre?</strong>
+        En elementos vigas sin cargas intermedias, los momentos flectores máximos y la mayor degradación inelástica ocurren <strong>exactamente en los nudos extremos (\(x = 0\) y \(x = L\))</strong>. 
+        La cuadratura clásica de Gauss-Legendre jamás coloca puntos en los extremos, subestimando la curvatura plástica real. 
+        Gauss-Lobatto incluye obligatoriamente los bordes como puntos de integración (\(\xi = \pm 1\)), capturando con precisión milimétrica la formación de las rótulas plásticas.
+      </div>
+
+      <div class="theory-card">
+        <h4>Nivel 3: Transformación a Coordenadas Globales</h4>
+        <p>
+          Relacionando las deformaciones básicas \(\mathbf{q} = \left[ \theta_1 - \frac{\Delta v}{L}, \, \theta_2 - \frac{\Delta v}{L}, \, u_2 - u_1 \right]^T\) con los 6 grados de libertad locales \(\mathbf{p} = [u_1, v_1, \theta_1, u_2, v_2, \theta_2]^T\):
+        </p>
+        <div class="theory-equation">
+          \[ \mathbf{T}_{\text{geom}} = \begin{bmatrix} 0 & \frac{1}{L} & 1 & 0 & -\frac{1}{L} & 0 \\ 0 & \frac{1}{L} & 0 & 0 & -\frac{1}{L} & 1 \\ -1 & 0 & 0 & 1 & 0 & 0 \end{bmatrix} \]
+        </div>
+        <div class="theory-equation">
+          \[ \mathbf{K}_{\text{local}} = \mathbf{T}_{\text{geom}}^T \, \mathbf{K}_{\text{basic}} \, \mathbf{T}_{\text{geom}} \]
+        </div>
+        <p>
+          Si el elemento posee una orientación en el plano dada por el ángulo \(\alpha\), la transformación a coordenadas globales del pórtico se realiza con la matriz de rotación estándar \(\mathbf{K}_{\text{global}} = \mathbf{R}^T \mathbf{K}_{\text{local}} \mathbf{R}\).
+        </p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN DE EJEMPLO DE APLICACIÓN PRÁCTICA: COLUMNA EN VOLADIZO 2D -->
+    <section class="worked-example-section" id="ejemplo-section">
+      <div class="worked-example-header">
+        <span class="example-badge">📌 Ejemplo Práctico Resuelto Paso a Paso</span>
+        <h2 class="example-title">Cálculo y Ensamble Numérico: Columna en Voladizo 2D (Spacone et al., 1996)</h2>
+        <p class="example-desc">
+          Para consolidar la formulación matemática de flexibilidad, a continuación se presenta la deducción numérica completa y explícita 
+          para una <strong>columna de concreto armado en voladizo</strong> (\(L = 3.00\text{ m}\), sección \(300 \times 500\text{ mm}\)). 
+          Se recorre la jerarquía completa: desde la integración de fibras y las estaciones de Gauss-Lobatto, pasando por la flexibilidad 
+          \([\mathbf{F}]\), hasta la matriz de rigidez local \([\mathbf{K}_{\text{local}}]_{6\times 6}\) y la rigidez lateral final condensada en la corona.
+        </p>
+      </div>
+
+      <!-- Ficha de Datos del Problema -->
+      <div class="example-params-grid">
+        <div class="example-param-card">
+          <h5>Geometría de la Columna</h5>
+          <div class="param-val">L = 3.00 m</div>
+          <div class="param-sub">Empotramiento en Base (Nodo 1: \(x=0\)) • Corona Libre (Nodo 2: \(x=L\))</div>
+        </div>
+        <div class="example-param-card">
+          <h5>Sección Transversal</h5>
+          <div class="param-val">b = 300 mm • h = 500 mm</div>
+          <div class="param-sub">Área \(A_g = 0.15\text{ m}^2\) • Inercia \(I_g = 3.125 \times 10^{-3}\text{ m}^4\)</div>
+        </div>
+        <div class="example-param-card">
+          <h5>Materiales y Resistencia</h5>
+          <div class="param-val">f'c = 28 MPa • fy = 420 MPa</div>
+          <div class="param-sub">\(E_c = 24870\text{ MPa}\) • \(E_s = 200000\text{ MPa}\)</div>
+        </div>
+        <div class="example-param-card">
+          <h5>Refuerzo Longitudinal</h5>
+          <div class="param-val">3 #6 sup + 3 #6 inf</div>
+          <div class="param-sub">\(A_s = 852\text{ mm}^2\) por lecho en \(y = \pm 0.20\text{ m}\) (\(d' = 50\text{ mm}\))</div>
+        </div>
+      </div>
+
+      <!-- Selector de Régimen de Análisis -->
+      <div class="example-toggle-bar">
+        <button class="btn-example-case active" id="btn-case-a" onclick="switchExampleCase('a')">
+          🟢 Caso A: Régimen Elástico Lineal (Validación Analítica Exacta)
+        </button>
+        <button class="btn-example-case" id="btn-case-b" onclick="switchExampleCase('b')">
+          🔴 Caso B: Régimen No Lineal con Agrietamiento y Acoplamiento N-M en la Base
+        </button>
+      </div>
+
+      <!-- CASO A: RÉGIMEN ELÁSTICO LINEAL -->
+      <div id="example-case-a" class="example-case-wrapper">
+        <div class="example-steps-container">
+
+          <!-- PASO 1 -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge">Paso 1</span>
+              <h4>Rigidez y Flexibilidad Seccional Tangente [\(\mathbf{k}_{\text{sec}}\)] y [\(\mathbf{f}_{\text{sec}}\)]</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                En régimen elástico no agrietado con sección simétrica homogeneizada, la rigidez axial y de flexión resultan de integrar el aporte del concreto y el acero:
+              </p>
+              <div class="theory-equation">
+                \[ (EA)_{\text{tan}} = E_c A_c + E_s A_{st} \approx 4.000 \times 10^6\text{ kN} \]
+                \[ (EI)_{\text{tan}} = E_c I_c + E_s I_s \approx 8.000 \times 10^4\text{ kN}\cdot\text{m}^2 \]
+                \[ (ES)_{\text{tan}} = \sum E_{t,i} y_i A_i = 0\quad \text{(sección simétrica no agrietada)} \]
+              </div>
+              <p>
+                La matriz de rigidez seccional y su inversa directa (matriz de flexibilidad seccional) son:
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{k}_{\text{sec}} = \begin{bmatrix} (EI)_{\text{tan}} & -(ES)_{\text{tan}} \\ -(ES)_{\text{tan}} & (EA)_{\text{tan}} \end{bmatrix} = \begin{bmatrix} 80000 & 0 \\ 0 & 4000000 \end{bmatrix} \implies \mathbf{f}_{\text{sec}} = [\mathbf{k}_{\text{sec}}]^{-1} = \begin{bmatrix} 1.250 \times 10^{-5} & 0 \\ 0 & 2.500 \times 10^{-7} \end{bmatrix} \]
+              </div>
+              <div class="step-highlight-box">
+                ℹ️ <strong>Unidades físicas:</strong> La curvatura \(\kappa\) está en \(\text{rad/m}\), el momento \(M\) en \(\text{kN}\cdot\text{m}\), la deformación axial \(\varepsilon_0\) es adimensional y la carga axial \(N\) está en \(\text{kN}\).
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 2 -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge">Paso 2</span>
+              <h4>Puntos de Gauss-Lobatto (\(NIP=3\)) y Matrices de Equilibrio \(\mathbf{b}(x_i)\)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Se discretiza la columna de longitud \(L = 3.00\text{ m}\) mediante cuadratura de Gauss-Lobatto con \(NIP = 3\) estaciones:
+              </p>
+              <div class="theory-equation">
+                \[ \xi_1 = -1 \implies x_1 = 0.00\text{ m (Base)},\quad w_1 = \frac{1}{6},\quad w_1 L = 0.50\text{ m} \]
+                \[ \xi_2 = 0 \implies x_2 = 1.50\text{ m (Medio)},\quad w_2 = \frac{2}{3},\quad w_2 L = 2.00\text{ m} \]
+                \[ \xi_3 = +1 \implies x_3 = 3.00\text{ m (Corona)},\quad w_3 = \frac{1}{6},\quad w_3 L = 0.50\text{ m} \]
+              </div>
+              <p>
+                Las matrices de interpolación de fuerzas en equilibrio \(\mathbf{b}(x) = \begin{bmatrix} \frac{x}{L}-1 & \frac{x}{L} & 0 \\ 0 & 0 & 1 \end{bmatrix}\) evaluadas en cada punto son:
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{b}(x_1=0) = \begin{bmatrix} -1 & 0 & 0 \\ 0 & 0 & 1 \end{bmatrix}, \quad \mathbf{b}(x_2=1.5) = \begin{bmatrix} -0.5 & 0.5 & 0 \\ 0 & 0 & 1 \end{bmatrix}, \quad \mathbf{b}(x_3=3.0) = \begin{bmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix} \]
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 3 -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge">Paso 3</span>
+              <h4>Ensamble Numérico de la Flexibilidad Básica del Elemento [\(\mathbf{F}\)]\(_{3\times 3}\)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Se aplica la integral numérica de Spacone et al. (1996) sumando las contribuciones ponderadas \(\mathbf{F} = \sum_{i=1}^3 w_i L \, \mathbf{b}^T(x_i) \mathbf{f}_{\text{sec}}(x_i) \mathbf{b}(x_i)\):
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{F}_1 = 0.50 \begin{bmatrix} \frac{1}{EI} & 0 & 0 \\ 0 & 0 & 0 \\ 0 & 0 & \frac{1}{EA} \end{bmatrix}, \quad \mathbf{F}_2 = 2.00 \begin{bmatrix} \frac{0.25}{EI} & -\frac{0.25}{EI} & 0 \\ -\frac{0.25}{EI} & \frac{0.25}{EI} & 0 \\ 0 & 0 & \frac{1}{EA} \end{bmatrix}, \quad \mathbf{F}_3 = 0.50 \begin{bmatrix} 0 & 0 & 0 \\ 0 & \frac{1}{EI} & 0 \\ 0 & 0 & \frac{1}{EA} \end{bmatrix} \]
+              </div>
+              <p>
+                Sumando algebraicamente las tres matrices resulta la clásica matriz de flexibilidad analítica:
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{F} = \begin{bmatrix} \frac{L}{3EI} & -\frac{L}{6EI} & 0 \\ -\frac{L}{6EI} & \frac{L}{3EI} & 0 \\ 0 & 0 & \frac{L}{EA} \end{bmatrix} = \begin{bmatrix} 1.2500 \times 10^{-5} & -0.6250 \times 10^{-5} & 0 \\ -0.6250 \times 10^{-5} & 1.2500 \times 10^{-5} & 0 \\ 0 & 0 & 7.5000 \times 10^{-7} \end{bmatrix} \]
+              </div>
+              <div class="step-highlight-box">
+                🎯 <strong>Verificación Magistral:</strong> La cuadratura de Gauss-Lobatto reproduce con solo 3 puntos de manera <em>exacta e idéntica</em> la solución de resistencia de materiales: \(f_{11} = \frac{3.0}{3(80000)} = 1.25 \times 10^{-5}\) y \(f_{12} = -\frac{3.0}{6(80000)} = -6.25 \times 10^{-6}\).
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 4 -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge">Paso 4</span>
+              <h4>Inversión a la Matriz de Rigidez Básica [\(\mathbf{K}_{\text{basic}}\)]\(_{3\times 3} = [\mathbf{F}]^{-1}\)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Invirtiendo analíticamente la matriz de flexibilidad básica \([\mathbf{F}]\):
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{K}_{\text{basic}} = [\mathbf{F}]^{-1} = \begin{bmatrix} \frac{4EI}{L} & \frac{2EI}{L} & 0 \\ \frac{2EI}{L} & \frac{4EI}{L} & 0 \\ 0 & 0 & \frac{EA}{L} \end{bmatrix} = \begin{bmatrix} 106666.67 & 53333.33 & 0 \\ 53333.33 & 106666.67 & 0 \\ 0 & 0 & 1333333.33 \end{bmatrix} \]
+              </div>
+              <p>
+                Donde:
+                \(\frac{4EI}{L} = \frac{4(80000)}{3.0} = 106666.67\text{ kN}\cdot\text{m/rad}\), 
+                \(\frac{2EI}{L} = 53333.33\text{ kN}\cdot\text{m/rad}\) y 
+                \(\frac{EA}{L} = \frac{4000000}{3.0} = 1333333.33\text{ kN/m}\).
+              </p>
+            </div>
+          </div>
+
+          <!-- PASO 5 -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge">Paso 5</span>
+              <h4>Matriz de Rigidez Local Completa [\(\mathbf{K}_{\text{local}}\)]\(_{6\times 6} = \mathbf{T}_{\text{geom}}^T \mathbf{K}_{\text{basic}} \mathbf{T}_{\text{geom}}\)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Proyectando las deformaciones básicas a los 6 grados de libertad del elemento plano \(\mathbf{p} = [u_1, v_1, \theta_1, u_2, v_2, \theta_2]^T\) mediante la matriz de transformación cinemática \(\mathbf{T}_{\text{geom}}\):
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{K}_{\text{local}} = \begin{bmatrix}
+                1333333.33 & 0 & 0 & -1333333.33 & 0 & 0 \\
+                0 & 35555.56 & 53333.33 & 0 & -35555.56 & 53333.33 \\
+                0 & 53333.33 & 106666.67 & 0 & -53333.33 & 53333.33 \\
+                -1333333.33 & 0 & 0 & 1333333.33 & 0 & 0 \\
+                0 & -35555.56 & -53333.33 & 0 & 35555.56 & -53333.33 \\
+                0 & 53333.33 & 53333.33 & 0 & -53333.33 & 106666.67
+                \end{bmatrix} \]
+              </div>
+              <div class="step-highlight-box">
+                🔍 <strong>Propiedad de Equilibrio de Cuerpo Rígido:</strong> Esta matriz \(6\times 6\) es estrictamente simétrica y tiene <strong>exactamente 3 autovalores iguales a cero</strong> (\(\lambda_1 = \lambda_2 = \lambda_3 = 0\)). Esto certifica que el elemento puede desplazarse como cuerpo rígido sin generar fuerzas espurias.
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 6 -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge">Paso 6</span>
+              <h4>Aplicación de Condiciones de Apoyo (Empotramiento en Base)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Para la columna en voladizo, la base está empotrada en el Nodo 1: \(u_1 = 0\), \(v_1 = 0\), \(\theta_1 = 0\).
+                Eliminando las filas y columnas 1, 2 y 3 correspondientes a los grados de libertad restringidos, la relación fuerza-desplazamiento en la corona libre (Nodo 2) se reduce a la submatriz \(3\times 3\):
+              </p>
+              <div class="theory-equation">
+                \[ \begin{bmatrix} P_2 \\ V_2 \\ M_2 \end{bmatrix} = \begin{bmatrix}
+                1333333.33 & 0 & 0 \\
+                0 & 35555.56 & -53333.33 \\
+                0 & -53333.33 & 106666.67
+                \end{bmatrix} \begin{bmatrix} u_2 \\ v_2 \\ \theta_2 \end{bmatrix} \]
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 7 -->
+          <div class="example-step-card" style="border-color: var(--emerald-500); background: rgba(16, 185, 129, 0.03);">
+            <div class="step-card-header">
+              <span class="step-badge" style="background: var(--emerald-600);">Paso 7</span>
+              <h4 style="color: var(--emerald-600);">Condensación Estática y Matriz de Rigidez Lateral Final del Voladizo</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Cuando se aplica una fuerza sísmica lateral \(V_2\) en la corona sin momento flector externo concentrado (\(M_2 = 0\)), la rotación \(\theta_2\) queda libre para acomodarse según la tercera ecuación:
+              </p>
+              <div class="theory-equation">
+                \[ M_2 = 0 \implies -53333.33 \, v_2 + 106666.67 \, \theta_2 = 0 \implies \theta_2 = \frac{53333.33}{106666.67} v_2 = 0.50 \, v_2 = \frac{3}{2L} v_2 \]
+              </div>
+              <p>
+                Sustituyendo \(\theta_2\) en la ecuación del cortante lateral \(V_2\):
+              </p>
+              <div class="theory-equation">
+                \[ V_2 = 35555.56 \, v_2 - 53333.33 \, (0.50 \, v_2) = (35555.56 - 26666.67) \, v_2 = 8888.89 \, v_2 \]
+              </div>
+              <div class="theory-equation" style="border-left-color: var(--emerald-500); background: var(--bg-card);">
+                \[ \mathbf{K}_{\text{lateral, voladizo}} = \frac{V_2}{v_2} = \mathbf{8888.89\text{ kN/m} = 8.889\text{ kN/mm}} \]
+              </div>
+              <div class="step-highlight-box" style="border-left-color: var(--emerald-500);">
+                🎉 <strong>Cierre y Demostración Teórica Exacta:</strong>
+                \[ K_{\text{voladizo, analítica}} = \frac{3EI}{L^3} = \frac{3(80000\text{ kN}\cdot\text{m}^2)}{(3.0\text{ m})^3} = \frac{240000}{27} = \mathbf{8888.89\text{ kN/m} = 8.889\text{ kN/mm}} \]
+                ¡El elemento de fibras basado en flexibilidad reproduce analítica y numéricamente la rigidez exacta del voladizo con absoluta fidelidad!
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CASO B: RÉGIMEN NO LINEAL CON AGRIETAMIENTO -->
+      <div id="example-case-b" class="example-case-wrapper" style="display: none;">
+        <div class="example-steps-container">
+
+          <!-- PASO 1 CASO B -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge" style="background: var(--rose-500);">Paso 1</span>
+              <h4>Rigideces Seccionales Degradadas a lo Largo de la Columna</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Bajo carga lateral en voladizo, el momento es máximo en la base empotrada y decrece linealmente hacia la corona (\(M(x) = V(L-x)\)). 
+                Las fibras de concreto a tracción se agrietan severamente en la base, mientras que la corona permanece elástica:
+              </p>
+              <ul>
+                <li><strong>Estación 1 (Base, \(x_1 = 0.00\text{ m}\)):</strong> Gran agrietamiento. \((EI)_1 = 36000\text{ kN}\cdot\text{m}^2\) (degradación del \(55\%\)), surge acoplamiento \((ES)_1 = 18000\text{ kN}\cdot\text{m}\), y \((EA)_1 = 2800000\text{ kN}\).</li>
+                <li><strong>Estación 2 (Medio, \(x_2 = 1.50\text{ m}\)):</strong> Agrietamiento moderado. \((EI)_2 = 56000\text{ kN}\cdot\text{m}^2\), \((ES)_2 = 8000\text{ kN}\cdot\text{m}\), \((EA)_2 = 3400000\text{ kN}\).</li>
+                <li><strong>Estación 3 (Corona, \(x_3 = 3.00\text{ m}\)):</strong> Momento nulo, sin agrietar. \((EI)_3 = 80000\text{ kN}\cdot\text{m}^2\), \((ES)_3 = 0\), \((EA)_3 = 4000000\text{ kN}\).</li>
+              </ul>
+              <div class="theory-equation">
+                \[ \mathbf{k}_{\text{sec}}(x=0) = \begin{bmatrix} 36000 & -18000 \\ -18000 & 2800000 \end{bmatrix} \implies \mathbf{f}_{\text{sec}}(x=0) = \begin{bmatrix} 2.787 \times 10^{-5} & 1.791 \times 10^{-7} \\ 1.791 \times 10^{-7} & 3.583 \times 10^{-7} \end{bmatrix} \]
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 2 Y 3 CASO B -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge" style="background: var(--rose-500);">Paso 2 y 3</span>
+              <h4>Integración de Gauss-Lobatto y Matriz de Flexibilidad No Lineal [\(\mathbf{F}\)]\(_{3\times 3}\)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Al integrar \(\mathbf{F} = \sum w_i L \, \mathbf{b}_i^T \mathbf{f}_{\text{sec}}(x_i) \mathbf{b}_i\) considerando la flexibilidad variable en cada sección:
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{F} = \begin{bmatrix}
+                2.2865 \times 10^{-5} & -0.8932 \times 10^{-5} & -1.3160 \times 10^{-7} \\
+                -0.8932 \times 10^{-5} & 1.5182 \times 10^{-5} & 0.4203 \times 10^{-7} \\
+                -1.3160 \times 10^{-7} & 0.4203 \times 10^{-7} & 8.9258 \times 10^{-7}
+                \end{bmatrix} \]
+              </div>
+              <div class="step-highlight-box">
+                ⚠️ <strong>Impacto del Acoplamiento Físico:</strong> Observe que los términos \(F_{13}\) y \(F_{23}\) ya no son cero. El agrietamiento asimétrico acopla las rotaciones de los extremos con la deformación axial de la columna.
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 4 CASO B -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge" style="background: var(--rose-500);">Paso 4</span>
+              <h4>Matriz de Rigidez Básica No Lineal [\(\mathbf{K}_{\text{basic}}\)]\(_{3\times 3} = [\mathbf{F}]^{-1}\)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Invirtiendo numéricamente la matriz de flexibilidad acoplada:
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{K}_{\text{basic}} = [\mathbf{F}]^{-1} = \begin{bmatrix}
+                56825.10 & 33412.32 & 6805.09 \\
+                33412.32 & 85523.86 & 899.15 \\
+                6805.09 & 899.15 & 1121308.34
+                \end{bmatrix} \]
+              </div>
+              <p>
+                <em>Lectura estructural:</em> La rigidez a la rotación en el extremo 1 (base agrietada) colapsó de \(106666.67\) a \(56825.10\text{ kN}\cdot\text{m/rad}\) (pérdida del \(46.7\%\)), mientras que el acoplamiento axial alcanza \(6805.09\text{ kN}\).
+              </p>
+            </div>
+          </div>
+
+          <!-- PASO 5 CASO B -->
+          <div class="example-step-card">
+            <div class="step-card-header">
+              <span class="step-badge" style="background: var(--rose-500);">Paso 5</span>
+              <h4>Matriz de Rigidez Local No Lineal [\(\mathbf{K}_{\text{local}}\)]\(_{6\times 6}\)</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Efectuando el producto matricial \(\mathbf{K}_{\text{local}} = \mathbf{T}_{\text{geom}}^T \mathbf{K}_{\text{basic}} \mathbf{T}_{\text{geom}}\):
+              </p>
+              <div class="theory-equation">
+                \[ \mathbf{K}_{\text{local}} = \begin{bmatrix}
+                1121308.34 & -2568.08 & -6805.09 & -1121308.34 & 2568.08 & -899.15 \\
+                -2568.08 & 23241.51 & 30079.14 & 2568.08 & -23241.51 & 39645.39 \\
+                -6805.09 & 30079.14 & 56825.10 & 6805.09 & -30079.14 & 33412.32 \\
+                -1121308.34 & 2568.08 & 6805.09 & 1121308.34 & -2568.08 & 899.15 \\
+                2568.08 & -23241.51 & -30079.14 & -2568.08 & 23241.51 & -39645.39 \\
+                -899.15 & 39645.39 & 33412.32 & 899.15 & -39645.39 & 85523.86
+                \end{bmatrix} \]
+              </div>
+              <div class="step-highlight-box">
+                🛡️ <strong>Invarianza Cinemática:</strong> A pesar de la severa no linealidad y pérdida de simetría en la sección, \([\mathbf{K}_{\text{local}}]\) conserva con precisión milimétrica sus <strong>3 autovalores exactamente iguales a cero</strong>.
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 6 Y 7 CASO B -->
+          <div class="example-step-card" style="border-color: var(--rose-500); background: rgba(244, 63, 94, 0.03);">
+            <div class="step-card-header">
+              <span class="step-badge" style="background: var(--rose-600);">Paso 6 y 7</span>
+              <h4 style="color: var(--rose-600);">Rigidez Lateral Condensada en Régimen No Lineal</h4>
+            </div>
+            <div class="step-card-body">
+              <p>
+                Condensando la rotación libre en la corona (\(M_2 = 0\)) para los grados de libertad de la punta:
+              </p>
+              <div class="theory-equation">
+                \[ \theta_2 = \frac{39645.39}{85523.86} v_2 = 0.4635 \, v_2 \]
+                \[ V_2 = \left( 23241.51 - \frac{39645.39^2}{85523.86} \right) v_2 = (23241.51 - 18377.99) \, v_2 = 4863.52 \, v_2 \]
+              </div>
+              <div class="theory-equation" style="border-left-color: var(--rose-500); background: var(--bg-card);">
+                \[ \mathbf{K}_{\text{lateral, degradada}} = \frac{V_2}{v_2} = \mathbf{4863.52\text{ kN/m} = 4.864\text{ kN/mm}} \]
+              </div>
+              <div class="step-highlight-box" style="border-left-color: var(--rose-500);">
+                📉 <strong>Impacto Sísmico y Estructural:</strong>
+                El agrietamiento de las fibras en la base reduce la rigidez lateral del voladizo de <strong>\(8.889\text{ kN/mm}\) a \(4.864\text{ kN/mm}\)</strong> (una reducción del <strong>\(45.3\%\)</strong>). 
+                Esto incrementa el período fundamental de la estructura en un factor de \(\sqrt{8.889 / 4.864} \approx 1.35\) (\(35\%\) de alargamiento de período), desplazando la demanda sísmica en el espectro de diseño.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TABLA COMPARATIVA SÍNTESIS -->
+      <div style="margin-top: 2rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem;">
+          📊 Comparativa Síntesis: Régimen Elástico Lineal vs. Régimen No Lineal con Agrietamiento
+        </h4>
+        <table class="step-matrix-table">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Parámetro Mecánico</th>
+              <th>Caso A: Elástico Lineal</th>
+              <th>Caso B: Agrietado en Base</th>
+              <th>Variación / Efecto Físico</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Rigidez a Flexión en Base \((EI)_1\)</td>
+              <td>\(80000\text{ kN}\cdot\text{m}^2\)</td>
+              <td>\(36000\text{ kN}\cdot\text{m}^2\)</td>
+              <td style="color: var(--rose-500); font-weight: 600;">-55.0% (Pérdida de tracción del concreto)</td>
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Acoplamiento Axial-Flexión \((ES)_1\)</td>
+              <td>\(0\text{ kN}\cdot\text{m}\) (Desacoplado)</td>
+              <td>\(18000\text{ kN}\cdot\text{m}\)</td>
+              <td style="color: var(--indigo-600); font-weight: 600;">Activación de término cruzado \(N-M\)</td>
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Rigidez Básica Rotacional \(K_{11}\)</td>
+              <td>\(106666.67\text{ kN}\cdot\text{m/rad}\)</td>
+              <td>\(56825.10\text{ kN}\cdot\text{m/rad}\)</td>
+              <td style="color: var(--rose-500); font-weight: 600;">-46.7% en el apoyo empotrado</td>
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Rigidez Lateral Condensada \(K_{\text{lateral}}\)</td>
+              <td><strong>\(8.889\text{ kN/mm}\)</strong></td>
+              <td><strong>\(4.864\text{ kN/mm}\)</strong></td>
+              <td style="color: var(--rose-500); font-weight: 700;">-45.3% de rigidez lateral efectiva</td>
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Autovalores de Cuerpo Rígido en \([\mathbf{K}_{\text{local}}]\)</td>
+              <td>\(\lambda_1 = \lambda_2 = \lambda_3 = 0.000\)</td>
+              <td>\(\lambda_1 = \lambda_2 = \lambda_3 = 0.000\)</td>
+              <td style="color: var(--emerald-600); font-weight: 600;">Conservación estricta del equilibrio</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+    <section class="socratic-section" id="preguntas-section">
+      <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+        🧠 Desafíos Socráticos: Comprueba tu Comprensión Mecánica
+      </h2>
+      <p style="font-size: 0.88rem; color: var(--text-muted);">
+        Selecciona una respuesta para validar tu intuición estructural o haz clic en <em>"Ver Explicación"</em> para desplegar el análisis físico y las deducciones matemáticas completas.
+      </p>
+
+      <div class="quiz-grid">
+
+        <!-- DESAFÍO 1 -->
+        <div class="quiz-card" id="q1">
+          <span class="quiz-num">Desafío 01 • Curvature Locking</span>
+          <div class="quiz-question">
+            1. En un elemento de concreto reforzado no lineal, ¿por qué la integración directa \(\mathbf{K} = \int_0^L \mathbf{B}^T(x) \, \mathbf{k}_{\text{sec}}(x) \, \mathbf{B}(x) \, dx\) (formulación en desplazamientos DBE) conduce a graves errores de cálculo estructural?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">A) Porque la matriz de rigidez seccional \(\mathbf{k}_{\text{sec}}(x)\) se vuelve singular y no permite calcular integrales de área en las fibras.</button>
+            <button class="quiz-opt" data-correct="true">B) Porque impone curvatura lineal (funciones cúbicas); al plastificarse los extremos, la curvatura real forma un pico concentrado que el modelo no puede reproducir, rigidizando artificialmente la respuesta (<em>curvature locking</em>).</button>
+            <button class="quiz-opt" data-correct="false">C) Porque viola las ecuaciones de equilibrio de Newton en el nudo medio del elemento.</button>
+          </div>
+          <div class="quiz-card-footer">
+            <button class="btn-reveal-answer" data-target="q1">👁️ Ver Explicación Detallada</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- DESAFÍO 2 -->
+        <div class="quiz-card" id="q2">
+          <span class="quiz-num">Desafío 02 • Acoplamiento Axial-Flexión</span>
+          <div class="quiz-question">
+            2. ¿Qué significado físico e implicación numérica tiene el término fuera de la diagonal \(-(ES)_{\text{tan}} = -\sum E_{t,i} y_i A_i\) en la matriz de rigidez de la sección \([\mathbf{k}_{\text{sec}}]\)?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="true">A) Representa el primer momento de rigidez tangente; al perder simetría por agrietamiento o fluencia, se activa (\(ES_{\text{tan}} \neq 0\)), forzando a que doblar la sección induzca deformaciones axiales obligatorias.</button>
+            <button class="quiz-opt" data-correct="false">B) Es un error de truncamiento numérico que surge al usar pocas fibras y debe forzarse a cero en el resolvedor.</button>
+            <button class="quiz-opt" data-correct="false">C) Es el factor de distorsión por cortante asociado a la teoría de vigas de Timoshenko.</button>
+          </div>
+          <div class="quiz-card-footer">
+            <button class="btn-reveal-answer" data-target="q2">👁️ Ver Explicación Detallada</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- DESAFÍO 3 -->
+        <div class="quiz-card" id="q3">
+          <span class="quiz-num">Desafío 03 • Ciclo de Determinación de Estado</span>
+          <div class="quiz-question">
+            3. Si las funciones de interpolación de fuerzas \(\mathbf{b}(x)\) satisfacen rigurosamente el equilibrio en todo punto, ¿por qué el elemento FBE requiere subiteraciones internas de Spacone?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">A) Para actualizar la orientación geométrica del elemento ante grandes desplazamientos \(P-\Delta\).</button>
+            <button class="quiz-opt" data-correct="false">B) Para corregir el diagrama de momentos flectores que se desbalancea al plastificarse las fibras.</button>
+            <button class="quiz-opt" data-correct="true">C) Porque el resolvedor global impone desplazamientos nodales \(\Delta \mathbf{q}\); la integración de deformaciones de fibras produce un residuo \(\mathbf{s}\) que debe anularse para restaurar la compatibilidad en los apoyos.</button>
+          </div>
+          <div class="quiz-card-footer">
+            <button class="btn-reveal-answer" data-target="q3">👁️ Ver Explicación Detallada</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <!-- DESAFÍO 4 -->
+        <div class="quiz-card" id="q4">
+          <span class="quiz-num">Desafío 04 • Modos Rígidos y Rango Matricial</span>
+          <div class="quiz-question">
+            4. Al transformar la rigidez básica \([\mathbf{K}_{\text{basic}}]_{3\times 3}\) a coordenadas locales \([\mathbf{K}_{\text{local}}]_{6\times 6}\), ¿por qué exactamente 3 de los 6 valores propios son idénticamente cero?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="true">A) Porque corresponden a los 3 modos de cuerpo rígido en el plano (2 traslaciones y 1 rotación), los cuales mueven la barra sin deformar las fibras ni generar fuerzas restauradoras.</button>
+            <button class="quiz-opt" data-correct="false">B) Porque la formulación desprecia 3 componentes cinemáticas al asumir hipótesis de Euler-Bernoulli.</button>
+            <button class="quiz-opt" data-correct="false">C) Porque la cuadratura de Gauss-Lobatto requiere un mínimo de 6 puntos de integración para rango completo.</button>
+          </div>
+          <div class="quiz-card-footer">
+            <button class="btn-reveal-answer" data-target="q4">👁️ Ver Explicación Detallada</button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <strong style="color: var(--text-main);">Análisis No Lineal de Estructuras</strong><br>
+        <span>Prof. Orlando Arroyo • Universidad Industrial de Santander (UIS)</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="01_la_trayectoria_importa.html">Clase 01</a></li>
+        <li><a href="02_equilibrio_newton_raphson.html">Clase 02</a></li>
+        <li><a href="03_analisis_pushover.html">Clase 03</a></li>
+        <li><a href="04_rotula_plastica_asce41.html">Clase 04</a></li>
+        <li><a href="05_regularizacion_energia_fractura.html">Clase 05</a></li>
+        <li><a href="06_matriz_rigidez_elemento_fibras.html">Clase 06</a></li>
+        <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- SCRIPT DE LÓGICA NUMÉRICA Y DIBUJO EN CANVAS -->
+  <script>
+    /* ==========================================================================
+       ESTADO NUMÉRICO Y PARÁMETROS DEL SIMULADOR
+       ========================================================================== */
+    const state = {
+      // Geometría Sección
+      b: 0.30, // m (300 mm)
+      h: 0.50, // m (500 mm)
+      cover: 0.04, // m (40 mm)
+      
+      // Materiales
+      fc: 28.0, // MPa
+      fy: 420.0, // MPa
+      Es: 200000.0, // MPa
+      tensionStiff: false, // Sin tracción
+
+      // Fibras
+      numFibers: 20,
+      steelLayers: [
+        { y: 0.21, As: 0.0006, type: 'top' },    // 3 #5
+        { y: -0.21, As: 0.0006, type: 'bottom' } // 3 #5
+      ],
+
+      // Deformaciones sección
+      kappa: 0.000, // rad/m
+      eps0: 0.0000, // axial strain
+
+      // Elemento
+      L: 4.0, // m
+      nip: 5,
+      Q1: 120.0, // kNm
+      Q2: -80.0, // kNm
+      Q3: -200.0, // kN (Axial)
+
+      // Subiteraciones de Spacone
+      currentSubiter: 1,
+      maxSubiters: 5,
+      subiterHistory: [],
+      converged: false
+    };
+
+    // Puntos de Gauss-Lobatto en [-1, 1] y pesos
+    const GL_RULES = {
+      3: {
+        xi: [-1.0, 0.0, 1.0],
+        w: [1/3, 4/3, 1/3]
+      },
+      4: {
+        xi: [-1.0, -Math.sqrt(1/5), Math.sqrt(1/5), 1.0],
+        w: [1/6, 5/6, 5/6, 1/6]
+      },
+      5: {
+        xi: [-1.0, -Math.sqrt(3/7), 0.0, Math.sqrt(3/7), 1.0],
+        w: [1/10, 49/90, 32/45, 49/90, 1/10]
+      },
+      6: {
+        xi: [-1.0, -0.765055, -0.285232, 0.285232, 0.765055, 1.0],
+        w: [0.066667, 0.378475, 0.554859, 0.554859, 0.378475, 0.066667]
+      }
+    };
+
+    /* ==========================================================================
+       MODELOS CONSTITUTIVOS UNIAXIALES
+       ========================================================================== */
+    function getEc(fc) {
+      return 4700 * Math.sqrt(fc); // MPa
+    }
+
+    function concreteConstitutive(eps, fc, tensionStiff) {
+      const Ec = getEc(fc);
+      const eps0_c = -0.002;
+      const eps_u = -0.0035;
+
+      // Tracción (eps > 0)
+      if (eps > 0) {
+        if (!tensionStiff) {
+          return { sigma: 0, Et: 1.0 }; // residual suave
+        } else {
+          const f_t = 0.33 * Math.sqrt(fc); // MPa
+          const eps_cr = f_t / Ec;
+          if (eps <= eps_cr) {
+            return { sigma: Ec * eps, Et: Ec };
+          } else {
+            return { sigma: 0, Et: 1.0 };
+          }
+        }
+      }
+
+      // Compresión (eps <= 0)
+      if (eps >= eps0_c) {
+        // Parábola de Hognestad / Kent-Park
+        const ratio = eps / eps0_c;
+        const sigma = -fc * (2 * ratio - ratio * ratio);
+        const Et = (2 * fc / Math.abs(eps0_c)) * (1 - ratio);
+        return { sigma, Et: Math.max(Et, 10.0) };
+      } else if (eps >= eps_u) {
+        // Rama ablandamiento
+        const slope = (0.2 * fc - fc) / (eps_u - eps0_c);
+        const sigma = -fc + slope * (eps - eps0_c);
+        return { sigma: Math.max(sigma, -fc * 0.2), Et: 50.0 };
+      } else {
+        // Plastificación residual
+        return { sigma: -0.2 * fc, Et: 10.0 };
+      }
+    }
+
+    function steelConstitutive(eps, fy, Es) {
+      const ey = fy / Es;
+      const b = 0.015; // endurecimiento post-fluencia
+
+      if (Math.abs(eps) <= ey) {
+        return { sigma: Es * eps, Et: Es };
+      } else {
+        const sign = Math.sign(eps);
+        const sigma = sign * (fy + b * Es * (Math.abs(eps) - ey));
+        return { sigma, Et: b * Es };
+      }
+    }
+
+    /* ==========================================================================
+       INTEGRACIÓN SECCIONAL (NIVEL 1)
+       ========================================================================== */
+    function evaluateSection(kappa, eps0, fc, fy, numFibers, tensionStiff) {
+      const h = state.h;
+      const b = state.b;
+      const dy = h / numFibers;
+      const fiberArea = b * dy;
+
+      let N = 0; // kN
+      let M = 0; // kNm
+      let EA = 0; // kN
+      let ES = 0; // kN*m
+      let EI = 0; // kN*m^2
+
+      const fibers = [];
+
+      // Concreto
+      for (let i = 0; i < numFibers; i++) {
+        // y desde +h/2 (arriba) hasta -h/2 (abajo)
+        const y = (h / 2) - (i + 0.5) * dy;
+        const eps = eps0 - y * kappa;
+        const mat = concreteConstitutive(eps, fc, tensionStiff);
+
+        // Convertir MPa a kN/m^2: 1 MPa = 1000 kN/m^2
+        const sigma_kN = mat.sigma * 1000;
+        const Et_kN = mat.Et * 1000;
+        const dF = sigma_kN * fiberArea;
+
+        N += dF;
+        M += -dF * y;
+
+        EA += Et_kN * fiberArea;
+        ES += Et_kN * y * fiberArea;
+        EI += Et_kN * y * y * fiberArea;
+
+        fibers.push({
+          y,
+          eps,
+          sigma: mat.sigma,
+          Et: mat.Et,
+          type: 'concrete',
+          dF
+        });
+      }
+
+      // Acero
+      state.steelLayers.forEach(layer => {
+        const eps = eps0 - layer.y * kappa;
+        const mat = steelConstitutive(eps, fy, state.Es);
+        const sigma_kN = mat.sigma * 1000;
+        const Et_kN = mat.Et * 1000;
+        const dF = sigma_kN * layer.As;
+
+        N += dF;
+        M += -dF * layer.y;
+
+        EA += Et_kN * layer.As;
+        ES += Et_kN * layer.y * layer.As;
+        EI += Et_kN * layer.y * layer.y * layer.As;
+
+        fibers.push({
+          y: layer.y,
+          eps,
+          sigma: mat.sigma,
+          Et: mat.Et,
+          type: 'steel',
+          dF
+        });
+      });
+
+      // Matriz de rigidez seccional k_sec = [[EI, -ES], [-ES, EA]]
+      const k11 = EI;
+      const k12 = -ES;
+      const k21 = -ES;
+      const k22 = EA;
+
+      const det = k11 * k22 - k12 * k21;
+      let f11 = 1 / k11, f12 = 0, f21 = 0, f22 = 1 / k22;
+      if (Math.abs(det) > 1e-9) {
+        f11 = k22 / det;
+        f12 = -k12 / det;
+        f21 = -k21 / det;
+        f22 = k11 / det;
+      }
+
+      return {
+        N,
+        M,
+        k: [[k11, k12], [k21, k22]],
+        f: [[f11, f12], [f21, f22]],
+        fibers,
+        neutralAxisY: Math.abs(kappa) > 1e-6 ? eps0 / kappa : null
+      };
+    }
+
+    /* ==========================================================================
+       INTEGRACIÓN DEL ELEMENTO (NIVEL 2 - GAUSS-LOBATTO)
+       ========================================================================== */
+    function evaluateElement(nip, L, Q1, Q2, Q3) {
+      const gl = GL_RULES[nip];
+      const stations = [];
+
+      // Flexibilidad acumulada 3x3
+      let F = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+      ];
+
+      for (let i = 0; i < nip; i++) {
+        const xi = gl.xi[i];
+        const wi = gl.w[i];
+        const x = 0.5 * L * (1 + xi);
+        const weight = 0.5 * L * wi; // dL
+
+        // Matriz de interpolación b(x): [ [x/L - 1, x/L, 0], [0, 0, 1] ]
+        const b11 = (x / L) - 1.0;
+        const b12 = (x / L);
+        const b13 = 0.0;
+        const b21 = 0.0;
+        const b22 = 0.0;
+        const b23 = 1.0;
+
+        // Fuerzas seccionales en equilibrio estricto D(x) = b(x) * Q
+        const Mx = b11 * Q1 + b12 * Q2;
+        const Nx = Q3;
+
+        // Estimar curvatura y eps0 a partir de sección elástica/secante
+        const secRes = evaluateSection(Mx / 25000, Nx / 200000, state.fc, state.fy, state.numFibers, state.tensionStiff);
+        const f = secRes.f;
+
+        // Acumular b^T * f * b * weight
+        const bf = [
+          [b11 * f[0][0] + b21 * f[1][0], b11 * f[0][1] + b21 * f[1][1]],
+          [b12 * f[0][0] + b22 * f[1][0], b12 * f[0][1] + b22 * f[1][1]],
+          [b13 * f[0][0] + b23 * f[1][0], b13 * f[0][1] + b23 * f[1][1]]
+        ];
+
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) {
+            const b_c = (c === 0 ? [b11, b21] : (c === 1 ? [b12, b22] : [b13, b23]));
+            const val = (bf[r][0] * b_c[0] + bf[r][1] * b_c[1]) * weight;
+            F[r][c] += val;
+          }
+        }
+
+        stations.push({
+          i: i + 1,
+          xi,
+          wi,
+          x,
+          weight,
+          Mx,
+          Nx,
+          secRes
+        });
+      }
+
+      // Invertir F 3x3 para hallar K_basic
+      const K_basic = invert3x3(F);
+
+      // Matriz T_geom 3x6
+      const T_geom = [
+        [0, 1/L, 1, 0, -1/L, 0],
+        [0, 1/L, 0, 0, -1/L, 1],
+        [-1, 0, 0, 1, 0, 0]
+      ];
+
+      // K_local = T^T * K_basic * T (6x6)
+      const K_local = multiplyTtKT(T_geom, K_basic);
+
+      return {
+        stations,
+        F,
+        K_basic,
+        T_geom,
+        K_local
+      };
+    }
+
+    /* Utilidades de Álgebra Lineal 3x3 y 6x6 */
+    function invert3x3(M) {
+      const a = M[0][0], b = M[0][1], c = M[0][2];
+      const d = M[1][0], e = M[1][1], f = M[1][2];
+      const g = M[2][0], h = M[2][1], i = M[2][2];
+
+      const A = (e * i - f * h);
+      const B = -(d * i - f * g);
+      const C = (d * h - e * g);
+
+      const det = a * A + b * B + c * C;
+      if (Math.abs(det) < 1e-12) return [[0,0,0],[0,0,0],[0,0,0]];
+
+      const invdet = 1 / det;
+      return [
+        [A * invdet, (c * h - b * i) * invdet, (b * f - c * e) * invdet],
+        [B * invdet, (a * i - c * g) * invdet, (c * d - a * f) * invdet],
+        [C * invdet, (g * b - a * h) * invdet, (a * e - b * d) * invdet]
+      ];
+    }
+
+    function multiplyTtKT(T, K) {
+      const KT = [
+        [0,0,0,0,0,0],
+        [0,0,0,0,0,0],
+        [0,0,0,0,0,0]
+      ];
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 6; c++) {
+          let s = 0;
+          for (let k = 0; k < 3; k++) s += K[r][k] * T[k][c];
+          KT[r][c] = s;
+        }
+      }
+
+      const res = [];
+      for (let r = 0; r < 6; r++) {
+        res[r] = [];
+        for (let c = 0; c < 6; c++) {
+          let s = 0;
+          for (let k = 0; k < 3; k++) s += T[k][r] * KT[k][c];
+          res[r][c] = s;
+        }
+      }
+      return res;
+    }
+
+    /* ==========================================================================
+       DIBUJO EN CANVAS
+       ========================================================================== */
+    function setupCanvasHiDPI(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      return { ctx, width: rect.width, height: rect.height };
+    }
+
+    function drawSectionCanvas() {
+      const canvas = document.getElementById('canvas-section');
+      if (!canvas) return;
+      const { ctx, width, height } = setupCanvasHiDPI(canvas);
+
+      const sec = evaluateSection(state.kappa, state.eps0, state.fc, state.fy, state.numFibers, state.tensionStiff);
+      const isDark = document.body.classList.contains('dark-theme');
+
+      ctx.clearRect(0, 0, width, height);
+
+      const pad = 40;
+      const availH = height - pad * 2;
+      const scale = availH / state.h;
+      const secW = state.b * scale;
+      const secH = state.h * scale;
+      const cx = width / 2;
+      const cy = height / 2;
+
+      const x0 = cx - secW / 2;
+      const y0 = cy - secH / 2;
+
+      const dy = secH / state.numFibers;
+      sec.fibers.filter(f => f.type === 'concrete').forEach((fib, idx) => {
+        const fy = y0 + idx * dy;
+
+        let fill = isDark ? '#1e293b' : '#e2e8f0';
+        if (fib.eps > 0.0001) {
+          fill = isDark ? '#262626' : '#f8fafc';
+        } else if (fib.eps < -0.002) {
+          fill = isDark ? '#7f1d1d' : '#fecaca';
+        } else if (fib.eps < 0) {
+          const intensity = Math.min(Math.abs(fib.sigma) / state.fc, 1.0);
+          fill = isDark ? `rgba(59, 130, 246, ${0.2 + 0.6 * intensity})` : `rgba(37, 99, 235, ${0.15 + 0.5 * intensity})`;
+        }
+
+        ctx.fillStyle = fill;
+        ctx.fillRect(x0, fy, secW, dy);
+
+        ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x0, fy, secW, dy);
+      });
+
+      // Borde exterior
+      ctx.strokeStyle = isDark ? '#94a3b8' : '#475569';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x0, y0, secW, secH);
+
+      // Barras de Acero
+      state.steelLayers.forEach(layer => {
+        const yPx = cy - layer.y * scale;
+        const eps = state.eps0 - layer.y * state.kappa;
+        const isYielded = Math.abs(eps) > (state.fy / state.Es);
+
+        const barX = [x0 + 20, cx, x0 + secW - 20];
+        barX.forEach(bx => {
+          ctx.beginPath();
+          ctx.arc(bx, yPx, 7, 0, Math.PI * 2);
+          ctx.fillStyle = isYielded ? '#ef4444' : (isDark ? '#22c55e' : '#16a34a');
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+      });
+
+      // Eje Neutro
+      if (sec.neutralAxisY !== null && Math.abs(sec.neutralAxisY) <= state.h / 2) {
+        const naPx = cy - sec.neutralAxisY * scale;
+        ctx.beginPath();
+        ctx.setLineDash([6, 4]);
+        ctx.moveTo(x0 - 25, naPx);
+        ctx.lineTo(x0 + secW + 25, naPx);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = 'bold 11px Inter';
+        ctx.fillText('E.N.', x0 + secW + 8, naPx + 4);
+      }
+
+      // Cotas y dimensiones
+      ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+      ctx.font = '11px JetBrains Mono';
+      ctx.fillText(`${(state.b * 100).toFixed(0)} cm`, cx - 18, y0 + secH + 20);
+      ctx.save();
+      ctx.translate(x0 - 15, cy + 15);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(`${(state.h * 100).toFixed(0)} cm`, 0, 0);
+      ctx.restore();
+
+      const naText = sec.neutralAxisY !== null 
+        ? `Eje Neutro: y = ${(sec.neutralAxisY * 1000).toFixed(1)} mm` 
+        : `Deformación Pura (Sin E.N.)`;
+      document.getElementById('badge-na').textContent = naText;
+    }
+
+    function drawProfilesCanvas() {
+      const canvas = document.getElementById('canvas-profiles');
+      if (!canvas) return;
+      const { ctx, width, height } = setupCanvasHiDPI(canvas);
+
+      const sec = evaluateSection(state.kappa, state.eps0, state.fc, state.fy, state.numFibers, state.tensionStiff);
+      const isDark = document.body.classList.contains('dark-theme');
+
+      ctx.clearRect(0, 0, width, height);
+
+      const pad = 35;
+      const midX = width / 2;
+      const availH = height - pad * 2;
+      const scaleY = availH / state.h;
+      const cy = height / 2;
+
+      ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(midX, pad);
+      ctx.lineTo(midX, height - pad);
+      ctx.stroke();
+
+      const maxEps = 0.005;
+      const scaleEps = (midX - pad - 20) / maxEps;
+
+      ctx.beginPath();
+      const topY = cy - (state.h / 2) * scaleY;
+      const botY = cy + (state.h / 2) * scaleY;
+      const topEps = state.eps0 - (state.h / 2) * state.kappa;
+      const botEps = state.eps0 + (state.h / 2) * state.kappa;
+
+      const xTop = midX + topEps * scaleEps;
+      const xBot = midX + botEps * scaleEps;
+
+      ctx.moveTo(xTop, topY);
+      ctx.lineTo(xBot, botY);
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      const maxSigma = Math.max(state.fc, 30.0);
+      const scaleSigma = (midX - pad - 20) / maxSigma;
+
+      ctx.beginPath();
+      ctx.moveTo(midX, topY);
+      sec.fibers.filter(f => f.type === 'concrete').forEach(fib => {
+        const py = cy - fib.y * scaleY;
+        const px = midX + fib.sigma * scaleSigma;
+        ctx.lineTo(px, py);
+      });
+      ctx.lineTo(midX, botY);
+      ctx.closePath();
+      ctx.fillStyle = isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(234, 88, 12, 0.2)';
+      ctx.fill();
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.font = '11px JetBrains Mono';
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillText(`ε_sup: ${(topEps * 1000).toFixed(2)}‰`, Math.max(10, xTop - 40), topY - 8);
+      ctx.fillText(`ε_inf: ${(botEps * 1000).toFixed(2)}‰`, Math.max(10, xBot - 40), botY + 16);
+
+      ctx.fillStyle = '#ea580c';
+      ctx.fillText(`σ_sup: ${(sec.fibers[0].sigma).toFixed(1)} MPa`, midX + 15, topY + 14);
+
+      let status = 'Elástico';
+      if (Math.abs(topEps) > 0.002 || Math.abs(botEps) > 0.002) status = 'Concreto en Plastificación';
+      if (Math.abs(topEps) > 0.0035 || Math.abs(botEps) > 0.0035) status = 'Aplastamiento Extremo';
+      document.getElementById('badge-fib-status').textContent = status;
+    }
+
+    function drawElementGLCanvas() {
+      const canvas = document.getElementById('canvas-element-gl');
+      if (!canvas) return;
+      const { ctx, width, height } = setupCanvasHiDPI(canvas);
+
+      const isDark = document.body.classList.contains('dark-theme');
+      const elem = evaluateElement(state.nip, state.L, state.Q1, state.Q2, state.Q3);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const padX = 70;
+      const availW = width - padX * 2;
+      const yBeam = 100;
+      const yMom = 240;
+
+      // 1. Dibujar Viga Física
+      ctx.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
+      ctx.fillRect(padX, yBeam - 16, availW, 32);
+      ctx.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(padX, yBeam - 16, availW, 32);
+
+      drawSupport(ctx, padX, yBeam + 16, 'pin', isDark);
+      drawSupport(ctx, padX + availW, yBeam + 16, 'roller', isDark);
+
+      // Puntos de Gauss-Lobatto
+      elem.stations.forEach((st) => {
+        const px = padX + (st.x / state.L) * availW;
+
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(px, yBeam + 16);
+        ctx.lineTo(px, yMom);
+        ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(px, yBeam, 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#6366f1';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = isDark ? '#cbd5e1' : '#1e293b';
+        ctx.font = 'bold 11px Inter';
+        ctx.fillText(`IP ${st.i}`, px - 10, yBeam - 24);
+        ctx.font = '10px JetBrains Mono';
+        ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+        ctx.fillText(`w=${st.wi.toFixed(3)}`, px - 18, yBeam + 42);
+      });
+
+      // 2. Diagrama de Momento Flector
+      ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padX - 20, yMom);
+      ctx.lineTo(padX + availW + 20, yMom);
+      ctx.stroke();
+
+      const maxM = Math.max(Math.abs(state.Q1), Math.abs(state.Q2), 100);
+      const scaleM = 75 / maxM;
+
+      ctx.beginPath();
+      ctx.moveTo(padX, yMom - state.Q1 * scaleM);
+      ctx.lineTo(padX + availW, yMom - state.Q2 * scaleM);
+      ctx.strokeStyle = '#4f46e5';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.lineTo(padX + availW, yMom);
+      ctx.lineTo(padX, yMom);
+      ctx.closePath();
+      ctx.fillStyle = isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(79, 70, 229, 0.15)';
+      ctx.fill();
+
+      elem.stations.forEach(st => {
+        const px = padX + (st.x / state.L) * availW;
+        const py = yMom - st.Mx * scaleM;
+
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#4f46e5';
+        ctx.fill();
+
+        ctx.font = '10px JetBrains Mono';
+        ctx.fillStyle = isDark ? '#a5b4fc' : '#4338ca';
+        ctx.fillText(`${st.Mx.toFixed(1)}`, px - 12, py - 8);
+      });
+
+      ctx.fillStyle = isDark ? '#f1f5f9' : '#0f172a';
+      ctx.font = 'bold 12px Inter';
+      ctx.fillText('Diagrama de Momentos Flectores M(x) [kN·m]', padX, yMom + 60);
+    }
+
+    function drawSupport(ctx, x, y, type, isDark) {
+      ctx.fillStyle = isDark ? '#475569' : '#94a3b8';
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 12, y + 20);
+      ctx.lineTo(x + 12, y + 20);
+      ctx.closePath();
+      ctx.fill();
+
+      if (type === 'roller') {
+        ctx.beginPath();
+        ctx.arc(x - 6, y + 24, 3, 0, Math.PI * 2);
+        ctx.arc(x + 6, y + 24, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawDBEvsFBECanvas() {
+      const canvas = document.getElementById('canvas-dbe-fbe');
+      if (!canvas) return;
+      const { ctx, width, height } = setupCanvasHiDPI(canvas);
+
+      const isDark = document.body.classList.contains('dark-theme');
+      ctx.clearRect(0, 0, width, height);
+
+      const padX = 60;
+      const availW = width - padX * 2;
+      const midY1 = 90;
+      const midY2 = 230;
+
+      // DBE
+      ctx.fillStyle = isDark ? '#38bdf8' : '#0284c7';
+      ctx.font = 'bold 13px Inter';
+      ctx.fillText('Displacement-Based Element (DBE) - Curvatura Forzada Lineal a(x)', padX, midY1 - 40);
+
+      ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padX, midY1);
+      ctx.lineTo(padX + availW, midY1);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(padX, midY1 - 45);
+      ctx.lineTo(padX + availW, midY1 + 35);
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+      ctx.beginPath();
+      ctx.moveTo(padX, midY1);
+      ctx.quadraticCurveTo(padX + 40, midY1, padX, midY1 - 80);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ef4444';
+      ctx.font = '10px JetBrains Mono';
+      ctx.fillText('Error: Curvature Locking', padX + 50, midY1 - 25);
+
+      // FBE
+      ctx.fillStyle = isDark ? '#a5b4fc' : '#4f46e5';
+      ctx.font = 'bold 13px Inter';
+      ctx.fillText('Force-Based Element (FBE - Spacone 1996) - Equilibrio Exacto b(x) y Curvatura Libre d(x)', padX, midY2 - 40);
+
+      ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padX, midY2);
+      ctx.lineTo(padX + availW, midY2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(padX, midY2 - 80);
+      ctx.quadraticCurveTo(padX + 50, midY2 - 10, padX + availW / 2, midY2);
+      ctx.quadraticCurveTo(padX + availW - 50, midY2 + 10, padX + availW, midY2 + 55);
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(79, 70, 229, 0.15)';
+      ctx.lineTo(padX + availW, midY2);
+      ctx.lineTo(padX, midY2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#22c55e';
+      ctx.font = '11px Inter';
+      ctx.fillText('✓ Rótula Plástica Capturada con Exactitud (1 solo elemento)', padX + 60, midY2 - 50);
+    }
+
+    function drawStateDetCanvas() {
+      const canvas = document.getElementById('canvas-state-det');
+      if (!canvas) return;
+      const { ctx, width, height } = setupCanvasHiDPI(canvas);
+
+      const isDark = document.body.classList.contains('dark-theme');
+      ctx.clearRect(0, 0, width, height);
+
+      const pad = 45;
+      const midX = width / 2;
+
+      ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+      ctx.lineWidth = 1.5;
+
+      // Izquierda: Elemento
+      ctx.beginPath();
+      ctx.moveTo(pad, height - pad);
+      ctx.lineTo(midX - 25, height - pad);
+      ctx.moveTo(pad, height - pad);
+      ctx.lineTo(pad, pad);
+      ctx.stroke();
+
+      // Derecha: Sección
+      ctx.beginPath();
+      ctx.moveTo(midX + 25, height - pad);
+      ctx.lineTo(width - pad, height - pad);
+      ctx.moveTo(midX + 25, height - pad);
+      ctx.lineTo(midX + 25, pad);
+      ctx.stroke();
+
+      ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+      ctx.font = '11px JetBrains Mono';
+      ctx.fillText('Elemento: q → Q', pad + 10, pad + 15);
+      ctx.fillText('Sección: d → D', midX + 35, pad + 15);
+
+      const sX0 = midX + 25;
+      const sY0 = height - pad;
+      ctx.beginPath();
+      ctx.moveTo(sX0, sY0);
+      ctx.quadraticCurveTo(sX0 + 80, sY0 - 150, sX0 + 200, sY0 - 180);
+      ctx.strokeStyle = isDark ? '#64748b' : '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const step = state.currentSubiter;
+
+      // Punto A
+      const pA_x = pad + 40, pA_y = height - pad - 50;
+      const sA_x = sX0 + 35, sA_y = sY0 - 65;
+
+      ctx.fillStyle = '#3b82f6';
+      ctx.beginPath(); ctx.arc(pA_x, pA_y, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillText('A (j=0)', pA_x - 15, pA_y - 8);
+
+      ctx.beginPath(); ctx.arc(sA_x, sA_y, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillText('A', sA_x - 12, sA_y - 8);
+
+      if (step >= 1) {
+        const pB_x = pad + 120, pB_y = height - pad - 160;
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(pA_x, pA_y);
+        ctx.lineTo(pB_x, pB_y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(pB_x, pB_y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('B (j=1)', pB_x + 8, pB_y);
+
+        const sB_x = sX0 + 130, sB_y = sY0 - 160;
+        const sR_y = sY0 - 145;
+
+        ctx.strokeStyle = '#ef4444';
+        ctx.beginPath(); ctx.moveTo(sA_x, sA_y); ctx.lineTo(sB_x, sB_y); ctx.stroke();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(sB_x, sB_y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('D_app', sB_x + 8, sB_y);
+
+        ctx.strokeStyle = '#f59e0b';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(sB_x, sB_y); ctx.lineTo(sB_x, sR_y); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.arc(sB_x, sR_y, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('D_res', sB_x + 8, sR_y + 12);
+      }
+
+      if (step >= 2) {
+        const pC_y = height - pad - 135;
+        const pC_x = pad + 120;
+        ctx.strokeStyle = '#22c55e';
+        ctx.beginPath(); ctx.moveTo(pad + 120, height - pad - 160); ctx.lineTo(pC_x, pC_y); ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath(); ctx.arc(pC_x, pC_y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('C (j=2)', pC_x + 8, pC_y);
+      }
+
+      if (step >= 3) {
+        const pD_y = height - pad - 140;
+        const pD_x = pad + 120;
+        ctx.fillStyle = '#6366f1';
+        ctx.beginPath(); ctx.arc(pD_x, pD_y, 6, 0, Math.PI*2); ctx.fill();
+        ctx.fillText('D (Convergencia)', pD_x + 10, pD_y - 10);
+      }
+    }
+
+    /* ==========================================================================
+       ACTUALIZACIÓN DE MATRICES Y TABLAS EN DOM
+       ========================================================================== */
+    function updateMatrixDisplays() {
+      const sec = evaluateSection(state.kappa, state.eps0, state.fc, state.fy, state.numFibers, state.tensionStiff);
+      const k = sec.k;
+
+      const secHtml = `
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Curvatura (rad/m)</th>
+              <th>Axial (1)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Momento (kN·m)</th>
+              <td class="highlight-cell">${(k[0][0]).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted);">(EI)</span></td>
+              <td>${(k[0][1]).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted);">(-ES)</span></td>
+            </tr>
+            <tr>
+              <th>Axial (kN)</th>
+              <td>${(k[1][0]).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted);">(-ES)</span></td>
+              <td class="highlight-cell">${(k[1][1]).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted);">(EA)</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:0.4rem;font-size:0.75rem;color:var(--indigo-600);font-weight:600;">
+          Fuerzas resistentes: M = ${sec.M.toFixed(1)} kN·m, N = ${sec.N.toFixed(1)} kN
+        </div>
+      `;
+      document.getElementById('sec-k-display').innerHTML = secHtml;
+
+      const elem = evaluateElement(state.nip, state.L, state.Q1, state.Q2, state.Q3);
+      let glHtml = `
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Punto</th>
+              <th>Abscisa ξ</th>
+              <th>x (m)</th>
+              <th>Peso w</th>
+              <th>M(x) (kN·m)</th>
+              <th>f_11 (rad/kN·m^2)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      elem.stations.forEach(st => {
+        glHtml += `
+          <tr>
+            <th>IP ${st.i}</th>
+            <td>${st.xi.toFixed(4)}</td>
+            <td>${st.x.toFixed(2)}</td>
+            <td>${st.wi.toFixed(4)}</td>
+            <td style="font-weight:600;color:var(--indigo-600);">${st.Mx.toFixed(1)}</td>
+            <td>${(st.secRes.f[0][0] * 1e6).toFixed(2)} ×10⁻⁶</td>
+          </tr>
+        `;
+      });
+      glHtml += `</tbody></table>`;
+      document.getElementById('gl-points-table').innerHTML = glHtml;
+
+      const F = elem.F;
+      document.getElementById('mat-f-display').innerHTML = `
+        <table class="matrix-table">
+          <tbody>
+            <tr>
+              <td>${(F[0][0] * 1e6).toFixed(2)}</td>
+              <td>${(F[0][1] * 1e6).toFixed(2)}</td>
+              <td>${(F[0][2] * 1e6).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td>${(F[1][0] * 1e6).toFixed(2)}</td>
+              <td>${(F[1][1] * 1e6).toFixed(2)}</td>
+              <td>${(F[1][2] * 1e6).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td>${(F[2][0] * 1e6).toFixed(2)}</td>
+              <td>${(F[2][1] * 1e6).toFixed(2)}</td>
+              <td>${(F[2][2] * 1e6).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-align:right;">(×10⁻⁶)</div>
+      `;
+
+      const Kb = elem.K_basic;
+      document.getElementById('mat-kbasic-display').innerHTML = `
+        <table class="matrix-table">
+          <tbody>
+            <tr>
+              <td class="highlight-cell">${(Kb[0][0]).toFixed(0)}</td>
+              <td>${(Kb[0][1]).toFixed(0)}</td>
+              <td>${(Kb[0][2]).toFixed(0)}</td>
+            </tr>
+            <tr>
+              <td>${(Kb[1][0]).toFixed(0)}</td>
+              <td class="highlight-cell">${(Kb[1][1]).toFixed(0)}</td>
+              <td>${(Kb[1][2]).toFixed(0)}</td>
+            </tr>
+            <tr>
+              <td>${(Kb[2][0]).toFixed(0)}</td>
+              <td>${(Kb[2][1]).toFixed(0)}</td>
+              <td class="highlight-cell">${(Kb[2][2]).toFixed(0)}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+
+      const T = elem.T_geom;
+      document.getElementById('mat-t-display').innerHTML = `
+        <table class="matrix-table">
+          <tbody>
+            ${T.map(row => `<tr>${row.map(val => `<td>${val.toFixed(2)}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+
+      const Kg = elem.K_local;
+      document.getElementById('mat-kglobal-display').innerHTML = `
+        <table class="matrix-table" style="font-size:0.75rem;">
+          <tbody>
+            ${Kg.map(row => `<tr>${row.map(v => `<td>${Math.abs(v) < 1 ? '0' : v.toFixed(0)}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    /* ==========================================================================
+       GESTIÓN DE SUBITERACIONES DE SPACONE (TAB 4)
+       ========================================================================== */
+    const subiterStepsInfo = {
+      1: {
+        title: String.raw`Paso 1: Aplicación del Incremento de Desplazamiento (Nivel Global a Elemento)`,
+        text: String.raw`El resolvedor global calcula un incremento de desplazamiento nodal \(\Delta \mathbf{q}\). Con la rigidez tangente inicial \(\mathbf{K} = \mathbf{F}^{-1}\), el elemento estima un incremento de fuerzas \(\Delta \mathbf{Q}^{j=1} = \mathbf{K} \Delta \mathbf{q}\). A partir de la matriz de interpolación en equilibrio \(\mathbf{b}(x)\), se determinan los esfuerzos y deformaciones seccionales preliminares. Al evaluar la ley de materiales en las fibras, surge un <strong>desbalance seccional</strong> \(\mathbf{D}_U(x) = \mathbf{D}_{\text{app}}(x) - \mathbf{D}_{\text{res}}(x) \neq \mathbf{0}\).`
+      },
+      2: {
+        title: String.raw`Paso 2: Generación de Deformaciones Residuales y Violación de Compatibilidad`,
+        text: String.raw`El desbalance de fuerzas en cada sección se multiplica por la flexibilidad seccional actual: \(\mathbf{r}(x) = \mathbf{f}_{\text{sec}}(x) \mathbf{D}_U(x)\). Integrando estos errores por Gauss-Lobatto se obtiene el <strong>vector de deformaciones residuales del elemento</strong>: \(\mathbf{s} = \int_0^L \mathbf{b}^T(x) \mathbf{r}(x) \, dx\). Como \(\mathbf{s} \neq \mathbf{0}\), se viola la compatibilidad de desplazamientos impuesta en los apoyos.`
+      },
+      3: {
+        title: String.raw`Paso 3: Aplicación de Fuerzas Nocionales Correctoras (Restauración de Compatibilidad)`,
+        text: String.raw`Para anular el error residual \(\mathbf{s}\), se aplican fuerzas correctoras en los extremos: \(\Delta \mathbf{Q}^{j=2} = -\mathbf{K} \mathbf{s}\). Esto propaga correcciones de deformación seccional \(\Delta \mathbf{d}(x) = \mathbf{r}(x) + \mathbf{f}_{\text{sec}} \mathbf{b} \Delta \mathbf{Q}\). Durante este proceso, <strong>el desplazamiento del elemento \(\mathbf{q}\) permanece estrictamente constante</strong> mientras las fuerzas se redistribuyen en equilibrio exacto.`
+      },
+      4: {
+        title: String.raw`Paso 4: Verificación de Criterio de Energía y Convergencia`,
+        text: String.raw`Se verifica el trabajo de las fuerzas residuales mediante el criterio de convergencia de energía de Spacone: \(\frac{\mathbf{s}^T \mathbf{K} \mathbf{s}}{\Delta \mathbf{q}^T \mathbf{K}_0 \Delta \mathbf{q}} < 10^{-6}\). El proceso converge habitualmente en 2 a 4 subiteraciones, garantizando que el elemento satisfaga simultáneamente el equilibrio estricto, la compatibilidad nodal y las leyes constitutivas no lineales de las fibras.`
+      }
+    };
+
+    function updateSubiterUI() {
+      const info = subiterStepsInfo[state.currentSubiter] || subiterStepsInfo[4];
+      document.getElementById('subiter-counter').textContent = `Subiteración j = ${state.currentSubiter}`;
+      const stepElem = document.getElementById('step-explanation');
+      stepElem.innerHTML = `
+        <strong style="color:var(--indigo-600);font-size:0.95rem;display:block;margin-bottom:0.3rem;">${info.title}</strong>
+        ${info.text}
+      `;
+
+      const energies = [1.000, 0.185, 0.008, 0.00002];
+      const eVal = energies[state.currentSubiter - 1] || 0.00000;
+      document.getElementById('energy-norm-text').textContent = `Residuo de Energía: ${eVal.toFixed(5)}`;
+
+      initKaTeX(stepElem);
+
+      drawStateDetCanvas();
+    }
+
+    /* ==========================================================================
+       DATOS Y GESTIÓN DEL QUIZ SOCRÁTICO
+       ========================================================================== */
+    const socraticFeedbackData = {
+      'q1': {
+        correctText: String.raw`¡Excelente deducción mecánica! En la formulación basada en desplazamientos (DBE), asumir funciones hermíticas cúbicas impone una curvatura estrictamente lineal a lo largo de la barra. Cuando el acero fluye o el concreto se agrieta en los extremos, la curvatura física real forma un pico exponencial concentrado (rótula plástica). La rigidez lineal impuesta es incapaz de adaptarse a ese gradiente abrupto, produciendo el fenómeno patológico de <em>bloqueo de curvatura</em> (<em>curvature locking</em>). Para mitigar este error se requeriría subdividir la columna en 5 a 10 subelementos, mientras que con la formulación de flexibilidad (FBE de Spacone) <strong>1 solo elemento</strong> resuelve la respuesta exacta con funciones de equilibrio \(\mathbf{b}(x)\).`,
+        wrongText: String.raw`Respuesta incorrecta. La causa fundamental no es la singularidad matemática seccional ni las fuerzas nodales de Newton, sino la restricción cinemática impuesta en la curvatura (DBE). Al forzar una curvatura lineal en todo el miembro, el modelo es incapaz de reproducir el pico plástico concentrado en los apoyos, sobreestimando artificialmente la rigidez estructural (<em>curvature locking</em>).`
+      },
+      'q2': {
+        correctText: String.raw`¡Brillante deducción física! En una sección elástica homogénea y simétrica, \(ES_{\text{tan}} = \int E y \, dA = 0\) porque el eje neutro coincide con el centroide geométrico. Sin embargo, en cuanto el concreto a tracción se agrieta o el acero fluye asimétricamente, el módulo tangente \(E_t\) colapsa en la zona traccionada mientras permanece elevado en el núcleo comprimido. Esta asimetría de rigidez hace que \(ES_{\text{tan}} \neq 0\), acoplando ambos campos: al flectar la sección, el eje neutro migra obligatoriamente hacia el borde comprimido, induciendo alargamientos axiales espontáneos (crecimiento axial o <em>beam elongation</em>) sin que exista carga axial aplicada.`,
+        wrongText: String.raw`Respuesta incorrecta. No se trata de un error numérico ni de cortante de Timoshenko. Es una propiedad constitutiva fundamental: el primer momento del módulo de rigidez tangente. Representa el acoplamiento axial-flexión \(N-M\) inducido por la pérdida de simetría tensional en secciones fisuradas o plastificadas.`
+      },
+      'q3': {
+        correctText: String.raw`¡Respuesta impecable! Los programas de análisis no lineal resuelven la estructura global imponiendo desplazamientos nodales \(\Delta \mathbf{q}\). Al ingresar a un elemento FBE, no existen funciones de forma de desplazamiento para interpolar deformaciones internas directamente. El elemento debe estimar fuerzas \(\Delta \mathbf{Q} = \mathbf{F}^{-1}\Delta \mathbf{q}\), evaluar las fibras y verificar si la integral de deformaciones \(\int_0^L \mathbf{b}^T(x) \mathbf{d}(x) \, dx\) coincide con \(\mathbf{q}\). La diferencia es el vector de deformaciones residuales \(\mathbf{s}\). Las subiteraciones de Spacone aplican fuerzas correctoras ficticias \(-\mathbf{K}\mathbf{s}\) manteniendo estrictamente fijos los nudos hasta anular el error y satisfacer la compatibilidad sin violar el equilibrio.`,
+        wrongText: String.raw`Respuesta incorrecta. En la formulación FBE el equilibrio de fuerzas \(\mathbf{D}(x) = \mathbf{b}(x)\mathbf{Q}\) se cumple rigurosamente en todo momento. La necesidad del algoritmo iterativo radica en la <strong>compatibilidad cinemática</strong>: conciliar las deformaciones no lineales libres de las secciones con los desplazamientos impuestos en los nudos por el análisis global.`
+      },
+      'q4': {
+        correctText: String.raw`¡Totalmente correcto! Un elemento viga plano en el espacio 2D posee 6 grados de libertad nodales (3 por cada extremo), pero 3 de ellos corresponden a movimientos rígidos del cuerpo (traslación horizontal pura, traslación vertical pura y rotación de cuerpo rígido). Dado que el desplazamiento de cuerpo rígido no genera alargamientos ni curvaturas en las fibras, no opone ninguna rigidez ni almacena energía elástica. Por ello, la matriz de rigidez local \([\mathbf{K}_{\text{local}}]_{6\times 6}\) tiene rango matemático 3 y exactamente 3 valores propios iguales a cero. La matriz básica \([\mathbf{K}_{\text{basic}}]_{3\times 3}\) es de rango completo porque fue formulada tras remover esos 3 modos rígidos.`,
+        wrongText: String.raw`Respuesta incorrecta. Los 3 valores propios nulos no representan un error ni la ausencia del efecto Poisson, sino un principio básico de la mecánica: los 3 modos de cuerpo rígido desplazan la barra sin generar deformaciones mecánicas en las fibras y, por ende, tienen rigidez nula.`
+      }
+    };
+
+    function initSocraticQuiz() {
+      document.querySelectorAll('.quiz-card').forEach(card => {
+        const qId = card.id;
+        const options = card.querySelectorAll('.quiz-opt');
+        const feedback = card.querySelector('.quiz-feedback');
+        const revealBtn = card.querySelector('.btn-reveal-answer');
+        const data = socraticFeedbackData[qId];
+        if (!data) return;
+
+        options.forEach(opt => {
+          opt.addEventListener('click', () => {
+            const isCorrect = opt.getAttribute('data-correct') === 'true';
+
+            options.forEach(o => {
+              o.disabled = true;
+              o.style.cursor = 'default';
+              if (o.getAttribute('data-correct') === 'true') {
+                o.classList.add('correct');
+              }
+            });
+
+            if (isCorrect) {
+              opt.classList.add('correct');
+              feedback.className = 'quiz-feedback show-correct';
+              feedback.innerHTML = `<strong>✓ ¡Excelente deducción!</strong><br>${data.correctText}`;
+            } else {
+              opt.classList.add('wrong');
+              feedback.className = 'quiz-feedback show-wrong';
+              feedback.innerHTML = `<strong>✗ Respuesta incorrecta.</strong><br>${data.wrongText}`;
+            }
+
+            initKaTeX(feedback);
+          });
+        });
+
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            options.forEach(o => {
+              if (o.getAttribute('data-correct') === 'true') {
+                o.classList.add('correct');
+              }
+            });
+            feedback.className = 'quiz-feedback show-info';
+            feedback.innerHTML = `<strong>💡 Explicación Técnica y Mecánica:</strong><br>${data.correctText}`;
+            initKaTeX(feedback);
+          });
+        }
+      });
+    }
+
+    /* ==========================================================================
+       LISTENERS DE EVENTOS Y CONTROLES
+       ========================================================================== */
+    function initListeners() {
+      // Pestañas
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+          btn.classList.add('active');
+          const target = btn.getAttribute('data-tab');
+          const targetEl = document.getElementById(target);
+          targetEl.classList.add('active');
+
+          setTimeout(() => {
+            drawSectionCanvas();
+            drawProfilesCanvas();
+            drawElementGLCanvas();
+            drawDBEvsFBECanvas();
+            drawStateDetCanvas();
+            initKaTeX(targetEl);
+          }, 50);
+        });
+      });
+
+      // Sliders sección
+      const sCurv = document.getElementById('slider-curv');
+      sCurv.addEventListener('input', (e) => {
+        state.kappa = parseFloat(e.target.value);
+        document.getElementById('val-curv').textContent = `${state.kappa.toFixed(3)} rad/m`;
+        refreshAll();
+      });
+
+      const sEps0 = document.getElementById('slider-eps0');
+      sEps0.addEventListener('input', (e) => {
+        state.eps0 = parseFloat(e.target.value);
+        document.getElementById('val-eps0').textContent = state.eps0.toFixed(5);
+        refreshAll();
+      });
+
+      const sFc = document.getElementById('slider-fc');
+      sFc.addEventListener('input', (e) => {
+        state.fc = parseFloat(e.target.value);
+        document.getElementById('val-fc').textContent = `${state.fc.toFixed(0)} MPa`;
+        refreshAll();
+      });
+
+      const sNfib = document.getElementById('slider-nfib');
+      sNfib.addEventListener('input', (e) => {
+        state.numFibers = parseInt(e.target.value, 10);
+        document.getElementById('val-nfib').textContent = `${state.numFibers} capas`;
+        refreshAll();
+      });
+
+      const selTension = document.getElementById('select-tension');
+      selTension.addEventListener('change', (e) => {
+        state.tensionStiff = (e.target.value === 'tension-stiff');
+        refreshAll();
+      });
+
+      // Sliders elemento
+      const sLen = document.getElementById('slider-elem-len');
+      sLen.addEventListener('input', (e) => {
+        state.L = parseFloat(e.target.value);
+        document.getElementById('val-elem-len').textContent = `${state.L.toFixed(2)} m`;
+        refreshAll();
+      });
+
+      const sNip = document.getElementById('slider-nip');
+      sNip.addEventListener('input', (e) => {
+        state.nip = parseInt(e.target.value, 10);
+        document.getElementById('val-nip').textContent = `${state.nip} puntos (Gauss-Lobatto)`;
+        refreshAll();
+      });
+
+      const sQ1 = document.getElementById('slider-q1');
+      sQ1.addEventListener('input', (e) => {
+        state.Q1 = parseFloat(e.target.value);
+        document.getElementById('val-q1').textContent = `${state.Q1.toFixed(1)} kN·m`;
+        refreshAll();
+      });
+
+      const sQ2 = document.getElementById('slider-q2');
+      sQ2.addEventListener('input', (e) => {
+        state.Q2 = parseFloat(e.target.value);
+        document.getElementById('val-q2').textContent = `${state.Q2.toFixed(1)} kN·m`;
+        refreshAll();
+      });
+
+      const sQ3 = document.getElementById('slider-q3');
+      sQ3.addEventListener('input', (e) => {
+        state.Q3 = parseFloat(e.target.value);
+        document.getElementById('val-q3').textContent = `${state.Q3.toFixed(0)} kN`;
+        refreshAll();
+      });
+
+      // Presets
+      document.getElementById('preset-elastic').addEventListener('click', () => {
+        setPreset('elastic');
+      });
+      document.getElementById('preset-cracking').addEventListener('click', () => {
+        setPreset('cracking');
+      });
+      document.getElementById('preset-yielding').addEventListener('click', () => {
+        setPreset('yielding');
+      });
+      document.getElementById('preset-axial-flexure').addEventListener('click', () => {
+        setPreset('axial-flexure');
+      });
+
+      // Botones Subiteraciones
+      document.getElementById('btn-next-step').addEventListener('click', () => {
+        if (state.currentSubiter < 4) {
+          state.currentSubiter++;
+        } else {
+          state.currentSubiter = 1;
+        }
+        updateSubiterUI();
+      });
+
+      document.getElementById('btn-converge').addEventListener('click', () => {
+        state.currentSubiter = 4;
+        updateSubiterUI();
+      });
+
+      document.getElementById('btn-reset-cycle').addEventListener('click', () => {
+        state.currentSubiter = 1;
+        updateSubiterUI();
+      });
+
+      // Desafíos Socráticos y Quiz Interactivo
+      initSocraticQuiz();
+
+      // Tema Claro / Oscuro
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
+        document.getElementById('theme-label').textContent = isDark ? 'Claro' : 'Oscuro';
+        localStorage.setItem('nl_theme_fibers', isDark ? 'dark' : 'light');
+        refreshAll();
+      });
+
+      // Redimensionamiento
+      window.addEventListener('resize', () => {
+        refreshAll();
+      });
+    }
+
+    function setPreset(type) {
+      document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById(`preset-${type}`);
+      if (btn) btn.classList.add('active');
+
+      if (type === 'elastic') {
+        state.kappa = 0.000;
+        state.eps0 = 0.0000;
+        state.tensionStiff = true;
+        state.Q1 = 40.0;
+        state.Q2 = -40.0;
+        state.Q3 = 0.0;
+      } else if (type === 'cracking') {
+        state.kappa = 0.012;
+        state.eps0 = 0.0002;
+        state.tensionStiff = false;
+        state.Q1 = 95.0;
+        state.Q2 = -60.0;
+        state.Q3 = -50.0;
+      } else if (type === 'yielding') {
+        state.kappa = 0.038;
+        state.eps0 = 0.0005;
+        state.tensionStiff = false;
+        state.Q1 = 180.0;
+        state.Q2 = -150.0;
+        state.Q3 = -100.0;
+      } else if (type === 'axial-flexure') {
+        state.kappa = 0.025;
+        state.eps0 = -0.0018;
+        state.tensionStiff = false;
+        state.Q1 = 140.0;
+        state.Q2 = -90.0;
+        state.Q3 = -650.0;
+      }
+
+      document.getElementById('slider-curv').value = state.kappa;
+      document.getElementById('val-curv').textContent = `${state.kappa.toFixed(3)} rad/m`;
+      document.getElementById('slider-eps0').value = state.eps0;
+      document.getElementById('val-eps0').textContent = state.eps0.toFixed(5);
+      document.getElementById('slider-q1').value = state.Q1;
+      document.getElementById('val-q1').textContent = `${state.Q1.toFixed(1)} kN·m`;
+      document.getElementById('slider-q2').value = state.Q2;
+      document.getElementById('val-q2').textContent = `${state.Q2.toFixed(1)} kN·m`;
+      document.getElementById('slider-q3').value = state.Q3;
+      document.getElementById('val-q3').textContent = `${state.Q3.toFixed(0)} kN`;
+      document.getElementById('select-tension').value = state.tensionStiff ? 'tension-stiff' : 'cracked';
+
+      refreshAll();
+    }
+
+    function refreshAll() {
+      drawSectionCanvas();
+      drawProfilesCanvas();
+      drawElementGLCanvas();
+      drawDBEvsFBECanvas();
+      drawStateDetCanvas();
+      updateMatrixDisplays();
+    }
+
+    /* ==========================================================================
+       SELECTOR DE CASOS EN EL EJEMPLO RESUELTO (COLUMNA EN VOLADIZO)
+       ========================================================================== */
+    function switchExampleCase(caseId) {
+      const caseA = document.getElementById('example-case-a');
+      const caseB = document.getElementById('example-case-b');
+      const btnA = document.getElementById('btn-case-a');
+      const btnB = document.getElementById('btn-case-b');
+      if (!caseA || !caseB || !btnA || !btnB) return;
+
+      if (caseId === 'a') {
+        caseA.style.display = 'block';
+        caseB.style.display = 'none';
+        btnA.classList.add('active');
+        btnB.classList.remove('active');
+        initKaTeX(caseA);
+      } else {
+        caseA.style.display = 'none';
+        caseB.style.display = 'block';
+        btnA.classList.remove('active');
+        btnB.classList.add('active');
+        initKaTeX(caseB);
+      }
+    }
+
+    /* ==========================================================================
+       INICIALIZADOR ROBUSTO DE KATEX
+       ========================================================================== */
+    function initKaTeX(root = document.body) {
+      if (typeof window !== 'undefined' && typeof window.renderMathInElement === 'function') {
+        try {
+          window.renderMathInElement(root, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+          return true;
+        } catch (e) {
+          console.warn('KaTeX auto-render error:', e);
+        }
+      }
+      return false;
+    }
+
+    /* ==========================================================================
+       INICIALIZACIÓN
+       ========================================================================== */
+    let isAppInitialized = false;
+    function startLaboratory() {
+      if (isAppInitialized) return;
+      isAppInitialized = true;
+
+      const savedTheme = localStorage.getItem('nl_theme_fibers');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.getElementById('theme-label').textContent = 'Claro';
+      }
+
+      initListeners();
+      updateSubiterUI();
+      refreshAll();
+      initKaTeX();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startLaboratory);
+    } else {
+      startLaboratory();
+    }
+
+    window.addEventListener('load', () => {
+      startLaboratory();
+      setTimeout(initKaTeX, 200);
+    });
+
+    // Sondeo de respaldo para KaTeX en caso de latencia de red desde CDN
+    let katexPollCount = 0;
+    const katexPollTimer = setInterval(() => {
+      katexPollCount++;
+      if (typeof window !== 'undefined' && window.renderMathInElement) {
+        initKaTeX();
+        clearInterval(katexPollTimer);
+      } else if (katexPollCount > 30) {
+        clearInterval(katexPollTimer);
+      }
+    }, 120);
+  </script>
+</body>
+</html>

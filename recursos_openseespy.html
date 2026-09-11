@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursos y Ecosistema OpenSeesPy | Análisis No Lineal de Estructuras</title>
+  <meta name="description" content="Centro de recursos, tutoriales, videotutoriales exclusivos y la librería científica opseestools para OpenSeesPy. Prof. Orlando Arroyo, Universidad Industrial de Santander.">
+
+  <!-- Tipografías modernas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES Y PALETA DE DISEÑO (MODO CLARO POR DEFECTO / MODO OSCURO)
+       ========================================================================== */
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #0284c7;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --hero-bg: radial-gradient(circle at 50% 0%, #e0f2fe 0%, #f8fafc 70%);
+      --hero-title-gradient: linear-gradient(135deg, #0f172a 20%, #0369a1 60%, #4338ca 100%);
+
+      /* Colores temáticos Python / OpenSees / YouTube */
+      --py-blue: #38761d;
+      --py-yellow: #eab308;
+      --brand-primary: #0284c7;
+      --brand-secondary: #4f46e5;
+      --yt-red: #ef4444;
+      --accent-green: #059669;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.06);
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: #1e293b;
+      --bg-card-hover: #27354f;
+      --border-subtle: #334155;
+      --border-accent: #38bdf8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(17, 24, 39, 0.92);
+      --hero-bg: radial-gradient(circle at 50% 0%, #082f49 0%, #0a0e17 75%);
+      --hero-title-gradient: linear-gradient(135deg, #ffffff 20%, #38bdf8 70%, #818cf8 100%);
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.25s ease, color 0.25s ease;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ENCABEZADO STICKY */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.75rem 1.5rem;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .header-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 800;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-text {
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    .nav-btn.active {
+      background: rgba(2, 132, 199, 0.12);
+      color: var(--brand-primary);
+      border-color: rgba(2, 132, 199, 0.3);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.42rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-icon:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 3rem 1.5rem 2.25rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.3rem 0.85rem;
+      border-radius: 9999px;
+      background: rgba(2, 132, 199, 0.12);
+      color: var(--brand-primary);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      max-width: 840px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.65rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-nav-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .hero-nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      text-decoration: none;
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-nav-link:hover {
+      background: rgba(2, 132, 199, 0.1);
+      border-color: var(--brand-primary);
+      color: var(--brand-primary);
+      transform: translateY(-1px);
+    }
+
+    /* MAIN CONTENT */
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 3.5rem;
+    }
+
+    .section-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(2, 132, 199, 0.12);
+      color: var(--brand-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .section-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      max-width: 900px;
+      line-height: 1.6;
+    }
+
+    /* PILAR 1: REPOSITORIO DE TUTORIALES BÁSICOS */
+    .tutorial-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+    }
+
+    .tutorial-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #0284c7, #10b981);
+    }
+
+    .card-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .tutorial-intro h3 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+
+    .tutorial-intro p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 1.25rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.84rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .feature-pill span.icon {
+      font-size: 1.1rem;
+    }
+
+    .terminal-box {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      border: 1px solid #334155;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .terminal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #1e293b;
+      color: #94a3b8;
+      font-size: 0.75rem;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #475569;
+    }
+    .terminal-dot.red { background: #ef4444; }
+    .terminal-dot.yellow { background: #eab308; }
+    .terminal-dot.green { background: #10b981; }
+
+    .terminal-code {
+      line-height: 1.7;
+      color: #38bdf8;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .terminal-comment {
+      color: #64748b;
+    }
+
+    .btn-copy {
+      align-self: flex-end;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-copy:hover {
+      background: #334155;
+      color: #38bdf8;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      padding: 0.75rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+      background: linear-gradient(135deg, #0369a1, #075985);
+    }
+
+    /* PILAR 2: VIDEOTUTORIALES Y REPRODUCTOR INTERACTIVO */
+    .video-hub-grid {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 1.75rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .player-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .video-frame-wrap {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .video-frame-wrap iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .player-details {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .player-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .player-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .playlist-column {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 620px;
+      overflow-y: auto;
+      padding-right: 0.35rem;
+    }
+
+    .playlist-column::-webkit-scrollbar {
+      width: 6px;
+    }
+    .playlist-column::-webkit-scrollbar-track {
+      background: var(--bg-card);
+      border-radius: 4px;
+    }
+    .playlist-column::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    .video-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .video-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateX(3px);
+    }
+
+    .video-item.active {
+      border-color: var(--brand-primary);
+      background: rgba(2, 132, 199, 0.1);
+      box-shadow: inset 3px 0 0 var(--brand-primary);
+    }
+
+    .video-number {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .video-item.active .video-number {
+      background: var(--brand-primary);
+      color: #fff;
+      border-color: var(--brand-primary);
+    }
+
+    .video-item-info {
+      flex: 1;
+    }
+
+    .video-item-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+      line-height: 1.35;
+    }
+
+    .video-item-meta {
+      font-size: 0.76rem;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .video-play-indicator {
+      color: var(--yt-red);
+      font-size: 1.1rem;
+    }
+
+    /* PILAR 3: OPSEESTOOLS Y PUBLICACIÓN */
+    .opseestools-container {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 2rem;
+    }
+
+    .opseestools-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .opseestools-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5, #0284c7);
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+    }
+
+    .module-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.85rem;
+    }
+
+    .module-name {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--brand-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .module-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* TARJETA DE PUBLICACIÓN (SCIENTIFIC PAPER) */
+    .paper-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .paper-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ea580c, #eab308);
+    }
+
+    .journal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(234, 88, 12, 0.12);
+      color: #ea580c;
+      margin-bottom: 0.75rem;
+    }
+
+    .paper-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+    }
+
+    .paper-authors {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .paper-meta {
+      font-size: 0.82rem;
+      color: var(--text-faint);
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    .citation-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 2.5rem 1.5rem;
+      margin-top: auto;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--brand-primary);
+    }
+
+    @media (max-width: 900px) {
+      .tutorial-card,
+      .video-hub-grid,
+      .opseestools-container {
+        grid-template-columns: 1fr;
+      }
+      .features-grid,
+      .modules-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado Sticky -->
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">🐍</div>
+        <div>
+          <span class="brand-text">Análisis No Lineal</span>
+          <span class="brand-sub">Ecosistema & Recursos OpenSeesPy</span>
+        </div>
+      </a>
+      
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-btn">← Portal</a></li>
+        <li><a href="01_la_trayectoria_importa.html" class="nav-btn">01</a></li>
+        <li><a href="02_equilibrio_newton_raphson.html" class="nav-btn">02</a></li>
+        <li><a href="03_analisis_pushover.html" class="nav-btn">03</a></li>
+        <li><a href="04_rotula_plastica_asce41.html" class="nav-btn">04</a></li>
+        <li><a href="05_regularizacion_energia_fractura.html" class="nav-btn">05</a></li>
+        <li><a href="06_matriz_rigidez_elemento_fibras.html" class="nav-btn">06</a></li>
+        <li><a href="recursos_openseespy.html" class="nav-btn active">OpenSeesPy</a></li>
+      </ul>
+
+      <div class="header-actions">
+        <button class="btn-icon" id="theme-toggle" title="Alternar tema de color">
+          <span id="theme-icon">🌙</span> <span id="theme-text">Oscuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-tag">💻 Computación Estructural Aplicada • Python & OpenSees</div>
+      <h1 class="hero-title">Recursos y Ecosistema OpenSeesPy</h1>
+      <p class="hero-subtitle">
+        Compilación de recursos docentes y de investigación desarrollados por el <strong>Prof. Orlando Arroyo</strong>. 
+        Incluye cuadernos Jupyter estructurados paso a paso, serie exclusiva de videotutoriales y la biblioteca científica 
+        <strong><code>opseestools</code></strong> con su correspondiente publicación en <em>SoftwareX</em>.
+      </p>
+
+      <div class="hero-badges">
+        <div class="hero-badge-pill">🐍 Python 3.9+</div>
+        <div class="hero-badge-pill">🏗️ OpenSeesPy Framework</div>
+        <div class="hero-badge-pill">📦 PyPI: opseestools</div>
+        <div class="hero-badge-pill">🎥 YouTube Series</div>
+        <div class="hero-badge-pill">📄 Elsevier SoftwareX (2024)</div>
+      </div>
+
+      <!-- Barra de navegación rápida entre los 3 pilares -->
+      <nav class="hero-nav-bar" aria-label="Navegación de recursos">
+        <a href="#tutoriales-basicos" class="hero-nav-link">📘 1. Tutoriales Básicos (GitHub)</a>
+        <a href="#videos-youtube" class="hero-nav-link">🎥 2. Videotutoriales Exclusivos (YouTube)</a>
+        <a href="#opseestools-paper" class="hero-nav-link">📦 3. opseestools & Publicación</a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- Contenedor Principal -->
+  <main>
+
+    <!-- ==========================================================================
+         PILAR 1: REPOSITORIO DE TUTORIALES BÁSICOS DE OPENSEESPY
+         ========================================================================== -->
+    <section id="tutoriales-basicos">
+      <div class="section-header">
+        <span class="section-badge">Pilar 01 • Modelación con Fibras</span>
+        <h2 class="section-title">📘 Repositorio de Tutoriales de Inicio para OpenSeesPy</h2>
+        <p class="section-desc">
+          Colección de <strong>Jupyter Notebooks</strong> progresivos creados para guiar a estudiantes y profesionales en la modelación no lineal de pórticos de concreto reforzado con elementos de fibras, basados y adaptados del Wiki oficial de Berkeley.
+        </p>
+      </div>
+
+      <div class="tutorial-card">
+        <div class="card-left">
+          <div class="tutorial-intro">
+            <h3>Repositorio: <code>odarroyo/openseespy_starting_tutorials</code></h3>
+            <p>
+              La serie de tutoriales (del 1 al 7) presenta una curva de aprendizaje continua: inicia con una simple barra y columna elástica en voladizo, 
+              avanza hacia secciones de concreto reforzado con fibras uniaxiales no lineales y culmina en el análisis pushover y dinámico paso a paso 
+              de pórticos estructurales completos.
+            </p>
+
+            <div class="features-grid">
+              <div class="feature-pill">
+                <span class="icon">📓</span>
+                <span><strong>Jupyter Notebooks:</strong> Código reproducible y comentado.</span>
+              </div>
+              <div class="feature-pill">
+                <span class="icon">🧱</span>
+                <span><strong>Fibras Uniaxiales:</strong> Concreto confinado y acero de refuerzo.</span>
+              </div>
+              <div class="feature-pill">
+                <span class="icon">📈</span>
+                <span><strong>Pushover & Dinámico:</strong> Control de desplazamiento y acelerogramas.</span>
+              </div>
+              <div class="feature-pill">
+                <span class="icon">📊</span>
+                <span><strong>Visualización:</strong> Integración con <code>opsvis</code>, <code>vfo</code> y <code>opseestools</code>.</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <a href="https://github.com/odarroyo/openseespy_starting_tutorials" target="_blank" rel="noopener" class="btn-primary">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              <span>Explorar Repositorio en GitHub</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="terminal-box">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+            </div>
+            <span>Terminal / Entorno Python</span>
+          </div>
+          <div class="terminal-code">
+            <span class="terminal-comment"># 1. Crear entorno virtual recomendado</span><br>
+            python -m venv opensees_env<br>
+            source opensees_env/bin/activate  <span class="terminal-comment"># En Windows: .\opensees_env\Scripts\activate</span><br><br>
+            <span class="terminal-comment"># 2. Instalar librerías esenciales para los tutoriales</span><br>
+            pip install openseespy opsvis vfo opseestools jupyter<br><br>
+            <span class="terminal-comment"># 3. Clonar el repositorio y ejecutar</span><br>
+            git clone https://github.com/odarroyo/openseespy_starting_tutorials.git<br>
+            cd openseespy_starting_tutorials<br>
+            jupyter notebook
+          </div>
+          <button class="btn-copy" onclick="copySnippet('pip install openseespy opsvis vfo opseestools jupyter')">
+            <span>📋 Copiar Comando Pip</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         PILAR 2: VIDEOTUTORIALES EXCLUSIVOS DE YOUTUBE (REPRODUCTOR INTERACTIVO)
+         ========================================================================== -->
+    <section id="videos-youtube">
+      <div class="section-header">
+        <span class="section-badge" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">Pilar 02 • Aprendizaje Audiovisual</span>
+        <h2 class="section-title">🎥 Serie Exclusiva de Videotutoriales en YouTube</h2>
+        <p class="section-desc">
+          Material audiovisual paso a paso que complementa los cuadernos Jupyter. Puedes reproducir cada lección directamente desde esta página interactiva o abrirla en YouTube.
+        </p>
+      </div>
+
+      <div class="video-hub-grid">
+        <!-- Columna del reproductor activo -->
+        <div class="player-column">
+          <div class="video-frame-wrap">
+            <iframe 
+              id="main-video-frame" 
+              src="https://www.youtube-nocookie.com/embed/B2Vjc_U5NNk?rel=0" 
+              title="Reproductor de Video OpenSeesPy" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen>
+            </iframe>
+          </div>
+
+          <div class="player-details">
+            <div class="player-header">
+              <div>
+                <span id="player-badge" class="section-badge" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">Video 0</span>
+                <h3 id="player-title" class="player-title">Instalación de OpenSeesPy</h3>
+              </div>
+              <a id="player-yt-link" href="https://youtu.be/B2Vjc_U5NNk" target="_blank" rel="noopener" class="btn-icon" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                <span>Ver en YouTube</span>
+              </a>
+            </div>
+            <p id="player-desc" class="player-desc">
+              Guía de preparación del entorno de trabajo en Python. Instalación de paquetes necesarios (OpenSeesPy, librerías de visualización y dependencias) para iniciar sin contratiempos los análisis computacionales.
+            </p>
+          </div>
+        </div>
+
+        <!-- Columna de la lista de reproducción -->
+        <div class="playlist-column" id="playlist-container">
+
+          <!-- Video 1 -->
+          <div class="video-item active" onclick="loadVideo('B2Vjc_U5NNk', 'Instalación de OpenSeesPy', 'Guía de preparación del entorno de trabajo en Python. Instalación de paquetes necesarios (OpenSeesPy, librerías de visualización y dependencias) para iniciar sin contratiempos los análisis computacionales.', 'Video 0', this)">
+            <div class="video-number">0</div>
+            <div class="video-item-info">
+              <div class="video-item-title">Instalación de OpenSeesPy</div>
+              <div class="video-item-meta">
+                <span>Configuración de entorno & paquetes</span>
+              </div>
+            </div>
+            <div class="video-play-indicator">▶</div>
+          </div>
+
+          <!-- Video 2 -->
+          <div class="video-item" onclick="loadVideo('f50Obb7J7vU', 'Tutorial 1: Modelo de una barra', 'Construcción del primer modelo estructural en OpenSeesPy. Definición del sistema coordenado, nodos, propiedades del material uniaxial elástico, conectividad de elementos y aplicación de cargas puntuales.', 'Video 1', this)">
+            <div class="video-number">1</div>
+            <div class="video-item-info">
+              <div class="video-item-title">Tutorial 1: Modelo de una barra</div>
+              <div class="video-item-meta">
+                <span>Nodos, material & cargas nodales</span>
+              </div>
+            </div>
+            <div class="video-play-indicator">▶</div>
+          </div>
+
+          <!-- Video 3 -->
+          <div class="video-item" onclick="loadVideo('Uwx7JbMBcN8', 'Tutorial 2: Modelo elástico', 'Modelación de un pórtico o columna elástica bidimensional. Implementación de secciones elásticas, transformación geométrica lineal y ejecución de análisis estático lineal con extracción de diagramas.', 'Video 2', this)">
+            <div class="video-number">2</div>
+            <div class="video-item-info">
+              <div class="video-item-title">Tutorial 2: Modelo elástico</div>
+              <div class="video-item-meta">
+                <span>Transformación geométrica & análisis estático</span>
+              </div>
+            </div>
+            <div class="video-play-indicator">▶</div>
+          </div>
+
+          <!-- Video 4 -->
+          <div class="video-item" onclick="loadVideo('d9o-cdj1Ru0', 'Tutorial 3: Modelo de fibras', 'Discretización seccional no lineal mediante fibras. Definición de leyes constitutivas de concreto (Kent-Park/Mander) y acero de refuerzo, fibras de recubrimiento y núcleo, e integración por cuadratura.', 'Video 3', this)">
+            <div class="video-number">3</div>
+            <div class="video-item-info">
+              <div class="video-item-title">Tutorial 3: Modelo de fibras</div>
+              <div class="video-item-meta">
+                <span>Sección de fibras de concreto y acero</span>
+              </div>
+            </div>
+            <div class="video-play-indicator">▶</div>
+          </div>
+
+          <!-- Video 5 -->
+          <div class="video-item" onclick="loadVideo('hGzWuKDobbY', 'Tutorial 4: Modelo de fibras - Pushover', 'Análisis estático no lineal pushover con control por desplazamiento sobre el modelo de fibras. Generación de curvas de capacidad, seguimiento de la plastificación y verificación de estabilidad numérica.', 'Video 4', this)">
+            <div class="video-number">4</div>
+            <div class="video-item-info">
+              <div class="video-item-title">Tutorial 4: Modelo de fibras - Pushover</div>
+              <div class="video-item-meta">
+                <span>Control de desplazamiento & curva de capacidad</span>
+              </div>
+            </div>
+            <div class="video-play-indicator">▶</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         PILAR 3: BIBLIOTECA OPSEESTOOLS Y PUBLICACIÓN EN SOFTWAREX
+         ========================================================================== -->
+    <section id="opseestools-paper">
+      <div class="section-header">
+        <span class="section-badge" style="background: rgba(79, 70, 229, 0.12); color: #6366f1;">Pilar 03 • Software Científico & Investigación</span>
+        <h2 class="section-title">📦 Biblioteca <code>opseestools</code> y Publicación Científica</h2>
+        <p class="section-desc">
+          Herramienta de código abierto desarrollada para simplificar y automatizar los flujos de análisis estático, dinámico y probabilístico en OpenSeesPy, publicada en la revista internacional indexada <strong>SoftwareX</strong> (Elsevier).
+        </p>
+      </div>
+
+      <div class="opseestools-container">
+        <!-- Tarjeta de la librería -->
+        <div class="opseestools-card">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <span class="section-badge" style="background: rgba(79, 70, 229, 0.12); color: #6366f1;">Python Package</span>
+              <a href="https://pypi.org/project/opseestools/" target="_blank" rel="noopener" style="font-size: 0.8rem; color: var(--text-faint); text-decoration: none;">PyPI Package</a>
+            </div>
+
+            <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+              <code>opseestools</code>: Automatización de Flujos en OpenSeesPy
+            </h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+              Facilita el modelado, ejecución y posprocesamiento en Python, eliminando código repetitivo y almacenando respuestas estructurales 
+              (fuerzas, derivas, rotaciones plásticas y estados seccionales) directamente en variables de Python y DataFrames de pandas.
+            </p>
+
+            <div class="modules-grid">
+              <div class="module-item">
+                <div class="module-name">opstools.analisis</div>
+                <div class="module-desc">Funciones para análisis 2D: gravedad, pushover monotónico/cíclico y análisis dinámico transitorio.</div>
+              </div>
+              <div class="module-item">
+                <div class="module-name">opstools.analisis3D</div>
+                <div class="module-desc">Rutinas para estructuras 3D complejas con pórticos espaciales y muros de cortante.</div>
+              </div>
+              <div class="module-item">
+                <div class="module-name">opstools.utilidades</div>
+                <div class="module-desc">Herramientas de apoyo para generación de mallas, asignación de cargas y extracción de resultados.</div>
+              </div>
+              <div class="module-item">
+                <div class="module-name">opstools.Lib_frag</div>
+                <div class="module-desc">Cálculo y graficación de curvas y superficies de fragilidad sísmica basadas en estados de daño.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+            <a href="https://github.com/odarroyo/opseestools" target="_blank" rel="noopener" class="btn-primary" style="background: linear-gradient(135deg, #4f46e5, #4338ca);">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              <span>Repositorio en GitHub</span>
+            </a>
+            <a href="https://opseestools.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener" class="btn-icon">
+              <span>📖 Documentación (ReadTheDocs)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tarjeta de la publicación científica -->
+        <div class="paper-card">
+          <div>
+            <div class="journal-badge">SoftwareX • Elsevier</div>
+            <h3 class="paper-title">opseestools: A Python library to streamline OpenSeesPy workflows</h3>
+            <div class="paper-authors">
+              <strong>Autores:</strong> Orlando Arroyo, Daniel Feliciano, David Novoa, Juan Valcárcel (2024)
+            </div>
+            <div class="paper-meta">
+              <em>SoftwareX</em>, Volumen 27, Artículo 101832.<br>
+              <strong>DOI:</strong> <a href="https://doi.org/10.1016/j.softx.2024.101832" target="_blank" rel="noopener" style="color: var(--brand-primary);">10.1016/j.softx.2024.101832</a>
+            </div>
+
+            <div class="citation-box" id="bibtex-block">
+              @article{arroyo2024opseestools,<br>
+              &nbsp;&nbsp;title={opseestools: A Python library to streamline OpenSeesPy workflows},<br>
+              &nbsp;&nbsp;author={Arroyo, Orlando and Feliciano, Daniel and Novoa, David and Valc{\'a}rcel, Juan},<br>
+              &nbsp;&nbsp;journal={SoftwareX},<br>
+              &nbsp;&nbsp;volume={27},<br>
+              &nbsp;&nbsp;pages={101832},<br>
+              &nbsp;&nbsp;year={2024},<br>
+              &nbsp;&nbsp;publisher={Elsevier},<br>
+              &nbsp;&nbsp;doi={10.1016/j.softx.2024.101832}<br>
+              }
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="https://www.sciencedirect.com/science/article/pii/S2352711024002036" target="_blank" rel="noopener" class="btn-primary" style="background: linear-gradient(135deg, #ea580c, #c2410c);">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+              <span>Ver Artículo en ScienceDirect</span>
+            </a>
+            <button class="btn-icon" onclick="copyBibtex()">
+              <span id="copy-bib-text">📋 Copiar BibTeX</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div>
+        <strong style="color: var(--text-main);">Análisis No Lineal de Estructuras</strong><br>
+        <span>Prof. Orlando Arroyo • Universidad Industrial de Santander (UIS)</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="index.html">Portal</a></li>
+        <li><a href="01_la_trayectoria_importa.html">Clase 01</a></li>
+        <li><a href="02_equilibrio_newton_raphson.html">Clase 02</a></li>
+        <li><a href="03_analisis_pushover.html">Clase 03</a></li>
+        <li><a href="04_rotula_plastica_asce41.html">Clase 04</a></li>
+        <li><a href="05_regularizacion_energia_fractura.html">Clase 05</a></li>
+        <li><a href="06_matriz_rigidez_elemento_fibras.html">Clase 06</a></li>
+        <li><a href="recursos_openseespy.html" style="color: var(--brand-primary); font-weight: 700;">OpenSeesPy</a></li>
+        <li><a href="https://github.com/odarroyo/openseespy_starting_tutorials" target="_blank" rel="noopener">Tutoriales GitHub</a></li>
+        <li><a href="https://github.com/odarroyo/opseestools" target="_blank" rel="noopener">opseestools</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    /* ==========================================================================
+       GESTIÓN DEL TEMA CLARO / OSCURO CON PERSISTENCIA
+       ========================================================================== */
+    function isDarkTheme() {
+      return document.documentElement.getAttribute('data-theme') === 'dark';
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.getElementById('theme-text').textContent = 'Claro';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.getElementById('theme-icon').textContent = '🌙';
+        document.getElementById('theme-text').textContent = 'Oscuro';
+      }
+      localStorage.setItem('nl_course_theme', theme);
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      applyTheme(isDarkTheme() ? 'light' : 'dark');
+    });
+
+    // Cargar tema guardado al iniciar
+    const savedTheme = localStorage.getItem('nl_course_theme') || 'light';
+    applyTheme(savedTheme);
+
+    /* ==========================================================================
+       REPRODUCTOR INTERACTIVO DE YOUTUBE
+       ========================================================================== */
+    function loadVideo(videoId, title, description, badgeText, element) {
+      // 1. Cambiar el iframe de video (usando embed seguro youtube-nocookie)
+      const frame = document.getElementById('main-video-frame');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0';
+
+      // 2. Actualizar título, badge y descripción
+      document.getElementById('player-title').textContent = title;
+      document.getElementById('player-desc').textContent = description;
+      document.getElementById('player-badge').textContent = badgeText;
+      document.getElementById('player-yt-link').href = 'https://youtu.be/' + videoId;
+
+      // 3. Actualizar clase activa en la lista
+      const items = document.querySelectorAll('.video-item');
+      items.forEach(item => item.classList.remove('active'));
+      if (element) {
+        element.classList.add('active');
+      }
+
+      // 4. Desplazamiento suave al reproductor en pantallas pequeñas
+      if (window.innerWidth < 900) {
+        document.getElementById('videos-youtube').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    /* ==========================================================================
+       UTILIDADES DE COPIADO AL PORTAPAPELES
+       ========================================================================== */
+    function copySnippet(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Comando copiado al portapapeles: ' + text);
+      }).catch(err => {
+        console.error('Error al copiar:', err);
+      });
+    }
+
+    function copyBibtex() {
+      const bibtex = `@article{arroyo2024opseestools,
+  title={opseestools: A Python library to streamline OpenSeesPy workflows},
+  author={Arroyo, Orlando and Feliciano, Daniel and Novoa, David and Valc{\\'a}rcel, Juan},
+  journal={SoftwareX},
+  volume={27},
+  pages={101832},
+  year={2024},
+  publisher={Elsevier},
+  doi={10.1016/j.softx.2024.101832}
+}`;
+      navigator.clipboard.writeText(bibtex).then(() => {
+        const btn = document.getElementById('copy-bib-text');
+        const old = btn.textContent;
+        btn.textContent = '✅ ¡BibTeX Copiado!';
+        setTimeout(() => { btn.textContent = old; }, 2500);
+      }).catch(err => {
+        console.error('Error al copiar BibTeX:', err);
+      });
+    }
+  </script>
+</body>
+</html>

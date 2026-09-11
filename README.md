@@ -62,6 +62,28 @@ Plataforma educativa y conjunto de laboratorios computacionales interactivos dis
   * **Post-procesamiento Geométrico de Curvaturas:** Escalado de la curvatura numérica $\phi^{\text{MODEL}}$ hacia la curvatura física $\phi^{\text{PREDICT}}$ sobre la longitud de rótula de Paulay & Priestley ($L_p$).
   * Presets reales del artículo (Pila de puente Tanaka & Park #7, Viga sobrerreforzada RILEM 148 SSC de Ulfkjaer), auto-escalado dinámico de momentos en tiempo real y módulo socrático de evaluación formativa.
 
+### 6. [Clase 06 — Matriz de Rigidez de un Elemento de Fibras: Formulación de Flexibilidad (Spacone et al., 1996)](https://odarroyo.github.io/analisis_no_lineal/06_matriz_rigidez_elemento_fibras.html)
+* **Objetivo:** Explicar con rigor matemático y visualización interactiva multiescala cómo se ensambla la matriz de rigidez de un elemento viga-columna de concreto reforzado según el artículo clásico de Spacone, Filippou y Taucer (1996).
+* **Características:**
+  * **Jerarquía Multiescala Completa:** Cinemática de Euler-Bernoulli en fibras uniaxiales $\to$ integración numérica de rigidez seccional $[\mathbf{k}_{sec}] \to$ cuadratura de Gauss-Lobatto para ensamblar la flexibilidad del elemento $[\mathbf{F}] \to$ inversión analítica a $[\mathbf{K}_{\text{basic}}] = [\mathbf{F}]^{-1} \to$ transformación geométrica a $[\mathbf{K}_{\text{global}, 6\times 6}]$.
+  * **Acoplamiento Axial-Flexión ($ES_{tan}$):** Demostración física en tiempo real de cómo el agrietamiento del concreto o la fluencia asimétrica del acero activa términos no diagonales ($ES_{tan} = \int E_t y dA \neq 0$), desplazando el eje neutro e induciendo deformaciones axiales bajo flexión.
+  * **Cuadratura de Gauss-Lobatto:** Análisis de pesos y abscisas con inclusión estricta de las secciones extremas ($x=0$ y $x=L$), resolviendo la deficiencia de Gauss-Legendre para capturar rótulas plásticas en nudos de pórticos.
+  * **Comparativa FBE vs. DBE:** Explicación visual de por qué 1 solo elemento basado en fuerzas satisface el equilibrio exacto $\mathbf{D}(x) = \mathbf{b}(x)\mathbf{Q}$ frente al bloqueo de curvatura (*curvature locking*) de los elementos basados en desplazamientos con funciones cúbicas.
+  * **Determinación de Estado Interno (Algoritmo de Spacone):** Simulador interactivo paso a paso de las subiteraciones internas $j$, mostrando cómo se reducen las deformaciones residuales $\mathbf{s} = \int \mathbf{b}^T \mathbf{r}(x) dx$ mediante fuerzas correctoras $-\mathbf{K}\mathbf{s}$ sin alterar las deformaciones de extremo impuestas $\mathbf{q}$.
+  * **Inspector Matricial en Tiempo Real:** Visualización y cálculo dinámico de $[\mathbf{k}_{sec}]$, $[\mathbf{f}_{sec}]$, $[\mathbf{b}(x_i)]$, $[\mathbf{F}_{3\times 3}]$, $[\mathbf{K}_{\text{basic}, 3\times 3}]$, $[\mathbf{T}_{\text{geom}, 3\times 6}]$ y $[\mathbf{K}_{\text{global}, 6\times 6}]$, confirmando los 3 autovalores nulos de modos de cuerpo rígido.
+
+### 7. [Recursos y Ecosistema OpenSeesPy](https://odarroyo.github.io/analisis_no_lineal/recursos_openseespy.html) 🐍
+* **Objetivo:** Centralizar y dar acceso abierto a recursos computacionales de modelado estructural en Python desarrollados por el Prof. Orlando Arroyo.
+* **Componentes:**
+  * **[Tutoriales de Inicio para OpenSeesPy](https://github.com/odarroyo/openseespy_starting_tutorials):** Serie de Jupyter Notebooks paso a paso (Tutoriales 1 al 7) para pórticos de concreto reforzado con elementos de fibras (desde barra elástica elemental hasta análisis dinámico y pushover).
+  * **Serie Exclusiva de Videotutoriales en YouTube:** 5 lecciones audiovisuales con reproductor interactivo embebido:
+    1. [Instalación de OpenSeesPy](https://youtu.be/B2Vjc_U5NNk)
+    2. [Tutorial 1: Modelo de una barra](https://youtu.be/f50Obb7J7vU)
+    3. [Tutorial 2: Modelo elástico](https://youtu.be/Uwx7JbMBcN8)
+    4. [Tutorial 3: Modelo de fibras](https://youtu.be/d9o-cdj1Ru0)
+    5. [Tutorial 4: Modelo de fibras - Pushover](https://youtu.be/hGzWuKDobbY)
+  * **[Biblioteca `opseestools`](https://github.com/odarroyo/opseestools) & [Publicación en SoftwareX (Elsevier)](https://www.sciencedirect.com/science/article/pii/S2352711024002036):** Paquete de Python (`pip install opseestools`) con 4 módulos (`analisis`, `analisis3D`, `utilidades`, `Lib_frag`) y documentación en [ReadTheDocs](https://opseestools.readthedocs.io/en/latest/index.html). Cita: *Arroyo et al. (2024), SoftwareX, 27, 101832*.
+
 ---
 
 ## 🎨 Características de Diseño
