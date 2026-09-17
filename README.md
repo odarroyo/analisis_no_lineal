@@ -72,7 +72,20 @@ Plataforma educativa y conjunto de laboratorios computacionales interactivos dis
   * **Determinación de Estado Interno (Algoritmo de Spacone):** Simulador interactivo paso a paso de las subiteraciones internas $j$, mostrando cómo se reducen las deformaciones residuales $\mathbf{s} = \int \mathbf{b}^T \mathbf{r}(x) dx$ mediante fuerzas correctoras $-\mathbf{K}\mathbf{s}$ sin alterar las deformaciones de extremo impuestas $\mathbf{q}$.
   * **Inspector Matricial en Tiempo Real:** Visualización y cálculo dinámico de $[\mathbf{k}_{sec}]$, $[\mathbf{f}_{sec}]$, $[\mathbf{b}(x_i)]$, $[\mathbf{F}_{3\times 3}]$, $[\mathbf{K}_{\text{basic}, 3\times 3}]$, $[\mathbf{T}_{\text{geom}, 3\times 6}]$ y $[\mathbf{K}_{\text{global}, 6\times 6}]$, confirmando los 3 autovalores nulos de modos de cuerpo rígido.
 
-### 7. [Recursos y Ecosistema OpenSeesPy](https://odarroyo.github.io/analisis_no_lineal/recursos_openseespy.html) 🐍
+### 7. [Clase 07 — Control por Desplazamiento vs. Control por Fuerza: OpenSeesPy y Rótula ASCE 41](https://odarroyo.github.io/analisis_no_lineal/07_control_fuerza_vs_desplazamiento.html)
+* **Objetivo:** Ilustrar de forma contundente y transparente a estudiantes de pregrado y especialización por qué el análisis no lineal exige formular los algoritmos mediante control por desplazamiento, desmitificando el colapso numérico por control de fuerzas y explicando la degradación post-pico (*softening*) en rótulas ASCE 41.
+* **Características:**
+  * **Columna en Voladizo en OpenSeesPy:** Altura $H = 3.0\text{ m}$, sección de concreto reforzado $400\times 400\text{ mm}$ y rótula concentrada al 5% de la altura ($y_h = 0.15\text{ m}$) modelada con elemento `zeroLength` y material `Hysteretic`.
+  * **Análisis 1 (Control por Desplazamiento hasta 3% de Deriva = 90 mm):**
+    * *Modelo Elástico:* Ascenso lineal hasta $F_{\text{el, 3\%}} = 533.33\text{ kN}$ y $M_{\text{base}} = 1600\text{ kN}\cdot\text{m}$.
+    * *Modelo Inelástico:* Captura fluencia ($M_y = 180\text{ kN}\cdot\text{m}$), pico de capacidad ($M_u = 210\text{ kN}\cdot\text{m}$, $V_{\text{max}} = 73.56\text{ kN}$) y descenso ordenado por la rama de ablandamiento hasta la meseta residual ($M_r = 40\text{ kN}\cdot\text{m}$, $V_{\text{res}} = 14.04\text{ kN}$), registrando una caída de capacidad del $-80.9\%$.
+  * **Análisis 2 (Control por Fuerza buscando $F_{\text{el, 3\%}} = 533.33\text{ kN}$):**
+    * *Modelo Elástico:* Convergencia en 1 iteración, coincidiendo de forma idéntica con el caso de desplazamiento ($F = Ku \iff u = K^{-1}F$).
+    * *Modelo Inelástico:* Colapso numérico instantáneo en el **Paso 14** al solicitar $F_{\text{ext}} = 74.67\text{ kN} > V_{\text{cap}} = 73.56\text{ kN}$. Imposibilidad física de equilibrar la carga ($R = F_{\text{ext}} - F_{\text{int}} > 0$), pérdida de positividad de la matriz de rigidez ($\det(\mathbf{K}_t) \to 0$) y emisión del error de no convergencia de OpenSees (`analyze failed, returned: -3`).
+  * **Demostración de Mecánica Seccional:** Demostración de por qué el momento en la rótula cae luego del pico (descascaramiento de recubrimiento *spalling*, microagrietamiento del núcleo y pandeo de barras comprimidas) y por qué el equilibrio estático $V = M_h / (0.95 H)$ obliga a toda la columna a perder capacidad lateral.
+  * **Visualizador Interactivo y 4 Lienzos Sincronizados:** Animación de la columna deformada, curva Pushover global, curva constitutiva ASCE 41 y monitor conceptual de divergencia de Newton-Raphson. Incluye visor de código OpenSeesPy y enlaces de descarga del script `.py`, cuaderno Jupyter `.ipynb` y datos `.json`.
+
+### 8. [Recursos y Ecosistema OpenSeesPy](https://odarroyo.github.io/analisis_no_lineal/recursos_openseespy.html) 🐍
 * **Objetivo:** Centralizar y dar acceso abierto a recursos computacionales de modelado estructural en Python desarrollados por el Prof. Orlando Arroyo.
 * **Componentes:**
   * **[Tutoriales de Inicio para OpenSeesPy](https://github.com/odarroyo/openseespy_starting_tutorials):** Serie de Jupyter Notebooks paso a paso (Tutoriales 1 al 7) para pórticos de concreto reforzado con elementos de fibras (desde barra elástica elemental hasta análisis dinámico y pushover).

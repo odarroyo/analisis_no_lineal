@@ -1,0 +1,2517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 07: Control por Desplazamiento vs. Control por Fuerza | Análisis No Lineal</title>
+  <meta name="description" content="Laboratorio interactivo de análisis no lineal en OpenSeesPy: Comparación de columna en voladizo elástica e inelástica con rótula ASCE 41 al 5% de H bajo control por desplazamiento y fuerza.">
+
+  <!-- KaTeX para renderizado de ecuaciones matemáticas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES Y PALETA DE COLORES (MODO CLARO POR DEFECTO / OSCURO)
+       TEMA CLASE 07: AZUL COBALTO & ROJO CARMESÍ (#2563eb / #e11d48)
+       Simboliza la dualidad: Desplazamiento Estable vs. Fuerza Divergente
+       ========================================================================== */
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #2563eb;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #eff6ff 45%, #fff1f2 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 25%, #2563eb 65%, #e11d48 100%);
+
+      --cyan-400: #0284c7;
+      --cyan-500: #0369a1;
+      --blue-400: #2563eb;
+      --blue-500: #1d4ed8;
+      --emerald-400: #059669;
+      --emerald-500: #047857;
+      --amber-400: #d97706;
+      --amber-500: #b45309;
+      --rose-400: #e11d48;
+      --rose-500: #be123c;
+      --purple-400: #7c3aed;
+      --purple-500: #6d28d9;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.2);
+    }
+
+    body.dark-theme {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: #162032;
+      --bg-card-hover: #1e2c45;
+      --border-subtle: #1f2d47;
+      --border-accent: #3b82f6;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(17, 24, 39, 0.95);
+      --hero-bg: linear-gradient(135deg, rgba(30, 58, 138, 0.35) 0%, rgba(22, 32, 50, 0.9) 60%, rgba(136, 19, 55, 0.3) 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 30%, #60a5fa 70%, #fb7185 100%);
+
+      --cyan-400: #22d3ee;
+      --cyan-500: #06b6d4;
+      --blue-400: #60a5fa;
+      --blue-500: #3b82f6;
+      --emerald-400: #34d399;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --purple-400: #c084fc;
+      --purple-500: #a855f7;
+
+      --canvas-bg: #0d131f;
+      --canvas-grid: #1e293b;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* HEADER */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #2563eb, #e11d48);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      list-style: none;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    .nav-btn.active {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--blue-400);
+      border-color: rgba(37, 99, 235, 0.3);
+      font-weight: 700;
+    }
+
+    .theme-toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--border-accent);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 2.25rem 1.5rem 2rem 1.5rem;
+    }
+
+    .hero-container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--blue-500);
+      margin-bottom: 0.6rem;
+    }
+
+    .hero-title {
+      font-size: 2.15rem;
+      font-weight: 800;
+      line-height: 1.2;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 950px;
+      margin-bottom: 1.25rem;
+      line-height: 1.55;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-tag {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .hero-tag.highlight {
+      background: rgba(37, 99, 235, 0.1);
+      border-color: rgba(37, 99, 235, 0.3);
+      color: var(--blue-400);
+    }
+
+    .hero-tag.alert {
+      background: rgba(225, 29, 72, 0.1);
+      border-color: rgba(225, 29, 72, 0.3);
+      color: var(--rose-400);
+    }
+
+    /* STATS CHIPS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .stat-chip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-chip-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-chip-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+    }
+
+    .stat-chip-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* MAIN CONTAINER */
+    .main-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem;
+    }
+
+    /* CONTROL PANEL */
+    .control-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.75rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .control-row-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .scenario-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .scenario-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.5rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .scenario-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .scenario-btn.active {
+      background: var(--blue-500);
+      color: #ffffff;
+      border-color: var(--blue-500);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+    }
+
+    .scenario-btn.active.fail-mode {
+      background: var(--rose-500);
+      border-color: var(--rose-500);
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.35);
+    }
+
+    .control-row-bottom {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+    }
+
+    .playback-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.15s;
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .btn-primary {
+      background: var(--blue-500);
+      color: #fff;
+      border: 1px solid var(--blue-500);
+      padding: 0.45rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--blue-400);
+    }
+
+    .slider-wrap {
+      flex: 1;
+      min-width: 250px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .slider-input {
+      flex: 1;
+      height: 7px;
+      border-radius: 4px;
+      background: var(--border-subtle);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--blue-500);
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    .slider-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      min-width: 90px;
+      text-align: right;
+    }
+
+    /* CANVASES GRID */
+    .canvas-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    @media (max-width: 1050px) {
+      .canvas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .canvas-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.15rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .canvas-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+
+    .canvas-card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .canvas-card-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* TELEMETRY CARDS */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 2rem;
+    }
+
+    .telem-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .telem-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+      margin-bottom: 0.25rem;
+    }
+
+    .telem-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+    }
+
+    .telem-unit {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-left: 0.2rem;
+    }
+
+    .telem-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      margin-top: 0.35rem;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-elastic {
+      background: rgba(5, 150, 105, 0.15);
+      color: var(--emerald-400);
+      border: 1px solid rgba(5, 150, 105, 0.3);
+    }
+
+    .badge-yield {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--amber-400);
+      border: 1px solid rgba(217, 119, 6, 0.3);
+    }
+
+    .badge-peak {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--blue-400);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+    }
+
+    .badge-softening {
+      background: rgba(225, 29, 72, 0.15);
+      color: var(--rose-400);
+      border: 1px solid rgba(225, 29, 72, 0.3);
+    }
+
+    .badge-residual {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--purple-400);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .badge-diverge {
+      background: #be123c;
+      color: #ffffff;
+      font-weight: 800;
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* ALERTA DIAGNÓSTICO */
+    .alert-banner {
+      background: rgba(225, 29, 72, 0.1);
+      border: 1px solid rgba(225, 29, 72, 0.4);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.75rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+    }
+
+    .alert-banner.success {
+      background: rgba(5, 150, 105, 0.1);
+      border-color: rgba(5, 150, 105, 0.4);
+    }
+
+    .alert-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .alert-content h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+
+    .alert-content p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* THEORY SECTIONS */
+    .theory-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theory-section h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .theory-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .theory-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .theory-card p, .theory-card li {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .theory-card ul {
+      margin-left: 1.25rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .math-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    /* CODE EXPLORER */
+    .code-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .code-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+
+    .code-tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .code-tab-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-accent);
+    }
+
+    .code-tab-btn.active {
+      background: var(--blue-500);
+      color: #fff;
+      border-color: var(--blue-500);
+    }
+
+    .code-display-wrap {
+      position: relative;
+      background: #0d1117;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      padding: 1rem;
+      overflow-x: auto;
+      max-height: 480px;
+    }
+
+    .code-display {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #e6edf3;
+      white-space: pre;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .download-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .download-link {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.5rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .download-link:hover {
+      border-color: var(--border-accent);
+      background: var(--bg-card-hover);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--blue-500);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       ENCABEZADO Y BARRA DE NAVEGACIÓN
+       ======================================================================== -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">Clase 07</span>
+        <span class="brand-title">Análisis No Lineal • Control Desplazamiento vs. Fuerza</span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-btn">Portal</a></li>
+          <li><a href="01_la_trayectoria_importa.html" class="nav-btn">01 Trayectoria</a></li>
+          <li><a href="02_equilibrio_newton_raphson.html" class="nav-btn">02 Newton-Raphson</a></li>
+          <li><a href="03_analisis_pushover.html" class="nav-btn">03 Pushover</a></li>
+          <li><a href="04_rotula_plastica_asce41.html" class="nav-btn">04 Rótula ASCE 41</a></li>
+          <li><a href="05_regularizacion_energia_fractura.html" class="nav-btn">05 Regularización</a></li>
+          <li><a href="06_matriz_rigidez_elemento_fibras.html" class="nav-btn">06 Fibras</a></li>
+          <li><a href="07_control_fuerza_vs_desplazamiento.html" class="nav-btn active">07 Desp. vs Fuerza</a></li>
+          <li><a href="recursos_openseespy.html" class="nav-btn">🐍 OpenSeesPy</a></li>
+          <li>
+            <button class="theme-toggle-btn" id="theme-toggle-btn" title="Alternar Modo Claro / Oscuro">
+              <span id="theme-icon">🌙</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       HERO PRINCIPAL
+       ======================================================================== -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-meta">
+        <span>🏛️ Universidad Industrial de Santander</span>
+        <span>•</span>
+        <span>Escuela de Ingeniería Civil</span>
+        <span>•</span>
+        <span>Prof. Orlando Arroyo</span>
+      </div>
+
+      <h1 class="hero-title">Control por Desplazamiento vs. Control por Fuerza: ¿Por qué la no linealidad cambia las reglas del juego?</h1>
+
+      <p class="hero-desc">
+        Laboratorio pedagógico interactivo de una columna en voladizo modelada en <strong>OpenSeesPy</strong>. 
+        Compara paso a paso el comportamiento de un modelo <strong>completamente elástico</strong> frente a un modelo <strong>inelástico con rótula ASCE 41 al 5% de la altura</strong>. 
+        Descubre por qué el momento cae luego de alcanzar su valor máximo y por qué el control por fuerza sufre un colapso numérico inevitable al intentar superar la capacidad de la sección.
+      </p>
+
+      <div class="hero-tags">
+        <span class="hero-tag highlight">📐 Columna en Voladizo (H = 3.0 m)</span>
+        <span class="hero-tag highlight">🧱 Rótula ASCE 41-17 / ASCE 41-23</span>
+        <span class="hero-tag highlight">🎯 Deriva Objetivo: 3.0% (90 mm)</span>
+        <span class="hero-tag alert">💥 Falla de Convergencia: Paso 14 de 100</span>
+        <span class="hero-tag">🐍 OpenSeesPy 3.7.2</span>
+      </div>
+
+      <!-- Resumen Numérico Clave -->
+      <div class="stats-row">
+        <div class="stat-chip">
+          <div class="stat-chip-label">Fuerza Elástica 3%</div>
+          <div class="stat-chip-value" style="color: var(--blue-500);">533.3 kN</div>
+          <div class="stat-chip-sub">Demanda lineal teórica</div>
+        </div>
+
+        <div class="stat-chip">
+          <div class="stat-chip-label">Capacidad Máxima Real (Pico)</div>
+          <div class="stat-chip-value" style="color: var(--emerald-500);">73.6 kN</div>
+          <div class="stat-chip-sub">\(V_{\text{cap}} = M_u / (0.95 H)\)</div>
+        </div>
+
+        <div class="stat-chip">
+          <div class="stat-chip-label">Cortante Residual Final</div>
+          <div class="stat-chip-value" style="color: var(--purple-500);">14.0 kN</div>
+          <div class="stat-chip-sub">Caída del -80.9% en softening</div>
+        </div>
+
+        <div class="stat-chip">
+          <div class="stat-chip-label">Límite Control Fuerza</div>
+          <div class="stat-chip-value" style="color: var(--rose-500);">Paso 14</div>
+          <div class="stat-chip-sub">OpenSees error -3 (Divergencia)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       CONTENIDO PRINCIPAL
+       ======================================================================== -->
+  <main class="main-container">
+
+    <!-- PANEL DE CONTROL INTERACTIVO -->
+    <section class="control-panel">
+      <div class="control-row-top">
+        <div class="scenario-selector">
+          <button class="scenario-btn active" id="btn-mode-dc" onclick="setMode('dc')">
+            <span>🎯 1. Control por Desplazamiento (Pushover 3%)</span>
+          </button>
+          <button class="scenario-btn" id="btn-mode-fc" onclick="setMode('fc')">
+            <span>⚠️ 2. Control por Fuerza (Buscando 533 kN)</span>
+          </button>
+          <button class="scenario-btn" id="btn-mode-both" onclick="setMode('both')">
+            <span>⚖️ 3. Comparativa Simultánea</span>
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.82rem; font-weight: 600;">
+          <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+            <input type="checkbox" id="chk-elastic" checked onchange="updateAll()">
+            <span style="color: var(--blue-500);">● Modelo Elástico</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+            <input type="checkbox" id="chk-inelastic" checked onchange="updateAll()">
+            <span style="color: var(--rose-500);">● Modelo Inelástico (ASCE 41)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="control-row-bottom">
+        <div class="playback-controls">
+          <button class="btn-icon" id="btn-prev" onclick="stepDelta(-1)" title="Paso Anterior">⏮</button>
+          <button class="btn-primary" id="btn-play" onclick="togglePlay()">
+            <span id="play-icon">▶</span>
+            <span id="play-text">Reproducir</span>
+          </button>
+          <button class="btn-icon" id="btn-next" onclick="stepDelta(1)" title="Paso Siguiente">⏭</button>
+          <button class="btn-icon" id="btn-reset" onclick="resetAnimation()" title="Reiniciar">🔄</button>
+
+          <select id="sel-speed" onchange="setSpeed(this.value)" style="background: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.8rem; padding: 0.4rem 0.6rem; border-radius: 6px; font-weight: 600;">
+            <option value="1">Velocidad: 1x</option>
+            <option value="2">Velocidad: 2x</option>
+            <option value="0.5">Velocidad: 0.5x</option>
+          </select>
+        </div>
+
+        <div class="slider-wrap">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-faint);">Paso:</span>
+          <input type="range" class="slider-input" id="step-slider" min="0" max="150" value="0" oninput="onSliderInput(this.value)">
+          <div class="slider-counter" id="slider-counter">0 / 150</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BANNER DE DIAGNÓSTICO EN TIEMPO REAL -->
+    <div id="alert-container">
+      <!-- Inyectado dinámicamente según el estado del slider -->
+    </div>
+
+    <!-- TELEMETRÍA EN VIVO (8 TARJETAS) -->
+    <section class="telemetry-grid">
+      <div class="telem-card">
+        <div class="telem-label">Desplazamiento Cúspide (Δ)</div>
+        <div class="telem-value" id="val-disp">0.0<span class="telem-unit">mm</span></div>
+        <div class="telem-badge badge-elastic" id="badge-disp">Deriva: 0.00%</div>
+      </div>
+
+      <div class="telem-card">
+        <div class="telem-label">Cortante Basal (V)</div>
+        <div class="telem-value" id="val-shear">0.0<span class="telem-unit">kN</span></div>
+        <div class="telem-badge badge-elastic" id="badge-shear">Reacción Vb</div>
+      </div>
+
+      <div class="telem-card">
+        <div class="telem-label">Momento en Rótula (Mh)</div>
+        <div class="telem-value" id="val-mhinge">0.0<span class="telem-unit">kN·m</span></div>
+        <div class="telem-badge badge-elastic" id="badge-mhinge">y = 0.15 m</div>
+      </div>
+
+      <div class="telem-card">
+        <div class="telem-label">Momento en la Base (Mb)</div>
+        <div class="telem-value" id="val-mbase">0.0<span class="telem-unit">kN·m</span></div>
+        <div class="telem-badge badge-elastic" id="badge-mbase">V · H</div>
+      </div>
+
+      <div class="telem-card">
+        <div class="telem-label">Giro Plástico Rótula (θh)</div>
+        <div class="telem-value" id="val-rot">0.00<span class="telem-unit">mrad</span></div>
+        <div class="telem-badge badge-elastic" id="badge-rot">Rotación zeroLength</div>
+      </div>
+
+      <div class="telem-card">
+        <div class="telem-label">Estado ASCE 41</div>
+        <div class="telem-value" id="val-asce-state" style="font-size: 1.05rem;">Elástico</div>
+        <div class="telem-badge badge-elastic" id="badge-asce-state">Tramo O-B</div>
+      </div>
+
+      <div class="telem-card">
+        <div class="telem-label">Relación Equilibrio</div>
+        <div class="telem-value" id="val-ratio">0.950</div>
+        <div class="telem-badge badge-elastic">Mh / Mb = 0.95</div>
+      </div>
+
+      <div class="telem-card">
+        <div class="telem-label">Estado OpenSees</div>
+        <div class="telem-value" id="val-solver" style="font-size: 1.05rem; color: var(--emerald-400);">OK (analyze: 0)</div>
+        <div class="telem-badge badge-elastic" id="badge-solver">Convergencia OK</div>
+      </div>
+    </section>
+
+    <!-- CUADRÍCULA DE 4 LIENZOS SINCRONIZADOS -->
+    <section class="canvas-grid">
+
+      <!-- LIENZO 1: VISTA ESTRUCTURAL DE LA COLUMNA -->
+      <article class="canvas-card">
+        <div class="canvas-card-header">
+          <h3 class="canvas-card-title">
+            <span>🏛️ 1. Deformada y Rótula Plástica en Voladizo</span>
+          </h3>
+          <span class="canvas-card-badge" id="badge-c1">H = 3.0 m | Hinge: 0.15 m</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-column"></canvas>
+        </div>
+      </article>
+
+      <!-- LIENZO 2: CURVA PUSHOVER GLOBAL (V vs Delta) -->
+      <article class="canvas-card">
+        <div class="canvas-card-header">
+          <h3 class="canvas-card-title">
+            <span>📈 2. Curva de Capacidad Global (V vs. Δ)</span>
+          </h3>
+          <span class="canvas-card-badge" id="badge-c2">Pushover Global</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-pushover"></canvas>
+        </div>
+      </article>
+
+      <!-- LIENZO 3: CURVA CONSTITUTIVA RÓTULA ASCE 41 (Mh vs thetah) -->
+      <article class="canvas-card">
+        <div class="canvas-card-header">
+          <h3 class="canvas-card-title">
+            <span>📐 3. Curva Troncal ASCE 41 de la Rótula (\(M_h\) vs. \(\theta_h\))</span>
+          </h3>
+          <span class="canvas-card-badge" id="badge-c3">Backbone ASCE 41</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-hinge"></canvas>
+        </div>
+      </article>
+
+      <!-- LIENZO 4: DIAGNÓSTICO NUMÉRICO NEWTON-RAPHSON -->
+      <article class="canvas-card">
+        <div class="canvas-card-header">
+          <h3 class="canvas-card-title">
+            <span>⚙️ 4. Diagnóstico de Convergencia: ¿Por qué diverge por Fuerza?</span>
+          </h3>
+          <span class="canvas-card-badge" id="badge-c4">Newton-Raphson & \(K_t\)</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-nr"></canvas>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ========================================================================
+         SECCIÓN DE FUNDAMENTOS TEÓRICOS Y PEDAGÓGICOS RIGUROSOS
+         ======================================================================== -->
+    <section class="theory-section">
+      <h2>📖 Fundamentos Teóricos: Desmitificando el Análisis No Lineal</h2>
+
+      <div class="theory-grid">
+
+        <!-- Tarjeta 1: Equilibrio Estático y Rigidez Inicial Idéntica -->
+        <article class="theory-card">
+          <h3>⚖️ 1. Equilibrio Estático y Rigidez Inicial Idéntica</h3>
+          <p>
+            Consideremos una columna en voladizo de altura \(H\) sujeta a una fuerza lateral en la cúspide \(V\).
+            El diagrama de momentos flectores varía linealmente desde cero en la cúspide hasta el valor máximo en la base empotrada:
+          </p>
+          <div class="math-block">
+            $$M(y) = V \cdot (H - y)$$
+          </div>
+          <p>
+            Al situar la rótula plástica concentrada al <strong>5% de la altura</strong> (\(y_h = 0.05 H\)), el brazo de palanca superior que transmite el momento hacia la rótula es:
+          </p>
+          <div class="math-block">
+            $$h_{\text{lever}} = H - 0.05 H = 0.95 H$$
+            $$M_h = V \cdot (0.95 H) = 0.95 \cdot M_{\text{base}} \iff V = \frac{M_h}{0.95 H}$$
+          </div>
+          <p>
+            <strong>¿Por qué ambas curvas coinciden en el tramo elástico?</strong><br>
+            Al modelar rótulas concentradas (<em>lumped plasticity</em>), el resorte <code>zeroLength</code> queda conectado <strong>en serie</strong> con los elementos elásticos de viga. Las flexibilidades se suman: \(f_{\text{total}} = f_{\text{viga}} + f_{\text{rótula}}\). Como los elementos de viga ya aportan el 100% de la flexibilidad elástica de la columna (\(K_0 = 3EI/H^3 = 5925.9\text{ kN/m}\)), el resorte de la rótula ASCE 41 debe modelar <strong>únicamente rotación plástica</strong> (\(\theta_p = 0\) antes de fluencia). Esto evita la clásica trampa de la <em>doble contabilidad de la flexibilidad</em>, garantizando que el modelo elástico y el inelástico compartan exactamente la misma recta hasta el punto de fluencia (\(V_y = 63.2\text{ kN}\), \(\Delta_y = 10.7\text{ mm}\)).
+          </p>
+        </article>
+
+        <!-- Tarjeta 2: ¿Por qué cae el momento después del pico? -->
+        <article class="theory-card">
+          <h3>📉 2. ¿Por qué cae el momento luego del máximo?</h3>
+          <p>
+            En la curva troncal ASCE 41, el tramo C-D presenta una pendiente negativa pronunciada (ablandamiento post-pico o <em>softening</em>). Los estudiantes suelen preguntarse: <em>"¿Por qué la sección pierde momento si el desplazamiento sigue aumentando?"</em>. La física del concreto reforzado lo explica a través de tres mecanismos irreversibles:
+          </p>
+          <ul>
+            <li>
+              <strong>1. Descascaramiento (Spalling) del recubrimiento:</strong> Al superarse la deformación última a compresión del concreto no confinado (\(\varepsilon_c \approx 0.003 - 0.004\)), los 4 cm de recubrimiento perimetral se desprenden, reduciendo drásticamente el área comprimida y el brazo mecánico interno \(j \cdot d\).
+            </li>
+            <li>
+              <strong>2. Agotamiento del confinamiento transversal:</strong> El concreto del núcleo sufre microfisuración severa y dilatación lateral, perdiendo cohesión y soporte triaxial.
+            </li>
+            <li>
+              <strong>3. Pandeo inelástico del acero longitudinal:</strong> Sin el soporte continuo del concreto de recubrimiento, las barras longitudinales comprimidas pandean plásticamente entre estribos, perdiendo drásticamente su capacidad resistente a compresión.
+            </li>
+          </ul>
+        </article>
+
+        <!-- Tarjeta 3: Caso Elástico: F = Ku <==> u = F/K -->
+        <article class="theory-card">
+          <h3>📐 3. El Caso Elástico: Identidad Total</h3>
+          <p>
+            En un sistema con comportamiento elástico lineal, la rigidez lateral \(K_0\) es rigurosamente constante:
+          </p>
+          <div class="math-block">
+            $$K_0 = \frac{3EI}{H^3} = 5925.9\text{ kN/m}$$
+            $$F = K_0 \cdot u \iff u = \frac{F}{K_0}$$
+          </div>
+          <p>
+            La función que liga la fuerza con el desplazamiento es estrictamente biyectiva y monótona creciente en todo el espacio \(\mathbb{R}\). Por lo tanto:
+          </p>
+          <ul>
+            <li>Si fijamos \(u = 90\text{ mm}\) (3% de deriva), obtenemos \(F = 533.3\text{ kN}\).</li>
+            <li>Si aplicamos incrementos de fuerza hasta \(F = 533.3\text{ kN}\), obtenemos exactamente \(u = 90\text{ mm}\).</li>
+          </ul>
+          <p>
+            En elasticidad lineal, <strong>control por fuerza y control por desplazamiento son exactamente la misma cosa</strong>. Esto genera en los estudiantes una falsa intuición que se quiebra radicalmente al ingresar al régimen no lineal.
+          </p>
+        </article>
+
+        <!-- Tarjeta 4: Caso Inelástico: La Trampa del Control por Fuerza -->
+        <article class="theory-card">
+          <h3>💥 4. Por qué el Control por Fuerza Falla</h3>
+          <p>
+            La columna física real tiene una capacidad máxima de flexión \(M_u = 210\text{ kN}\cdot\text{m}\). Por estricto equilibrio estático, su cortante basal jamás puede superar:
+          </p>
+          <div class="math-block">
+            $$V_{\text{cap}} = \frac{M_u}{0.95 H} = \frac{210}{2.85} = 73.56\text{ kN}$$
+          </div>
+          <p>
+            Cuando el ingeniero intenta forzar un análisis por <strong>incremento de fuerzas</strong> buscando la carga elástica teórica de \(533.3\text{ kN}\):
+          </p>
+          <ul>
+            <li>En los pasos 1 a 13, la fuerza externa solicitada crece hasta \(69.33\text{ kN}\) y OpenSees converge con facilidad.</li>
+            <li>En el <strong>paso 14</strong>, el integrador <code>LoadControl</code> impone una fuerza externa solicitada de \(F_{\text{ext}} = 74.67\text{ kN}\).</li>
+            <li><strong>¡Imposibilidad física y matemática!</strong> No existe ninguna configuración cinemática deformable \(u\) capaz de equilibrar \(74.67\text{ kN}\). El desbalance residual \(R = F_{\text{ext}} - F_{\text{int}}(u) > 0\) jamás puede anularse.</li>
+            <li>En el pico, la rigidez tangente se anula (\(\mathbf{K}_t \to 0\)), por lo que \(\det(\mathbf{K}_t) \to 0\) y \(\mathbf{K}_t^{-1}\) no existe. Las correcciones de Newton-Raphson divergen al infinito, OpenSees agota sus 40 iteraciones y emite <code>analyze failed, returned: -3</code>.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         VISOR DEL CÓDIGO OPENSEESPY Y DESCARGAS
+         ======================================================================== -->
+    <section class="code-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.2rem;">
+            💻 Código Completo de Simulación en OpenSeesPy
+          </h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Script reproducible ejecutado con el entorno <code>venv_opensees</code> (OpenSeesPy 3.7.2).
+          </p>
+        </div>
+
+        <div class="download-bar">
+          <a href="Codigos_OpenSeesPy/cantilever_asce41_displacement_vs_force_control.py" download class="download-link">
+            <span>🐍 Descargar Script .py</span>
+          </a>
+          <a href="Codigos_OpenSeesPy/cantilever_asce41_colab.ipynb" download class="download-link">
+            <span>📓 Cuaderno Google Colab (.ipynb)</span>
+          </a>
+          <a href="Codigos_OpenSeesPy/cantilever_simulation_data.json" download class="download-link">
+            <span>📊 Datos JSON</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="code-tabs">
+        <button class="code-tab-btn active" onclick="switchCodeTab(0)">1. Geometría y Rótula ASCE 41</button>
+        <button class="code-tab-btn" onclick="switchCodeTab(1)">2. Caso Elástico (Desp. vs Fuerza)</button>
+        <button class="code-tab-btn" onclick="switchCodeTab(2)">3. Inelástico: Desp. Control</button>
+        <button class="code-tab-btn" onclick="switchCodeTab(3)">4. Inelástico: Falla Control Fuerza</button>
+        <button class="code-tab-btn" onclick="switchCodeTab(4)">5. Script Completo</button>
+      </div>
+
+      <div class="code-display-wrap">
+        <button class="copy-btn" id="btn-copy" onclick="copyCode()">📋 Copiar Código</button>
+        <pre class="code-display" id="code-snippet"></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       PIE DE PÁGINA
+       ======================================================================== -->
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <p style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+        Análisis No Lineal de Estructuras • Universidad Industrial de Santander
+      </p>
+      <p style="margin-bottom: 0.8rem;">
+        Profesor <strong>Orlando Arroyo</strong> | Escuela de Ingeniería Civil | Bucaramanga, Colombia
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+        <a href="index.html">Portal de Clases</a>
+        <a href="recursos_openseespy.html">Recursos OpenSeesPy</a>
+        <a href="04_rotula_plastica_asce41.html">Clase 04 (Rótula ASCE 41)</a>
+        <a href="02_equilibrio_newton_raphson.html">Clase 02 (Newton-Raphson)</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       DATOS NUMÉRICOS EMBEBIDOS DIRECTAMENTE DESDE OPENSEESPY
+       Garantiza autonomía total offline y elimina problemas de CORS
+       ======================================================================== -->
+  <script>
+    const OPENSEES_SIMULATION = {"metadata": {"title": "Comparativa de An\u00e1lisis No Lineal: Control de Desplazamiento vs. Control de Fuerza", "author": "Prof. Orlando Arroyo - Universidad Industrial de Santander", "structure": "Columna en Voladizo (Cantilever Column)", "height_m": 3.0, "section_b_m": 0.4, "section_h_m": 0.4, "E_kPa": 25000000.0, "hinge_location_ratio": 0.05, "hinge_y_m": 0.15000000000000002, "lever_arm_m": 2.85, "drift_target_pct": 3.0, "u_target_m": 0.09, "F_target_elastic_kN": 533.3333333333378, "asce41_parameters": {"My_kNm": 180.0, "theta_y_rad": 1.8e-05, "Mu_kNm": 210.0, "theta_u_rad": 0.012018000000000001, "Mr_kNm": 40.0, "theta_r_rad": 0.024018, "V_yield_kN": 63.1578947368421, "V_cap_kN": 73.68421052631578, "V_residual_kN": 14.035087719298245}, "failure_summary": {"failed_step": 14, "total_steps": 100, "attempted_force_kN": 74.6666666666673, "last_converged_force_kN": 69.33333333333488, "last_converged_disp_mm": 31.815300000001912, "last_converged_drift_pct": 1.0605100000000638, "opensees_error_code": -3}}, "case1_elastic_disp_control": {"disp_m": [0.0, 0.0009, 0.0018, 0.0027, 0.0036, 0.0045, 0.005399999999999999, 0.006299999999999999, 0.007199999999999999, 0.0081, 0.009, 0.009899999999999999, 0.010799999999999999, 0.011699999999999999, 0.012599999999999998, 0.013499999999999998, 0.014399999999999998, 0.015299999999999998, 0.0162, 0.0171, 0.018000000000000002, 0.018900000000000004, 0.019800000000000005, 0.020700000000000007, 0.021600000000000008, 0.02250000000000001, 0.02340000000000001, 0.024300000000000013, 0.025200000000000014, 0.026100000000000016, 0.027000000000000017, 0.02790000000000002, 0.02880000000000002, 0.02970000000000002, 0.030600000000000023, 0.03150000000000002, 0.03240000000000002, 0.03330000000000002, 0.034200000000000015, 0.03510000000000001, 0.03600000000000001, 0.03690000000000001, 0.03780000000000001, 0.038700000000000005, 0.0396, 0.0405, 0.0414, 0.0423, 0.043199999999999995, 0.04409999999999999, 0.04499999999999999, 0.04589999999999999, 0.04679999999999999, 0.047699999999999985, 0.048599999999999983, 0.04949999999999998, 0.05039999999999998, 0.05129999999999998, 0.052199999999999976, 0.053099999999999974, 0.05399999999999997, 0.05489999999999997, 0.05579999999999997, 0.056699999999999966, 0.057599999999999964, 0.05849999999999996, 0.05939999999999996, 0.06029999999999996, 0.061199999999999956, 0.062099999999999954, 0.06299999999999996, 0.06389999999999996, 0.06479999999999995, 0.06569999999999995, 0.06659999999999995, 0.06749999999999995, 0.06839999999999995, 0.06929999999999994, 0.07019999999999994, 0.07109999999999994, 0.07199999999999994, 0.07289999999999994, 0.07379999999999994, 0.07469999999999993, 0.07559999999999993, 0.07649999999999993, 0.07739999999999993, 0.07829999999999993, 0.07919999999999992, 0.08009999999999992, 0.08099999999999992, 0.08189999999999992, 0.08279999999999992, 0.08369999999999991, 0.08459999999999991, 0.08549999999999991, 0.08639999999999991, 0.0872999999999999, 0.0881999999999999, 0.0890999999999999, 0.0899999999999999], "drift_pct": [0.0, 0.03, 0.06, 0.09000000000000001, 0.12, 0.15, 0.17999999999999997, 0.21, 0.24, 0.26999999999999996, 0.3, 0.32999999999999996, 0.35999999999999993, 0.38999999999999996, 0.42, 0.44999999999999996, 0.48, 0.5099999999999999, 0.5399999999999999, 0.5700000000000001, 0.6000000000000001, 0.6300000000000001, 0.6600000000000001, 0.6900000000000003, 0.7200000000000002, 0.7500000000000003, 0.7800000000000004, 0.8100000000000005, 0.8400000000000005, 0.8700000000000004, 0.9000000000000006, 0.9300000000000006, 0.9600000000000006, 0.9900000000000008, 1.0200000000000007, 1.0500000000000007, 1.0800000000000005, 1.1100000000000005, 1.1400000000000006, 1.1700000000000004, 1.2000000000000004, 1.2300000000000004, 1.2600000000000002, 1.2900000000000003, 1.32, 1.35, 1.38, 1.41, 1.4399999999999997, 1.4699999999999998, 1.4999999999999998, 1.5299999999999996, 1.5599999999999996, 1.5899999999999994, 1.6199999999999997, 1.6499999999999995, 1.6799999999999993, 1.7099999999999993, 1.739999999999999, 1.769999999999999, 1.7999999999999992, 1.829999999999999, 1.8599999999999988, 1.889999999999999, 1.9199999999999988, 1.9499999999999986, 1.9799999999999989, 2.0099999999999985, 2.0399999999999983, 2.0699999999999985, 2.0999999999999988, 2.1299999999999986, 2.1599999999999984, 2.1899999999999986, 2.2199999999999984, 2.2499999999999982, 2.2799999999999985, 2.3099999999999983, 2.339999999999998, 2.3699999999999983, 2.399999999999998, 2.429999999999998, 2.4599999999999977, 2.4899999999999975, 2.519999999999998, 2.5499999999999976, 2.5799999999999974, 2.609999999999997, 2.6399999999999975, 2.6699999999999973, 2.699999999999997, 2.7299999999999973, 2.759999999999997, 2.789999999999997, 2.819999999999997, 2.849999999999997, 2.879999999999997, 2.909999999999997, 2.939999999999997, 2.9699999999999966, 2.999999999999997], "shear_kN": [0.0, 5.333333333333255, 10.666666666666723, 16.000000000000227, 21.333333333333492, 26.666666666666284, 31.99999999999979, 37.33333333333377, 42.66666666666604, 48.00000000000011, 53.33333333333257, 58.66666666666579, 63.99999999999958, 69.33333333333317, 74.66666666666583, 80.00000000000169, 85.33333333333358, 90.66666666666643, 96.00000000000021, 101.33333333333438, 106.66666666666666, 112.00000000000044, 117.33333333333385, 122.66666666666575, 128.00000000000142, 133.33333333333408, 138.66666666666976, 144.00000000000165, 149.33333333333468, 154.66666666666734, 159.99999999999923, 165.33333333333186, 170.66666666666717, 176.0000000000002, 181.33333333333664, 186.6666666666674, 192.00000000000196, 197.33333333333346, 202.66666666666953, 208.0000000000018, 213.33333333333331, 218.6666666666633, 223.99999999999633, 229.3333333333339, 234.66666666666467, 239.99999999999997, 245.333333333333, 250.66666666666376, 255.99999999999832, 261.33333333333513, 266.66666666666816, 272.00000000000045, 277.3333333333335, 282.6666666666665, 287.99999999999955, 293.3333333333371, 298.66666666666407, 303.99999999999636, 309.3333333333347, 314.66666666666697, 320.00000000000676, 325.3333333333375, 330.6666666666698, 335.99999999999756, 341.3333333333306, 346.66666666666663, 352.0000000000004, 357.3333333333357, 362.6666666666642, 367.99999999999875, 373.3333333333363, 378.66666666666936, 384.00000000000995, 389.3333333333339, 394.66666666666544, 399.99999999999994, 405.33333333332996, 410.66666666667055, 416.0000000000036, 421.33333333333206, 426.66666666666964, 431.9999999999936, 437.33333333333724, 442.66666666665964, 448.0000000000033, 453.3333333333363, 458.6666666666633, 464.0000000000024, 469.3333333333263, 474.66666666666845, 479.9999999999863, 485.3333333333239, 490.66666666666146, 495.99999999998994, 501.3333333333275, 506.666666666656, 511.9999999999936, 517.3333333333342, 522.6666666666733, 528.0000000000109, 533.3333333333378], "hinge_moment_kNm": [0.0, 15.199999999999777, 30.400000000000162, 45.60000000000065, 60.80000000000045, 75.9999999999989, 91.1999999999994, 106.40000000000124, 121.59999999999822, 136.8000000000003, 151.9999999999978, 167.19999999999752, 182.3999999999988, 197.59999999999954, 212.79999999999762, 228.00000000000483, 243.20000000000073, 258.39999999999935, 273.6000000000006, 288.80000000000297, 304.0, 319.20000000000124, 334.4000000000015, 349.5999999999974, 364.80000000000405, 380.00000000000216, 395.2000000000088, 410.4000000000047, 425.60000000000383, 440.80000000000194, 455.99999999999784, 471.19999999999584, 486.40000000000146, 501.6000000000006, 516.8000000000094, 532.000000000002, 547.2000000000056, 562.4000000000003, 577.6000000000082, 592.8000000000051, 608.0, 623.1999999999904, 638.3999999999895, 653.6000000000016, 668.7999999999943, 683.9999999999999, 699.199999999999, 714.3999999999917, 729.5999999999952, 744.8000000000052, 760.0000000000043, 775.2000000000013, 790.4000000000004, 805.5999999999996, 820.7999999999987, 836.0000000000108, 851.1999999999927, 866.3999999999896, 881.6000000000039, 896.8000000000009, 912.0000000000193, 927.200000000012, 942.400000000009, 957.5999999999931, 972.7999999999922, 987.9999999999999, 1003.2000000000012, 1018.4000000000068, 1033.5999999999929, 1048.7999999999965, 1064.0000000000086, 1079.2000000000078, 1094.4000000000283, 1109.6000000000015, 1124.7999999999965, 1139.9999999999998, 1155.1999999999905, 1170.400000000011, 1185.6000000000101, 1200.7999999999963, 1216.0000000000084, 1231.1999999999816, 1246.4000000000112, 1261.59999999998, 1276.8000000000095, 1292.0000000000086, 1307.1999999999903, 1322.400000000007, 1337.5999999999801, 1352.8000000000052, 1367.999999999961, 1383.199999999973, 1398.399999999985, 1413.5999999999713, 1428.7999999999834, 1443.9999999999695, 1459.1999999999816, 1474.4000000000024, 1489.600000000019, 1504.800000000031, 1520.0000000000127], "base_moment_kNm": [0.0, 15.999999999999996, 32.000000000000014, 48.00000000000002, 64.00000000000001, 79.99999999999997, 95.99999999999999, 112.00000000000003, 127.99999999999997, 144.00000000000003, 159.99999999999994, 175.99999999999997, 191.99999999999997, 208.00000000000003, 223.99999999999994, 240.0000000000001, 256.0, 272.00000000000006, 288.00000000000006, 304.0000000000001, 320.00000000000006, 336.00000000000017, 352.00000000000017, 368.0000000000001, 384.0000000000003, 400.0000000000003, 416.00000000000045, 432.0000000000004, 448.0000000000004, 464.0000000000004, 480.00000000000034, 496.0000000000003, 512.0000000000005, 528.0000000000005, 544.0000000000008, 560.0000000000005, 576.0000000000006, 592.0000000000003, 608.0000000000007, 624.0000000000005, 640.0000000000003, 656.0, 672.0, 688.0000000000002, 704.0, 720.0000000000001, 736.0000000000001, 752.0, 767.9999999999999, 784.0000000000001, 800.0000000000001, 815.9999999999999, 831.9999999999999, 847.9999999999999, 863.9999999999999, 880.0000000000001, 895.9999999999997, 911.9999999999994, 927.9999999999999, 943.9999999999998, 960.0, 975.9999999999999, 991.9999999999998, 1007.9999999999994, 1023.9999999999994, 1039.9999999999993, 1055.9999999999995, 1071.9999999999995, 1087.9999999999993, 1103.999999999999, 1119.9999999999998, 1135.9999999999998, 1152.0, 1167.9999999999993, 1183.9999999999993, 1199.9999999999993, 1215.999999999999, 1231.9999999999995, 1247.9999999999995, 1263.999999999999, 1279.9999999999995, 1295.9999999999986, 1311.9999999999993, 1327.9999999999986, 1343.9999999999993, 1359.9999999999993, 1375.9999999999986, 1391.9999999999993, 1407.9999999999984, 1423.9999999999989, 1439.999999999998, 1455.9999999999982, 1471.9999999999984, 1487.9999999999982, 1503.9999999999984, 1519.999999999998, 1535.9999999999984, 1551.9999999999984, 1567.999999999999, 1583.9999999999993, 1599.9999999999986]}, "case2_elastic_force_control": {"disp_m": [0.0, 0.0009000000000000076, 0.0018000000000000151, 0.002700000000000023, 0.00360000000000003, 0.004500000000000038, 0.005400000000000045, 0.006300000000000053, 0.00720000000000006, 0.008100000000000067, 0.009000000000000074, 0.00990000000000008, 0.010800000000000087, 0.011700000000000092, 0.012600000000000104, 0.013500000000000113, 0.01440000000000012, 0.015300000000000128, 0.016200000000000134, 0.017100000000000143, 0.018000000000000155, 0.01890000000000016, 0.019800000000000168, 0.020700000000000177, 0.021600000000000185, 0.02250000000000019, 0.023400000000000195, 0.024300000000000207, 0.025200000000000212, 0.026100000000000224, 0.027000000000000236, 0.027900000000000237, 0.028800000000000246, 0.029700000000000257, 0.03060000000000027, 0.03150000000000028, 0.03240000000000028, 0.033300000000000295, 0.03420000000000029, 0.03510000000000031, 0.036000000000000316, 0.03690000000000033, 0.03780000000000034, 0.03870000000000034, 0.03960000000000035, 0.040500000000000355, 0.04140000000000036, 0.04230000000000037, 0.043200000000000384, 0.04410000000000039, 0.045000000000000394, 0.0459000000000004, 0.04680000000000041, 0.04770000000000042, 0.04860000000000043, 0.04950000000000043, 0.05040000000000043, 0.05130000000000045, 0.05220000000000046, 0.05310000000000048, 0.05400000000000048, 0.05490000000000048, 0.055800000000000495, 0.05670000000000049, 0.057600000000000505, 0.05850000000000051, 0.05940000000000052, 0.06030000000000053, 0.06120000000000054, 0.062100000000000544, 0.06300000000000056, 0.06390000000000057, 0.06480000000000057, 0.06570000000000059, 0.0666000000000006, 0.06750000000000059, 0.0684000000000006, 0.06930000000000062, 0.07020000000000062, 0.07110000000000063, 0.07200000000000063, 0.07290000000000063, 0.07380000000000067, 0.07470000000000065, 0.07560000000000067, 0.07650000000000068, 0.07740000000000069, 0.0783000000000007, 0.0792000000000007, 0.08010000000000071, 0.08100000000000074, 0.08190000000000074, 0.08280000000000075, 0.08370000000000076, 0.08460000000000074, 0.08550000000000076, 0.08640000000000078, 0.08730000000000078, 0.08820000000000078, 0.08910000000000078, 0.0900000000000008], "drift_pct": [0.0, 0.030000000000000252, 0.060000000000000504, 0.09000000000000077, 0.12000000000000098, 0.15000000000000127, 0.18000000000000152, 0.21000000000000177, 0.24000000000000196, 0.27000000000000224, 0.3000000000000025, 0.3300000000000027, 0.3600000000000029, 0.39000000000000307, 0.4200000000000034, 0.4500000000000038, 0.4800000000000039, 0.5100000000000043, 0.5400000000000045, 0.5700000000000048, 0.6000000000000051, 0.6300000000000053, 0.6600000000000056, 0.6900000000000059, 0.7200000000000062, 0.7500000000000063, 0.7800000000000065, 0.8100000000000069, 0.8400000000000071, 0.8700000000000074, 0.9000000000000079, 0.9300000000000079, 0.9600000000000083, 0.9900000000000085, 1.020000000000009, 1.0500000000000091, 1.0800000000000094, 1.1100000000000099, 1.1400000000000097, 1.1700000000000104, 1.2000000000000106, 1.2300000000000109, 1.2600000000000113, 1.2900000000000114, 1.3200000000000116, 1.3500000000000119, 1.3800000000000119, 1.4100000000000124, 1.4400000000000128, 1.470000000000013, 1.500000000000013, 1.5300000000000133, 1.5600000000000136, 1.590000000000014, 1.620000000000014, 1.6500000000000143, 1.6800000000000144, 1.710000000000015, 1.7400000000000155, 1.770000000000016, 1.8000000000000158, 1.830000000000016, 1.8600000000000165, 1.8900000000000163, 1.9200000000000168, 1.950000000000017, 1.9800000000000175, 2.0100000000000176, 2.040000000000018, 2.070000000000018, 2.1000000000000183, 2.130000000000019, 2.160000000000019, 2.19000000000002, 2.22000000000002, 2.2500000000000195, 2.28000000000002, 2.310000000000021, 2.3400000000000207, 2.370000000000021, 2.4000000000000212, 2.430000000000021, 2.460000000000022, 2.4900000000000215, 2.5200000000000222, 2.550000000000023, 2.5800000000000227, 2.6100000000000234, 2.640000000000023, 2.670000000000024, 2.7000000000000246, 2.7300000000000244, 2.760000000000025, 2.7900000000000253, 2.8200000000000247, 2.850000000000025, 2.880000000000026, 2.910000000000026, 2.940000000000026, 2.970000000000026, 3.0000000000000266], "shear_kN": [0.0, 5.333333333333349, 10.666666666666556, 16.000000000000654, 21.333333333333538, 26.666666666666664, 32.000000000000455, 37.333333333333485, 42.66666666666679, 48.00000000000124, 53.33333333333352, 58.66666666666617, 64.00000000000091, 69.33333333333317, 74.66666666666754, 80.0, 85.33333333333358, 90.66666666666605, 96.00000000000098, 101.33333333333438, 106.66666666666818, 112.00000000000121, 117.33333333333347, 122.66666666666536, 128.00000000000182, 133.3333333333337, 138.6666666666671, 144.00000000000242, 149.33333333333468, 154.66666666666998, 160.00000000000338, 165.33333333333528, 170.66666666666794, 176.0000000000002, 181.3333333333359, 186.6666666666674, 192.00000000000043, 197.33333333333727, 202.66666666666876, 208.00000000000406, 213.33333333333255, 218.66666666667012, 224.00000000000242, 229.33333333333695, 234.6666666666677, 240.00000000000074, 245.33333333333226, 250.66666666666376, 256.00000000000364, 261.3333333333344, 266.66666666666816, 272.00000000000045, 277.33333333332587, 282.666666666665, 288.0000000000033, 293.3333333333318, 298.66666666666936, 304.0000000000024, 309.33333333333394, 314.66666666666697, 320.0000000000045, 325.3333333333307, 330.66666666667055, 336.0000000000036, 341.33333333334195, 346.66666666667345, 352.0000000000065, 357.333333333338, 362.66666666667027, 368.00000000000483, 373.3333333333348, 378.6666666666709, 384.00000000000085, 389.3333333333324, 394.66666666666544, 399.99999999999847, 405.33333333334207, 410.666666666666, 415.99999999999903, 421.3333333333336, 426.66666666666964, 431.9999999999981, 437.33333333334025, 442.6666666666642, 447.99999999999574, 453.3333333333439, 458.66666666666936, 464.0000000000024, 469.33333333333997, 474.66666666666845, 479.99999999999847, 485.3333333333375, 490.666666666666, 496.0000000000036, 501.33333333334116, 506.6666666666651, 512.0000000000057, 517.3333333333342, 522.6666666666824, 528.0000000000246, 533.3333333333485], "hinge_moment_kNm": [0.0, 15.200000000000045, 30.399999999999686, 45.60000000000186, 60.80000000000059, 76.0, 91.2000000000013, 106.40000000000043, 121.60000000000036, 136.80000000000354, 152.00000000000054, 167.19999999999857, 182.4000000000026, 197.59999999999954, 212.80000000000248, 228.0, 243.20000000000073, 258.3999999999982, 273.6000000000028, 288.80000000000297, 304.0000000000043, 319.20000000000346, 334.4000000000004, 349.59999999999627, 364.8000000000052, 380.0000000000011, 395.2000000000013, 410.4000000000069, 425.60000000000383, 440.80000000000945, 456.00000000000966, 471.20000000000556, 486.4000000000036, 501.6000000000006, 516.8000000000073, 532.000000000002, 547.2000000000012, 562.4000000000112, 577.6000000000059, 592.8000000000116, 607.9999999999977, 623.2000000000098, 638.4000000000069, 653.6000000000104, 668.800000000003, 684.0000000000022, 699.199999999997, 714.3999999999917, 729.6000000000104, 744.800000000003, 760.0000000000043, 775.2000000000013, 790.3999999999787, 805.5999999999952, 820.8000000000094, 835.9999999999956, 851.2000000000077, 866.4000000000068, 881.6000000000017, 896.8000000000009, 912.0000000000128, 927.1999999999925, 942.4000000000111, 957.6000000000103, 972.8000000000246, 988.0000000000193, 1003.2000000000185, 1018.4000000000133, 1033.6000000000104, 1048.8000000000138, 1064.000000000004, 1079.200000000012, 1094.4000000000024, 1109.5999999999974, 1124.7999999999965, 1139.9999999999957, 1155.2000000000248, 1170.399999999998, 1185.5999999999972, 1200.8000000000009, 1216.0000000000084, 1231.1999999999946, 1246.4000000000196, 1261.5999999999929, 1276.799999999988, 1292.00000000003, 1307.2000000000078, 1322.400000000007, 1337.600000000019, 1352.8000000000052, 1367.9999999999957, 1383.2000000000119, 1398.399999999998, 1413.6000000000101, 1428.8000000000222, 1443.9999999999955, 1459.2000000000162, 1474.4000000000024, 1489.600000000045, 1504.80000000007, 1520.0000000000432], "base_moment_kNm": [0.0, 16.000000000000135, 32.000000000000256, 48.00000000000045, 64.00000000000054, 80.00000000000067, 96.00000000000081, 112.00000000000094, 128.00000000000108, 144.00000000000125, 160.0000000000013, 176.0000000000014, 192.00000000000162, 208.00000000000165, 224.00000000000188, 240.000000000002, 256.00000000000216, 272.0000000000022, 288.00000000000244, 304.0000000000026, 320.0000000000028, 336.0000000000029, 352.00000000000296, 368.00000000000307, 384.0000000000034, 400.0000000000034, 416.0000000000035, 432.00000000000387, 448.00000000000387, 464.0000000000042, 480.0000000000043, 496.0000000000043, 512.0000000000044, 528.0000000000045, 544.0000000000049, 560.0000000000049, 576.0000000000051, 592.0000000000055, 608.0000000000053, 624.0000000000058, 640.0000000000056, 656.000000000006, 672.000000000006, 688.0000000000063, 704.0000000000064, 720.0000000000064, 736.0000000000064, 752.0000000000065, 768.0000000000069, 784.0000000000068, 800.000000000007, 816.0000000000072, 832.0000000000067, 848.0000000000074, 864.0000000000077, 880.0000000000075, 896.0000000000077, 912.0000000000082, 928.0000000000083, 944.0000000000084, 960.0000000000086, 976.0000000000083, 992.000000000009, 1008.0000000000091, 1024.0000000000095, 1040.0000000000095, 1056.0000000000095, 1072.0000000000098, 1088.00000000001, 1104.0000000000098, 1120.00000000001, 1136.0000000000102, 1152.0000000000102, 1168.0000000000105, 1184.0000000000105, 1200.0000000000105, 1216.0000000000111, 1232.000000000011, 1248.000000000011, 1264.0000000000111, 1280.0000000000116, 1296.0000000000111, 1312.0000000000123, 1328.0000000000116, 1344.0000000000116, 1360.0000000000127, 1376.0000000000123, 1392.0000000000127, 1408.000000000013, 1424.0000000000127, 1440.0000000000127, 1456.0000000000134, 1472.0000000000132, 1488.0000000000134, 1504.0000000000139, 1520.0000000000134, 1536.000000000014, 1552.0000000000139, 1568.000000000015, 1584.0000000000155, 1600.0000000000152]}, "case3_inelastic_disp_control": {"disp_m": [0.0, 0.0006, 0.0012, 0.0018, 0.0024, 0.0029999999999999996, 0.0035999999999999995, 0.0042, 0.0048, 0.005399999999999999, 0.005999999999999999, 0.006599999999999999, 0.007199999999999999, 0.007799999999999999, 0.0084, 0.009, 0.0096, 0.010199999999999999, 0.010799999999999999, 0.011399999999999999, 0.011999999999999999, 0.012599999999999998, 0.013199999999999998, 0.013799999999999998, 0.014399999999999998, 0.014999999999999998, 0.015599999999999998, 0.0162, 0.0168, 0.0174, 0.018, 0.0186, 0.0192, 0.019799999999999998, 0.020399999999999998, 0.020999999999999998, 0.021599999999999998, 0.022199999999999998, 0.022799999999999997, 0.023399999999999997, 0.023999999999999997, 0.024599999999999997, 0.025199999999999997, 0.025799999999999997, 0.026399999999999996, 0.026999999999999996, 0.027599999999999996, 0.028199999999999996, 0.028799999999999996, 0.029399999999999996, 0.029999999999999995, 0.030599999999999995, 0.031199999999999995, 0.031799999999999995, 0.0324, 0.033, 0.033600000000000005, 0.03420000000000001, 0.03480000000000001, 0.035400000000000015, 0.03600000000000002, 0.03660000000000002, 0.037200000000000025, 0.03780000000000003, 0.03840000000000003, 0.039000000000000035, 0.03960000000000004, 0.04020000000000004, 0.040800000000000045, 0.04140000000000005, 0.04200000000000005, 0.042600000000000054, 0.04320000000000006, 0.04380000000000006, 0.044400000000000064, 0.04500000000000007, 0.04560000000000007, 0.046200000000000074, 0.04680000000000008, 0.04740000000000008, 0.048000000000000084, 0.04860000000000009, 0.04920000000000009, 0.049800000000000094, 0.0504000000000001, 0.0510000000000001, 0.051600000000000104, 0.05220000000000011, 0.05280000000000011, 0.053400000000000114, 0.05400000000000012, 0.05460000000000012, 0.055200000000000124, 0.05580000000000013, 0.05640000000000013, 0.057000000000000134, 0.05760000000000014, 0.05820000000000014, 0.058800000000000144, 0.05940000000000015, 0.06000000000000015, 0.060600000000000154, 0.06120000000000016, 0.06180000000000016, 0.062400000000000164, 0.06300000000000017, 0.06360000000000017, 0.06420000000000017, 0.06480000000000018, 0.06540000000000018, 0.06600000000000018, 0.06660000000000019, 0.06720000000000019, 0.0678000000000002, 0.0684000000000002, 0.0690000000000002, 0.0696000000000002, 0.0702000000000002, 0.07080000000000021, 0.07139999999992327, 0.07199999999992328, 0.07259999999992328, 0.07319999999992328, 0.07379999999992329, 0.07439999999992329, 0.0749999999999233, 0.0755999999999233, 0.0761999999999233, 0.0767999999999233, 0.07739999999992331, 0.07799999999992331, 0.07859999999992331, 0.07919999999992332, 0.07979999999992332, 0.08039999999992332, 0.08099999999992333, 0.08159999999992333, 0.08219999999992333, 0.08279999999992334, 0.08339999999992334, 0.08399999999992334, 0.08459999999992335, 0.08519999999992335, 0.08579999999992335, 0.08639999999992336, 0.08699999999992336, 0.08759999999992336, 0.08819999999992337, 0.08879999999992337, 0.08939999999992337, 0.08999999999992338], "drift_pct": [0.0, 0.019999999999999997, 0.039999999999999994, 0.06, 0.07999999999999999, 0.09999999999999998, 0.12, 0.13999999999999999, 0.15999999999999998, 0.17999999999999997, 0.19999999999999996, 0.21999999999999997, 0.24, 0.25999999999999995, 0.27999999999999997, 0.3, 0.31999999999999995, 0.33999999999999997, 0.35999999999999993, 0.37999999999999995, 0.3999999999999999, 0.42, 0.43999999999999995, 0.4599999999999999, 0.48, 0.49999999999999994, 0.5199999999999999, 0.5399999999999999, 0.5599999999999999, 0.58, 0.6, 0.62, 0.6399999999999999, 0.6599999999999999, 0.6799999999999999, 0.7, 0.7199999999999999, 0.74, 0.7599999999999999, 0.7799999999999999, 0.7999999999999998, 0.8199999999999998, 0.84, 0.8599999999999999, 0.8799999999999999, 0.8999999999999999, 0.9199999999999998, 0.9399999999999998, 0.96, 0.9799999999999998, 0.9999999999999999, 1.0199999999999998, 1.0399999999999998, 1.0599999999999998, 1.0799999999999998, 1.1, 1.12, 1.1400000000000001, 1.1600000000000004, 1.1800000000000006, 1.2000000000000006, 1.2200000000000009, 1.2400000000000009, 1.260000000000001, 1.2800000000000011, 1.3000000000000012, 1.3200000000000012, 1.3400000000000014, 1.3600000000000014, 1.3800000000000014, 1.4000000000000017, 1.4200000000000017, 1.440000000000002, 1.4600000000000022, 1.4800000000000022, 1.5000000000000022, 1.5200000000000025, 1.5400000000000025, 1.5600000000000025, 1.5800000000000025, 1.6000000000000028, 1.620000000000003, 1.640000000000003, 1.6600000000000033, 1.6800000000000033, 1.7000000000000033, 1.7200000000000035, 1.7400000000000038, 1.7600000000000036, 1.7800000000000038, 1.800000000000004, 1.8200000000000038, 1.840000000000004, 1.8600000000000043, 1.8800000000000043, 1.9000000000000044, 1.9200000000000046, 1.9400000000000046, 1.9600000000000048, 1.980000000000005, 2.000000000000005, 2.020000000000005, 2.0400000000000054, 2.0600000000000054, 2.0800000000000054, 2.100000000000006, 2.1200000000000054, 2.140000000000006, 2.160000000000006, 2.180000000000006, 2.200000000000006, 2.2200000000000064, 2.2400000000000064, 2.2600000000000064, 2.2800000000000065, 2.3000000000000065, 2.320000000000007, 2.340000000000007, 2.360000000000007, 2.3799999999974424, 2.399999999997443, 2.4199999999974424, 2.439999999997443, 2.459999999997443, 2.479999999997443, 2.499999999997443, 2.5199999999974434, 2.5399999999974434, 2.5599999999974434, 2.579999999997444, 2.5999999999974435, 2.619999999997444, 2.639999999997444, 2.659999999997444, 2.679999999997444, 2.6999999999974444, 2.7199999999974445, 2.7399999999974445, 2.7599999999974445, 2.7799999999974445, 2.799999999997445, 2.819999999997445, 2.839999999997445, 2.859999999997445, 2.8799999999974455, 2.899999999997445, 2.9199999999974455, 2.9399999999974455, 2.9599999999974456, 2.979999999997446, 2.999999999997446], "shear_kN": [0.0, 3.538523462622128, 7.077046925244351, 10.615570387866454, 14.15409385048856, 17.69261731311085, 21.23114077573253, 24.76966423835449, 28.30818770097759, 31.846711163598417, 35.3852346262217, 38.92375808884424, 42.462281551465914, 46.000805014088535, 49.53932847671088, 53.0778519393317, 56.616375401954045, 60.154898864577525, 63.18446346280514, 63.360017555409435, 63.53557164801448, 63.71112574061896, 63.8866798332242, 64.06223392582697, 64.23778801843373, 64.41334211103613, 64.58889620364175, 64.76445029624718, 64.9400043888528, 65.11555848145727, 65.291112574061, 65.46666666666661, 65.64222075927071, 65.81777485187577, 65.99332894448139, 66.1688830370855, 66.3444371296913, 66.51999122229691, 66.69554531490044, 66.87109940750474, 67.04665350011035, 67.22220759271408, 67.39776168531951, 67.57331577792343, 67.7488698705279, 67.92442396313334, 68.09997805573894, 68.27553214834248, 68.45108624094696, 68.62664033355372, 68.80219442615801, 68.97774851876306, 69.15330261136754, 69.32885670397164, 69.50441079657669, 69.67996488918232, 69.8555189817866, 70.03107307439052, 70.20662716699576, 70.38218125959986, 70.5577353522051, 70.73328944481091, 70.9088435374152, 71.08439763002025, 71.25995172262435, 71.43550581522845, 71.61105990783369, 71.7866140004395, 71.96216809304379, 72.1377221856475, 72.31327627825313, 72.48883037085875, 72.66438446346247, 72.83993855606809, 73.0154926486737, 73.1910467412761, 73.36660083388172, 73.54215492648544, 73.40124304873919, 71.91830770908287, 70.43537236942541, 68.95243702976586, 67.46950169010972, 65.98656635045188, 64.50363101079404, 63.02069567113638, 61.537760331478914, 60.0548249918224, 58.57188965216399, 57.08895431250652, 55.60601897284925, 54.12308363319084, 52.640148293534516, 51.15721295387572, 49.674277614217694, 48.191342274560604, 46.70840693490276, 45.22547159524549, 43.74253625558793, 42.25960091593028, 40.776665576273096, 39.29373023661459, 37.8107948969577, 36.32785955729929, 34.84492421764211, 33.36198887798446, 31.879053538327373, 30.396118198669054, 28.91318285901159, 27.430247519353653, 25.947312179696663, 24.464376840038536, 22.981441500381262, 21.49850616072347, 20.0155708210661, 18.532635481408352, 17.049700141750606, 15.566764802093141, 14.083829462435299, 14.035087719298216, 14.035087719298264, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985, 14.035087719298216, 14.0350877192985], "hinge_moment_kNm": [0.0, 10.084791868473065, 20.1695837369464, 30.254375605419394, 40.339167473892395, 50.423959342365926, 60.508751210837715, 70.5935430793103, 80.67833494778614, 90.7631268162555, 100.84791868473185, 110.93271055320608, 121.01750242167786, 131.10229429015232, 141.18708615862602, 151.27187802709534, 161.35666989556904, 171.44146176404595, 180.07572086899467, 180.5760500329169, 181.0763791968413, 181.57670836076403, 182.07703752468896, 182.57736668860687, 183.07769585253615, 183.57802501645298, 184.078354180379, 184.57868334430447, 185.07901250823048, 185.57934167215322, 186.07967083607386, 186.57999999999984, 187.08032916392153, 187.58065832784595, 188.08098749177196, 188.58131665569366, 189.0816458196202, 189.5819749835462, 190.08230414746626, 190.58263331138852, 191.0829624753145, 191.58329163923514, 192.0836208031606, 192.58394996708176, 193.0842791310045, 193.58460829493, 194.084937458856, 194.58526662277606, 195.08559578669886, 195.5859249506281, 196.08625411455034, 196.58658327847473, 197.08691244239748, 197.58724160631917, 198.0875707702436, 198.5878999341696, 199.08822909809183, 199.58855826201298, 200.0888874259379, 200.5892165898596, 201.08954575378453, 201.5898749177111, 202.09020408163332, 202.5905332455577, 203.0908624094794, 203.5911915734011, 204.09152073732602, 204.59184990125257, 205.0921790651748, 205.5925082290954, 206.09283739302143, 206.59316655694744, 207.09349572086805, 207.59382488479406, 208.09415404872004, 208.59448321263687, 209.0948123765629, 209.5951415404835, 209.1935426889067, 204.9671769708862, 200.74081125286241, 196.5144455348327, 192.2880798168127, 188.06171409878786, 183.835348380763, 179.6089826627387, 175.3826169447149, 171.15625122669385, 166.92988550866738, 162.70351979064358, 158.47715407262035, 154.25078835459388, 150.02442263657338, 145.7980569185458, 141.57169120052043, 137.3453254824977, 133.11895976447286, 128.89259404644963, 124.6662283284256, 120.43986261040129, 116.21349689237833, 111.98713117435159, 107.76076545632945, 103.53439973830298, 99.30803402028002, 95.08166830225571, 90.85530258423302, 86.6289368662068, 82.40257114818304, 78.1762054301579, 73.94983971213549, 69.72347399410982, 65.49710827608659, 61.27074255806189, 57.04437684003838, 52.81801112201381, 48.591645403989226, 44.365279685965454, 40.1389139679406, 39.999999999999915, 40.00000000000006, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725, 39.999999999999915, 40.000000000000725], "hinge_rot_rad": [0.0, 1.0084791868473077e-06, 2.016958373694622e-06, 3.025437560541923e-06, 4.033916747389231e-06, 5.042395934236538e-06, 6.050875121083846e-06, 7.0593543079311536e-06, 8.067833494778488e-06, 9.076312681625769e-06, 1.0084791868473077e-05, 1.1093271055320438e-05, 1.2101750242167692e-05, 1.3110229429015e-05, 1.4118708615862361e-05, 1.5127187802709615e-05, 1.6135666989556922e-05, 1.7144146176404284e-05, 4.8288347597103725e-05, 0.00024842001316655754, 0.0004485516787360107, 0.0006486833443054644, 0.0008488150098749178, 0.0010489466754443708, 0.0012490783410138246, 0.0014492100065832782, 0.0016493416721527314, 0.001849473337722186, 0.0020496050032916394, 0.002249736668861093, 0.0024498683344305466, 0.0026499999999999996, 0.002850131665569454, 0.0030502633311389068, 0.0032503949967083606, 0.003450526662277814, 0.0036506583278472678, 0.0038507899934167203, 0.0040509216589861745, 0.004251053324555628, 0.004451184990125082, 0.004651316655694535, 0.00485144832126399, 0.005051579986833442, 0.005251711652402896, 0.005451843317972349, 0.005651974983541802, 0.005852106649111257, 0.00605223831468071, 0.006252369980250163, 0.006452501645819617, 0.00665263331138907, 0.006852764976958524, 0.007052896642527977, 0.007253028308097433, 0.007453159973666887, 0.0076532916392363405, 0.007853423304805797, 0.008053554970375253, 0.008253686635944706, 0.008453818301514161, 0.008653949967083616, 0.00885408163265307, 0.009054213298222525, 0.00925434496379198, 0.009454476629361434, 0.009654608294930889, 0.009854739960500344, 0.010054871626069797, 0.010255003291639253, 0.010455134957208708, 0.010655266622778162, 0.010855398288347615, 0.011055529953917072, 0.011255661619486526, 0.01145579328505598, 0.011655924950625434, 0.01185605661619489, 0.012074926398429872, 0.012373258096172759, 0.012671589793915645, 0.012969921491658532, 0.013268253189401419, 0.013566584887144306, 0.013864916584887192, 0.014163248282630079, 0.014461579980372967, 0.014759911678115852, 0.015058243375858739, 0.015356575073601627, 0.015654906771344512, 0.0159532384690874, 0.01625157016683029, 0.016549901864573172, 0.01684823356231606, 0.017146565260058946, 0.017444896957801836, 0.017743228655544722, 0.018041560353287606, 0.018339892051030496, 0.018638223748773382, 0.018936555446516266, 0.019234887144259152, 0.019533218842002043, 0.01983155053974493, 0.020129882237487816, 0.0204282139352307, 0.02072654563297359, 0.021024877330716476, 0.02132320902845936, 0.02162154072620225, 0.021919872423945136, 0.022218204121688023, 0.022516535819430906, 0.022814867517173796, 0.023113199214916683, 0.02341153091265957, 0.023709862610402452, 0.024008194308145343, 0.02422160664817253, 0.02443213296396199, 0.024642659279751462, 0.02485318559554094, 0.025063711911330413, 0.025274238227119886, 0.025484764542909363, 0.025695290858698837, 0.025905817174488314, 0.026116343490277787, 0.02632686980606726, 0.026537396121856738, 0.02674792243764621, 0.026958448753435685, 0.027168975069225162, 0.027379501385014635, 0.027590027700804112, 0.027800554016593586, 0.02801108033238306, 0.028221606648172536, 0.02843213296396201, 0.028642659279751487, 0.02885318559554096, 0.029063711911330434, 0.02927423822711991, 0.029484764542909384, 0.029695290858698858, 0.029905817174488335, 0.030116343490277808, 0.030326869806067285, 0.03053739612185676, 0.030747922437646232], "base_moment_kNm": [0.0, 10.615570387866404, 21.231140775732815, 31.84671116359922, 42.46228155146562, 53.07785193933203, 63.693422327198405, 74.30899271506479, 84.92456310293126, 95.54013349079757, 106.15570387866406, 116.77127426653047, 127.38684465439685, 138.00241504226332, 148.61798543012972, 159.23355581799606, 169.84912620586246, 180.46469659372892, 189.55339038841348, 190.08005266622777, 190.60671494404218, 191.1333772218565, 191.66003949967086, 192.1867017774851, 192.7133640552996, 193.24002633311378, 193.76668861092818, 194.29335088874257, 194.82001316655698, 195.3466754443713, 195.8733377221856, 196.4, 196.92666227781427, 197.45332455562868, 197.9799868334431, 198.50664911125736, 199.0333113890718, 199.5599736668862, 200.08663594470045, 200.61329822251477, 201.13996050032918, 201.66662277814348, 202.19328505595786, 202.71994733377218, 203.2466096115865, 203.77327188940092, 204.2999341672153, 204.82659644502954, 205.35325872284392, 205.87992100065838, 206.4065832784727, 206.9332455562871, 207.45990783410141, 207.98657011191568, 208.5132323897301, 209.0398946675445, 209.56655694535883, 210.09321922317312, 210.61988150098747, 211.14654377880183, 211.67320605661618, 212.19986833443062, 212.72653061224494, 213.25319289005932, 213.7798551678736, 214.30651744568794, 214.8331797235023, 215.35984200131674, 215.88650427913106, 216.41316655694533, 216.93982883475977, 217.46649111257415, 217.99315339038847, 218.51981566820285, 219.04647794601726, 219.57314022383144, 220.09980250164588, 220.62646477946015, 220.20372914622112, 215.7549231272484, 211.30611710827554, 206.85731108930253, 202.4085050703297, 197.95969905135686, 193.51089303238396, 189.0620870134111, 184.61328099443816, 180.16447497546545, 175.7156689564925, 171.2668629375196, 166.81805691854677, 162.36925089957384, 157.92044488060102, 153.47163886162815, 149.02283284265522, 144.57402682368237, 140.12522080470947, 135.6764147857366, 131.22760876676378, 126.77880274779089, 122.32999672881803, 117.88119070984516, 113.43238469087231, 108.98357867189935, 104.53477265292649, 100.08596663395362, 95.63716061498081, 91.18835459600788, 86.73954857703501, 82.29074255806218, 77.84193653908932, 73.3931305201164, 68.94432450114351, 64.49551848217071, 60.04671246319782, 55.597906444224925, 51.14910042525202, 46.70029440627922, 42.25148838730631, 42.105263157894555, 42.10526315789519, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952, 42.10526315789519, 42.1052631578952], "damage_states": ["El\u00e1stico (Tramo O-B)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "El\u00e1stico (Tramo O-B: M < My)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Endurecimiento / Capping (Tramo B-C: My < M <= Mu)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)", "Meseta Residual (Tramo D-E: M ~ Mr)"]}, "case4_inelastic_force_control": {"disp_m": [0.0, 0.0009043320000000076, 0.0018086640000000152, 0.0027129960000000226, 0.00361732800000003, 0.0045216600000000376, 0.005425992000000046, 0.006330324000000053, 0.007234656000000061, 0.008138988000000066, 0.009043320000000075, 0.009947652000000081, 0.013587300000001818, 0.03181530000000191], "drift_pct": [0.0, 0.030144400000000255, 0.06028880000000051, 0.09043320000000075, 0.12057760000000099, 0.15072200000000124, 0.18086640000000154, 0.21101080000000177, 0.24115520000000204, 0.2712996000000022, 0.3014440000000025, 0.3315884000000027, 0.4529100000000606, 1.0605100000000638], "shear_kN": [0.0, 5.3333333333333846, 10.666666666666769, 15.9999999999998, 21.333333333333492, 26.666666666666664, 32.00000000000026, 37.33333333333452, 42.66666666666793, 48.00000000000124, 53.33333333333352, 58.66666666666693, 64.00000000000091, 69.33333333333488], "hinge_moment_kNm": [0.0, 15.200000000000147, 30.400000000000293, 45.599999999999426, 60.80000000000045, 76.0, 91.20000000000076, 106.40000000000339, 121.6000000000036, 136.80000000000354, 152.00000000000054, 167.20000000000076, 182.4000000000026, 197.6000000000044], "hinge_rot_rad": [0.0, 1.5200000000000126e-06, 3.040000000000025e-06, 4.560000000000024e-06, 6.080000000000077e-06, 7.600000000000049e-06, 9.120000000000102e-06, 1.0640000000000129e-05, 1.21600000000001e-05, 1.3680000000000127e-05, 1.5200000000000098e-05, 1.6720000000000125e-05, 0.0009780000000006073, 0.007058000000000638], "base_moment_kNm": [0.0, 16.000000000000135, 32.00000000000027, 48.000000000000384, 64.00000000000053, 80.00000000000067, 96.00000000000082, 112.00000000000101, 128.00000000000117, 144.00000000000125, 160.0000000000013, 176.00000000000148, 192.00000000000162, 208.00000000000173]}};
+  </script>
+
+  <!-- ========================================================================
+       LÓGICA JAVASCRIPT DEL SIMULADOR Y RENDERIZADO DE LIENZOS
+       ======================================================================== -->
+  <script>
+    /* ==========================================================================
+       ESTADO GLOBAL DE LA APLICACIÓN
+       ========================================================================== */
+    const appState = {
+      mode: 'dc', // 'dc' (Displacement Control), 'fc' (Force Control), 'both' (Comparativa)
+      currentStep: 0,
+      isPlaying: false,
+      speed: 1.0,
+      timerId: null,
+      showElastic: true,
+      showInelastic: true
+    };
+
+    // Extraer datos numéricos de OpenSeesPy
+    const simMeta = OPENSEES_SIMULATION.metadata;
+    const case1_el_dc = OPENSEES_SIMULATION.case1_elastic_disp_control;
+    const case2_el_fc = OPENSEES_SIMULATION.case2_elastic_force_control;
+    const case3_in_dc = OPENSEES_SIMULATION.case3_inelastic_disp_control;
+    const case4_in_fc = OPENSEES_SIMULATION.case4_inelastic_force_control;
+
+    // Número máximo de pasos según el caso
+    const N_STEPS_DC = case3_in_dc.disp_m.length - 1; // 150
+    const N_STEPS_FC = 100; // 100 pasos planificados para fuerza
+    const FAILED_STEP_FC = simMeta.failure_summary.failed_step; // 14
+
+    // Variables globales para referencias de los 4 lienzos
+    let canvasColumn = null;
+    let canvasPushover = null;
+    let canvasHinge = null;
+    let canvasNR = null;
+    let isAppInitialized = false;
+    let themeListenerAdded = false;
+
+/* ==========================================================================
+       VISOR DE CÓDIGO OPENSEESPY
+       ========================================================================== */
+    const codeSnippets = [
+      // Pestaña 0: Geometría y Rótula
+      `# 1. PARÁMETROS GEOMÉTRICOS Y MATERIALES
+H = 3.0           # Altura total (m)
+y_hinge = 0.05 * H  # 0.15 m desde la base (5% de H)
+h_upper = 0.95 * H  # 2.85 m (brazo de palanca superior)
+
+# Sección transversal 400x400 mm y concreto Ec = 25 GPa
+b, h = 0.40, 0.40
+A = b * h
+I = (b * h**3) / 12.0
+E = 25.0e6  # kPa
+
+# 2. RÓTULA PLÁSTICA ASCE 41 (Rígido-Plástica: evita doble contabilidad de flexibilidad)
+My, Mu, Mr = 180.0, 210.0, 40.0   # Fluencia, Capping, Residual (kN*m)
+K_spring_elastic = 1.0e7          # Resorte virtualmente rígido antes de My
+theta_y = My / K_spring_elastic   # ~0.000018 rad (giro plástico elástico ~ 0)
+theta_u = theta_y + 0.012         # +12.0 mrad de giro plástico a Capping
+theta_r = theta_y + 0.024         # +24.0 mrad de giro plástico a Residual
+
+ops.wipe()
+ops.model('basic', '-ndm', 2, '-ndf', 3)
+ops.node(1, 0.0, 0.0); ops.node(2, 0.0, y_hinge)
+ops.node(3, 0.0, y_hinge); ops.node(4, 0.0, H)
+ops.fix(1, 1, 1, 1)
+ops.equalDOF(2, 3, 1, 2) # Acople traslacional
+
+ops.uniaxialMaterial('Hysteretic', 1, 
+                     My, theta_y, Mu, theta_u, Mr, theta_r,
+                     -My, -theta_y, -Mu, -theta_u, -Mr, -theta_r,
+                     0.0, 0.0, 0.0, 0.0, 0.0)
+
+ops.element('zeroLength', 1, 2, 3, '-mat', 1, '-dir', 6)
+ops.geomTransf('Linear', 1)
+ops.element('elasticBeamColumn', 2, 1, 2, A, E, I, 1)
+ops.element('elasticBeamColumn', 3, 3, 4, A, E, I, 1)`,
+
+      // Pestaña 1: Caso Elástico
+      `# CASO 1: MODELO ELÁSTICO - CONTROL POR DESPLAZAMIENTO HASTA 3%
+# Aplica desplazamiento hasta 90 mm en la cúspide
+ops.integrator('DisplacementControl', 3, 1, 0.09 / 100)
+ops.analysis('Static')
+
+for step in range(100):
+    ops.analyze(1)
+
+# Reporta fuerza requerida para 3% de deriva:
+F_target_elastic = 533.33  # kN
+
+# CASO 2: MODELO ELÁSTICO - CONTROL POR FUERZA
+# Aplica la carga F_target_elastic en 100 incrementos
+ops.load(3, F_target_elastic, 0.0, 0.0)
+ops.integrator('LoadControl', 1.0 / 100)
+for step in range(100):
+    ops.analyze(1)
+
+# RESULTADO: Desplazamiento final = exactamente 90.0 mm
+# F = K*u  <=>  u = F/K  (Identidad total en elasticidad)`,
+
+      // Pestaña 2: Inelástico Desp Control
+      `# CASO 3: INELÁSTICO (RÓTULA ASCE 41) - CONTROL POR DESPLAZAMIENTO
+ops.timeSeries('Linear', 1)
+ops.pattern('Plain', 1, 1)
+ops.load(4, 1.0, 0.0, 0.0) # Carga patrón unitaria
+
+# Integrador DisplacementControl en el nodo superior (DOF 1)
+N_steps = 150
+du = 0.09 / N_steps # Deriva objetivo: 3% (90 mm)
+ops.integrator('DisplacementControl', 4, 1, du)
+ops.system('BandGeneral')
+ops.test('NormDispIncr', 1.0e-6, 50, 0)
+ops.algorithm('Newton')
+ops.analysis('Static')
+
+disp, force, moment = [], [], []
+for step in range(1, N_steps + 1):
+    ret = ops.analyze(1)
+    if ret != 0:
+        ops.algorithm('ModifiedNewton', '-initial')
+        ops.analyze(1)
+        ops.algorithm('Newton')
+    
+    u = ops.nodeDisp(4, 1)
+    ops.reactions()
+    V = -ops.nodeReaction(1, 1)
+    disp.append(u)
+    force.append(V)
+    moment.append(V * h_upper)
+
+# RESULTADO: 100% de convergencia. Captura rama descendente:
+# Pico V_max = 73.56 kN  ->  Residual final V_fin = 14.04 kN`,
+
+      // Pestaña 3: Inelástico Fuerza Control
+      `# CASO 4: INELÁSTICO - CONTROL POR FUERZA BUSCANDO F_el_3% (533.3 kN)
+# Capacidad física máxima real: V_cap = 73.56 kN
+ops.timeSeries('Linear', 1)
+ops.pattern('Plain', 1, 1)
+ops.load(4, 533.33, 0.0, 0.0) # Carga objetivo elástica
+
+N_steps = 100
+ops.integrator('LoadControl', 1.0 / N_steps)
+ops.test('NormDispIncr', 1.0e-6, 40, 0)
+ops.algorithm('Newton')
+ops.analysis('Static')
+
+for step in range(1, N_steps + 1):
+    ret = ops.analyze(1)
+    if ret != 0:
+        print(f"❌ ¡COLAPSO NUMÉRICO EN PASO {step}!")
+        print(f"Fuerza externa solicitada: {step * 5.33:.2f} kN")
+        print(f"Capacidad máxima real: 73.56 kN")
+        print("DIAGNÓSTICO: F_ext > V_cap. Residuo no converge. Error -3.")
+        break
+
+# OpenSees salida en consola:
+# WARNING: CTestNormDispIncr::test() - failed to converge after 40 iterations
+# OpenSees > analyze failed, returned: -3 error flag (Paso 14)`,
+
+      // Pestaña 4: Script Completo
+      "\"\"\"\n================================================================================\nUNIVERSIDAD INDUSTRIAL DE SANTANDER - ESCUELA DE INGENIER\u00cdA CIVIL\nCURSO: AN\u00c1LISIS NO LINEAL DE ESTRUCTURAS\nProfesor: Orlando Arroyo\n\nM\u00f3dulo Pedag\u00f3gico:\n\u00bfPor qu\u00e9 el An\u00e1lisis No Lineal exige Control por Desplazamiento?\nComparaci\u00f3n de Columna en Voladizo: Modelo El\u00e1stico vs. Inel\u00e1stico (R\u00f3tula ASCE 41)\nBajo Control de Desplazamiento (Pushover) y Control de Fuerza (Carga Mon\u00f3tona)\n================================================================================\n\nEste script realiza cuatro simulaciones num\u00e9ricas en OpenSeesPy:\n  1. Modelo El\u00e1stico bajo Control por Desplazamiento hasta 3% de deriva (90 mm).\n     -> Obtiene la curva lineal y la fuerza el\u00e1stica objetivo: F_el_3%.\n  2. Modelo El\u00e1stico bajo Control por Fuerza hasta F_el_3%.\n     -> Demuestra que en elasticidad lineal F = K*u <=> u = F/K (identidad total).\n  3. Modelo Inel\u00e1stico (R\u00f3tula ASCE 41 al 5% H) bajo Control por Desplazamiento.\n     -> Captura la fluencia seccional (My), el endurecimiento a pico (Mu),\n        la degradaci\u00f3n de resistencia (softening) por descascaramiento y pandeo,\n        y la meseta residual (Mr).\n  4. Modelo Inel\u00e1stico bajo Control por Fuerza buscando alcanzar F_el_3%.\n     -> Demuestra la falla de convergencia de Newton-Raphson cuando la fuerza\n        externa solicitada supera la capacidad resistente m\u00e1xima (F_ext > V_cap).\n        No existe equilibrio posible y el determinante de rigidez colapsa.\n\nExporta:\n  - cantilever_simulation_data.json (para consumo del visualizador HTML)\n  - cantilever_asce41_comparison.png (gr\u00e1ficas comparativas en alta resoluci\u00f3n)\n================================================================================\n\"\"\"\n\nimport os\nimport sys\nimport json\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport openseespy.opensees as ops\n\n# ==============================================================================\n# 1. PAR\u00c1METROS GEOM\u00c9TRICOS Y MATERIALES DE LA COLUMNA\n# ==============================================================================\nH = 3.0           # Altura total de la columna (m)\ndrift_target = 0.03  # Deriva m\u00e1xima objetivo = 3% (0.09 m = 90 mm)\nu_target = drift_target * H  # 0.09 m\n\n# Posici\u00f3n de la r\u00f3tula pl\u00e1stica concentrada al 5% de la altura\ny_hinge = 0.05 * H        # 0.15 m desde la base\nh_upper = H - y_hinge     # 2.85 m (brazo de palanca superior hasta la carga)\n\n# Propiedades de la secci\u00f3n de concreto reforzado (400 mm x 400 mm)\nb = 0.40          # Ancho de la secci\u00f3n (m)\nh = 0.40          # Altura de la secci\u00f3n (m)\nA = b * h         # \u00c1rea de la secci\u00f3n transversal = 0.16 m2\nI = (b * h**3) / 12.0  # Momento de inercia = 0.002133 m4\n\n# M\u00f3dulo de elasticidad del concreto (f'c = 28 MPa -> Ec ~ 25 GPa)\nE = 25.0e6        # kPa (kN/m2)\nEI = E * I        # Rigidez a flexi\u00f3n el\u00e1stica = 53333.33 kN*m2\n\n# Rigidez lateral el\u00e1stica te\u00f3rica del voladizo: K_lat = 3*EI / H^3\nK_lat_theor = (3.0 * EI) / (H**3)  # 5925.93 kN/m\n\n# ==============================================================================\n# 2. PAR\u00c1METROS DE LA R\u00d3TULA PL\u00c1STICA ASCE 41-17 / ASCE 41-23\n# ==============================================================================\n# Para evitar la \"doble contabilidad de la flexibilidad el\u00e1stica\" (double-counting\n# of elastic flexibility), el resorte concentrado zeroLength modela \u00daNICAMENTE\n# la deformaci\u00f3n inel\u00e1stica / pl\u00e1stica (theta_p), tal como lo estipula la norma ASCE 41.\n# Toda la flexibilidad el\u00e1stica de la columna ya la aportan los elementos de viga (3EI/H^3).\n# Por tanto, el resorte es virtualmente r\u00edgido antes de fluencia (theta_y ~ 0),\n# garantizando que en el rango el\u00e1stico (0 a My), ambos modelos (el\u00e1stico e inel\u00e1stico)\n# sigan EXACTAMENTE la misma recta de rigidez K0 = 5925.9 kN/m.\n\nMy = 180.0        # kN*m (Momento de fluencia)\nMu = 210.0        # kN*m (Momento m\u00e1ximo / Capping, 1.17 My)\nMr = 40.0         # kN*m (Momento residual post-pico, 0.22 My)\n\n# Rigidez el\u00e1stica del resorte muy alta para representar r\u00f3tula r\u00edgida-pl\u00e1stica:\nK_spring_elastic = 1.0e7  # kNm/rad (>> 4*EI/H = 7.1e4 kNm/rad)\ntheta_y = My / K_spring_elastic  # 0.000018 rad (0.018 mrad ~ 0)\n\n# Deformaciones pl\u00e1sticas seg\u00fan ASCE 41:\n# a = 0.012 rad (rotaci\u00f3n pl\u00e1stica de fluencia a pico capping)\n# b = 0.024 rad (rotaci\u00f3n pl\u00e1stica de fluencia a residual)\ntheta_u = theta_y + 0.012  # rad (~ 0.012 rad)\ntheta_r = theta_y + 0.024  # rad (~ 0.024 rad)\n\n# Capacidad cortante lateral te\u00f3rica en el pico: V_cap = Mu / h_upper\nV_cap_theor = Mu / h_upper  # 210 / 2.85 = 73.68 kN\nV_yield_theor = My / h_upper  # 180 / 2.85 = 63.16 kN\nV_res_theor = Mr / h_upper  # 40 / 2.85 = 14.04 kN\n\nprint(\"=\" * 80)\nprint(\"INICIANDO SIMULACIONES NUM\u00c9RICAS EN OPENSEESPY\")\nprint(f\"Columna en voladizo H = {H:.2f} m | Secci\u00f3n: {b*1000:.0f}x{h*1000:.0f} mm\")\nprint(f\"R\u00f3tula ASCE 41 al 5% de H (y = {y_hinge:.2f} m, brazo h_lever = {h_upper:.2f} m)\")\nprint(f\"Capacidad m\u00e1xima de momento Mu = {Mu:.1f} kN*m -> Cortante m\u00e1ximo V_cap = {V_cap_theor:.2f} kN\")\nprint(\"=\" * 80)\n\n# ==============================================================================\n# CASO 1: MODELO EL\u00c1STICO - CONTROL POR DESPLAZAMIENTO (PUSHOVER HASTA 3% DERIVA)\n# ==============================================================================\nprint(\"\\n[1/4] Ejecutando: Modelo El\u00e1stico con Control por Desplazamiento...\")\nops.wipe()\nops.model('basic', '-ndm', 2, '-ndf', 3)\n\nops.node(1, 0.0, 0.0)\nops.node(2, 0.0, y_hinge)\nops.node(3, 0.0, H)\n\nops.fix(1, 1, 1, 1)\n\nops.geomTransf('Linear', 1)\nops.element('elasticBeamColumn', 1, 1, 2, A, E, I, 1)\nops.element('elasticBeamColumn', 2, 2, 3, A, E, I, 1)\n\nops.timeSeries('Linear', 1)\nops.pattern('Plain', 1, 1)\nops.load(3, 1.0, 0.0, 0.0)\n\nops.system('BandGeneral')\nops.numberer('Plain')\nops.constraints('Plain')\nops.test('NormDispIncr', 1.0e-8, 25, 0)\nops.algorithm('Newton')\n\nN_steps_disp = 100\ndu_step = u_target / N_steps_disp\nops.integrator('DisplacementControl', 3, 1, du_step)\nops.analysis('Static')\n\nel_dc_disp = [0.0]\nel_dc_drift = [0.0]\nel_dc_force = [0.0]\nel_dc_base_moment = [0.0]\nel_dc_hinge_moment = [0.0]\n\nfor step in range(1, N_steps_disp + 1):\n    ret = ops.analyze(1)\n    if ret != 0:\n        print(f\"  Error en an\u00e1lisis el\u00e1stico por desplazamiento en paso {step}\")\n        break\n    u = ops.nodeDisp(3, 1)\n    ops.reactions()\n    V = -ops.nodeReaction(1, 1)\n    M_base = ops.nodeReaction(1, 3)\n    M_hinge = V * h_upper  # Momento por equilibrio est\u00e1tico en y = 0.05 H\n    el_dc_disp.append(u)\n    el_dc_drift.append((u / H) * 100.0)\n    el_dc_force.append(V)\n    el_dc_base_moment.append(M_base)\n    el_dc_hinge_moment.append(M_hinge)\n\nF_target_elastic = el_dc_force[-1]\nprint(f\"  -> Finalizado exitosamente. Desplazamiento m\u00e1ximo: {el_dc_disp[-1]*1000:.1f} mm ({el_dc_drift[-1]:.2f}% deriva)\")\nprint(f\"  -> Fuerza el\u00e1stica requerida para 3% de deriva: F_el_3% = {F_target_elastic:.2f} kN\")\nprint(f\"  -> Momento en la base el\u00e1stico: {el_dc_base_moment[-1]:.2f} kN*m | En la r\u00f3tula: {el_dc_hinge_moment[-1]:.2f} kN*m\")\n\n# ==============================================================================\n# CASO 2: MODELO EL\u00c1STICO - CONTROL POR FUERZA (INCREMENTOS HASTA F_el_3%)\n# ==============================================================================\nprint(\"\\n[2/4] Ejecutando: Modelo El\u00e1stico con Control por Fuerza...\")\nops.wipe()\nops.model('basic', '-ndm', 2, '-ndf', 3)\n\nops.node(1, 0.0, 0.0)\nops.node(2, 0.0, y_hinge)\nops.node(3, 0.0, H)\n\nops.fix(1, 1, 1, 1)\n\nops.geomTransf('Linear', 1)\nops.element('elasticBeamColumn', 1, 1, 2, A, E, I, 1)\nops.element('elasticBeamColumn', 2, 2, 3, A, E, I, 1)\n\nops.timeSeries('Linear', 1)\nops.pattern('Plain', 1, 1)\nops.load(3, F_target_elastic, 0.0, 0.0)\n\nops.system('BandGeneral')\nops.numberer('Plain')\nops.constraints('Plain')\nops.test('NormDispIncr', 1.0e-8, 25, 0)\nops.algorithm('Newton')\n\nN_steps_force = 100\nops.integrator('LoadControl', 1.0 / N_steps_force)\nops.analysis('Static')\n\nel_fc_disp = [0.0]\nel_fc_drift = [0.0]\nel_fc_force = [0.0]\nel_fc_base_moment = [0.0]\nel_fc_hinge_moment = [0.0]\n\nfor step in range(1, N_steps_force + 1):\n    ret = ops.analyze(1)\n    if ret != 0:\n        print(f\"  Error en paso {step}\")\n        break\n    u = ops.nodeDisp(3, 1)\n    ops.reactions()\n    V = -ops.nodeReaction(1, 1)\n    M_base = ops.nodeReaction(1, 3)\n    M_hinge = V * h_upper\n    el_fc_disp.append(u)\n    el_fc_drift.append((u / H) * 100.0)\n    el_fc_force.append(V)\n    el_fc_base_moment.append(M_base)\n    el_fc_hinge_moment.append(M_hinge)\n\nprint(f\"  -> Finalizado exitosamente. Desplazamiento m\u00e1ximo: {el_fc_disp[-1]*1000:.1f} mm\")\nprint(f\"  -> Fuerza final alcanzada: {el_fc_force[-1]:.2f} kN (Coincidencia id\u00e9ntica con control de desplazamiento)\")\n\n# ==============================================================================\n# CASO 3: MODELO INEL\u00c1STICO (R\u00d3TULA ASCE 41) - CONTROL POR DESPLAZAMIENTO\n# ==============================================================================\nprint(\"\\n[3/4] Ejecutando: Modelo Inel\u00e1stico (R\u00f3tula ASCE 41) con Control por Desplazamiento...\")\nops.wipe()\nops.model('basic', '-ndm', 2, '-ndf', 3)\n\n# Nodos:\n# 1: Base (0, 0)\n# 2: Lado inferior de la r\u00f3tula (0, y_hinge)\n# 3: Lado superior de la r\u00f3tula (0, y_hinge) [Coincidente]\n# 4: C\u00faspide del voladizo (0, H)\nops.node(1, 0.0, 0.0)\nops.node(2, 0.0, y_hinge)\nops.node(3, 0.0, y_hinge)\nops.node(4, 0.0, H)\n\nops.fix(1, 1, 1, 1)\n# Restricci\u00f3n cinem\u00e1tica: traslaciones X e Y id\u00e9nticas en la r\u00f3tula (solo rota)\nops.equalDOF(2, 3, 1, 2)\n\n# Material rotacional tipo Hysteretic (Backbone ASCE 41 sim\u00e9trico)\n# Puntos: (My, theta_y), (Mu, theta_u), (Mr, theta_r)\nops.uniaxialMaterial('Hysteretic', 1,\n                     My, theta_y,\n                     Mu, theta_u,\n                     Mr, theta_r,\n                     -My, -theta_y,\n                     -Mu, -theta_u,\n                     -Mr, -theta_r,\n                     0.0, 0.0, 0.0, 0.0, 0.0)\n\n# Elemento zeroLength con la r\u00f3tula rotacional en el DOF 6 (giro Z en 2D = DOF 3)\nops.element('zeroLength', 1, 2, 3, '-mat', 1, '-dir', 6)\n\nops.geomTransf('Linear', 1)\nops.element('elasticBeamColumn', 2, 1, 2, A, E, I, 1)\nops.element('elasticBeamColumn', 3, 3, 4, A, E, I, 1)\n\nops.timeSeries('Linear', 1)\nops.pattern('Plain', 1, 1)\nops.load(4, 1.0, 0.0, 0.0)\n\nops.system('BandGeneral')\nops.numberer('Plain')\nops.constraints('Transformation')\nops.test('NormDispIncr', 1.0e-6, 50, 0)\nops.algorithm('Newton')\n\nN_steps_inel_dc = 150\ndu_inel = u_target / N_steps_inel_dc\nops.integrator('DisplacementControl', 4, 1, du_inel)\nops.analysis('Static')\n\ninel_dc_disp = [0.0]\ninel_dc_drift = [0.0]\ninel_dc_force = [0.0]\ninel_dc_base_moment = [0.0]\ninel_dc_hinge_moment = [0.0]\ninel_dc_hinge_rot = [0.0]\ninel_dc_state = [\"El\u00e1stico (Tramo O-B)\"]\n\nfor step in range(1, N_steps_inel_dc + 1):\n    ret = ops.analyze(1)\n    if ret != 0:\n        ops.algorithm('ModifiedNewton', '-initial')\n        ret = ops.analyze(1)\n        ops.algorithm('Newton')\n        if ret != 0:\n            print(f\"  An\u00e1lisis inel\u00e1stico por desplazamiento se detuvo en paso {step}\")\n            break\n\n    u = ops.nodeDisp(4, 1)\n    ops.reactions()\n    V = -ops.nodeReaction(1, 1)\n    M_base = ops.nodeReaction(1, 3)\n\n    # Rotaci\u00f3n relativa de la r\u00f3tula: en flexi\u00f3n lateral hacia +X (deriva positiva),\n    # la rotaci\u00f3n horaria en el sistema 2D es negativa. Tomamos la magnitud absoluta\n    # para representar el giro pl\u00e1stico positivo congruente con la curva ASCE 41:\n    th_hinge = abs(ops.nodeDisp(3, 3) - ops.nodeDisp(2, 3))\n    # Momento en la r\u00f3tula por equilibrio est\u00e1tico: M_h = V * h_upper\n    M_h = V * h_upper\n\n    # Clasificaci\u00f3n pedag\u00f3gica del estado de da\u00f1o ASCE 41\n    if th_hinge <= theta_y + 1e-4:\n        state_str = \"El\u00e1stico (Tramo O-B: M < My)\"\n    elif th_hinge <= theta_u:\n        state_str = \"Endurecimiento / Capping (Tramo B-C: My < M <= Mu)\"\n    elif th_hinge <= theta_r:\n        state_str = \"Degradaci\u00f3n Post-Pico / Softening (Tramo C-D: Mu > M >= Mr)\"\n    else:\n        state_str = \"Meseta Residual (Tramo D-E: M ~ Mr)\"\n\n    inel_dc_disp.append(u)\n    inel_dc_drift.append((u / H) * 100.0)\n    inel_dc_force.append(V)\n    inel_dc_base_moment.append(M_base)\n    inel_dc_hinge_moment.append(M_h)\n    inel_dc_hinge_rot.append(th_hinge)\n    inel_dc_state.append(state_str)\n\nmax_V_inel = max(inel_dc_force)\nmax_M_inel = max(inel_dc_hinge_moment)\nfinal_V_inel = inel_dc_force[-1]\nfinal_M_inel = inel_dc_hinge_moment[-1]\n\nprint(f\"  -> Finalizado exitosamente. Pasos completados: {len(inel_dc_disp)-1} / {N_steps_inel_dc}\")\nprint(f\"  -> Cortante m\u00e1ximo (Pico): V_max = {max_V_inel:.2f} kN | Momento m\u00e1ximo r\u00f3tula: M_max = {max_M_inel:.2f} kN*m\")\nprint(f\"  -> Cortante final (Deriva 3%): V_fin = {final_V_inel:.2f} kN | Momento final r\u00f3tula: M_fin = {final_M_inel:.2f} kN*m\")\nprint(f\"  -> Ca\u00edda de capacidad observada: {((max_V_inel - final_V_inel) / max_V_inel)*100:.1f}% de p\u00e9rdida de cortante.\")\n\n# ==============================================================================\n# CASO 4: MODELO INEL\u00c1STICO (R\u00d3TULA ASCE 41) - CONTROL POR FUERZA HASTA F_el_3%\n# ==============================================================================\nprint(\"\\n[4/4] Ejecutando: Modelo Inel\u00e1stico con Control por Fuerza buscando F_el_3%...\")\nprint(f\"  (Carga objetivo: {F_target_elastic:.2f} kN vs. Capacidad m\u00e1xima real: {max_V_inel:.2f} kN)\")\nops.wipe()\nops.model('basic', '-ndm', 2, '-ndf', 3)\n\nops.node(1, 0.0, 0.0)\nops.node(2, 0.0, y_hinge)\nops.node(3, 0.0, y_hinge)\nops.node(4, 0.0, H)\n\nops.fix(1, 1, 1, 1)\nops.equalDOF(2, 3, 1, 2)\n\nops.uniaxialMaterial('Hysteretic', 1,\n                     My, theta_y,\n                     Mu, theta_u,\n                     Mr, theta_r,\n                     -My, -theta_y,\n                     -Mu, -theta_u,\n                     -Mr, -theta_r,\n                     0.0, 0.0, 0.0, 0.0, 0.0)\n\nops.element('zeroLength', 1, 2, 3, '-mat', 1, '-dir', 6)\n\nops.geomTransf('Linear', 1)\nops.element('elasticBeamColumn', 2, 1, 2, A, E, I, 1)\nops.element('elasticBeamColumn', 3, 3, 4, A, E, I, 1)\n\nops.timeSeries('Linear', 1)\nops.pattern('Plain', 1, 1)\nops.load(4, F_target_elastic, 0.0, 0.0)\n\nops.system('BandGeneral')\nops.numberer('Plain')\nops.constraints('Transformation')\n# Prueba de convergencia estricta para ilustrar el residuo divergente\nops.test('NormDispIncr', 1.0e-6, 40, 0)\nops.algorithm('Newton')\n\nN_steps_fc_inel = 100\ndF_step = F_target_elastic / N_steps_fc_inel\nops.integrator('LoadControl', 1.0 / N_steps_fc_inel)\nops.analysis('Static')\n\ninel_fc_disp = [0.0]\ninel_fc_drift = [0.0]\ninel_fc_force = [0.0]\ninel_fc_base_moment = [0.0]\ninel_fc_hinge_moment = [0.0]\ninel_fc_hinge_rot = [0.0]\n\nfailure_step = None\nattempted_force = 0.0\n\nfor step in range(1, N_steps_fc_inel + 1):\n    ret = ops.analyze(1)\n    if ret != 0:\n        failure_step = step\n        attempted_force = step * dF_step\n        print(f\"  \u274c \u00a1COLAPSO NUM\u00c9RICO EN PASO {step} DE {N_steps_fc_inel}!\")\n        print(f\"     Fuerza externa solicitada en este incremento: F_ext = {attempted_force:.2f} kN\")\n        print(f\"     \u00daltima fuerza resistente interna convergida: F_int = {inel_fc_force[-1]:.2f} kN\")\n        print(f\"     Capacidad f\u00edsica m\u00e1xima de la columna: V_cap = {max_V_inel:.2f} kN\")\n        print(\"     DIAGN\u00d3STICO PEDAG\u00d3GICO: F_ext > V_cap. El residuo R = F_ext - F_int no puede anularse.\")\n        print(\"     La matriz de rigidez tangente Kt se hace singular/indefinida y Newton-Raphson diverge.\")\n        break\n\n    u = ops.nodeDisp(4, 1)\n    ops.reactions()\n    V = -ops.nodeReaction(1, 1)\n    M_base = ops.nodeReaction(1, 3)\n    th_hinge = abs(ops.nodeDisp(3, 3) - ops.nodeDisp(2, 3))\n    M_h = V * h_upper\n\n    inel_fc_disp.append(u)\n    inel_fc_drift.append((u / H) * 100.0)\n    inel_fc_force.append(V)\n    inel_fc_base_moment.append(M_base)\n    inel_fc_hinge_moment.append(M_h)\n    inel_fc_hinge_rot.append(th_hinge)\n\n# ==============================================================================\n# 5. ESTRUCTURACI\u00d3N Y EXPORTACI\u00d3N DE DATOS EN JSON PARA LA WEB INTERACTIVA\n# ==============================================================================\noutput_data = {\n    \"metadata\": {\n        \"title\": \"Comparativa de An\u00e1lisis No Lineal: Control de Desplazamiento vs. Control de Fuerza\",\n        \"author\": \"Prof. Orlando Arroyo - Universidad Industrial de Santander\",\n        \"structure\": \"Columna en Voladizo (Cantilever Column)\",\n        \"height_m\": H,\n        \"section_b_m\": b,\n        \"section_h_m\": h,\n        \"E_kPa\": E,\n        \"hinge_location_ratio\": 0.05,\n        \"hinge_y_m\": y_hinge,\n        \"lever_arm_m\": h_upper,\n        \"drift_target_pct\": drift_target * 100.0,\n        \"u_target_m\": u_target,\n        \"F_target_elastic_kN\": float(F_target_elastic),\n        \"asce41_parameters\": {\n            \"My_kNm\": My,\n            \"theta_y_rad\": theta_y,\n            \"Mu_kNm\": Mu,\n            \"theta_u_rad\": theta_u,\n            \"Mr_kNm\": Mr,\n            \"theta_r_rad\": theta_r,\n            \"V_yield_kN\": float(V_yield_theor),\n            \"V_cap_kN\": float(V_cap_theor),\n            \"V_residual_kN\": float(V_res_theor)\n        },\n        \"failure_summary\": {\n            \"failed_step\": failure_step,\n            \"total_steps\": N_steps_fc_inel,\n            \"attempted_force_kN\": float(attempted_force),\n            \"last_converged_force_kN\": float(inel_fc_force[-1]),\n            \"last_converged_disp_mm\": float(inel_fc_disp[-1] * 1000.0),\n            \"last_converged_drift_pct\": float(inel_fc_drift[-1]),\n            \"opensees_error_code\": -3\n        }\n    },\n    \"case1_elastic_disp_control\": {\n        \"disp_m\": el_dc_disp,\n        \"drift_pct\": el_dc_drift,\n        \"shear_kN\": el_dc_force,\n        \"hinge_moment_kNm\": el_dc_hinge_moment,\n        \"base_moment_kNm\": el_dc_base_moment\n    },\n    \"case2_elastic_force_control\": {\n        \"disp_m\": el_fc_disp,\n        \"drift_pct\": el_fc_drift,\n        \"shear_kN\": el_fc_force,\n        \"hinge_moment_kNm\": el_fc_hinge_moment,\n        \"base_moment_kNm\": el_fc_base_moment\n    },\n    \"case3_inelastic_disp_control\": {\n        \"disp_m\": inel_dc_disp,\n        \"drift_pct\": inel_dc_drift,\n        \"shear_kN\": inel_dc_force,\n        \"hinge_moment_kNm\": inel_dc_hinge_moment,\n        \"hinge_rot_rad\": inel_dc_hinge_rot,\n        \"base_moment_kNm\": inel_dc_base_moment,\n        \"damage_states\": inel_dc_state\n    },\n    \"case4_inelastic_force_control\": {\n        \"disp_m\": inel_fc_disp,\n        \"drift_pct\": inel_fc_drift,\n        \"shear_kN\": inel_fc_force,\n        \"hinge_moment_kNm\": inel_fc_hinge_moment,\n        \"hinge_rot_rad\": inel_fc_hinge_rot,\n        \"base_moment_kNm\": inel_fc_base_moment\n    }\n}\n\ncurrent_dir = os.path.dirname(os.path.abspath(__file__))\njson_path = os.path.join(current_dir, \"cantilever_simulation_data.json\")\n\nwith open(json_path, 'w', encoding='utf-8') as f:\n    json.dump(output_data, f, indent=2)\n\nprint(f\"\\n[OK] Datos num\u00e9ricos guardados exitosamente en:\\n  {json_path}\")\n\n# ==============================================================================\n# 6. GENERACI\u00d3N DE GR\u00c1FICO COMPARATIVO CON MATPLOTLIB (ALTA DEFINICI\u00d3N)\n# ==============================================================================\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), dpi=150)\nplt.style.use('seaborn-v0_8-whitegrid' if 'seaborn-v0_8-whitegrid' in plt.style.available else 'default')\n\n# Subplot 1: Curva Pushover Global (Cortante Basal vs. Deriva / Desplazamiento)\nax1.plot([d * 1000 for d in el_dc_disp], el_dc_force, 'b--', lw=2.2, label=f'El\u00e1stico - Desp. Control (F_3% = {F_target_elastic:.1f} kN)')\nax1.plot([d * 1000 for d in el_fc_disp], el_fc_force, 'c:', lw=2.5, label='El\u00e1stico - Fuerza Control (Id\u00e9ntico)')\nax1.plot([d * 1000 for d in inel_dc_disp], inel_dc_force, 'r-', lw=2.8, label=f'Inel\u00e1stico ASCE 41 - Desp. Control (V_max = {max_V_inel:.1f} kN)')\nax1.plot([d * 1000 for d in inel_fc_disp], inel_fc_force, 'm-', lw=2.2, label='Inel\u00e1stico ASCE 41 - Fuerza Control')\n\n# Punto de colapso por control de fuerza\nif failure_step is not None:\n    ax1.scatter([inel_fc_disp[-1] * 1000], [inel_fc_force[-1]], color='red', s=140, zorder=5, edgecolors='black', lw=1.5)\n    ax1.annotate(f'Colapso Num\u00e9rico\\nFuerza Control (Paso {failure_step})\\nF_ext > V_cap ({inel_fc_force[-1]:.1f} kN)',\n                 xy=(inel_fc_disp[-1] * 1000, inel_fc_force[-1]),\n                 xytext=(inel_fc_disp[-1] * 1000 + 10, inel_fc_force[-1] + 60),\n                 arrowprops=dict(facecolor='crimson', shrink=0.08, width=1.5, headwidth=8),\n                 fontsize=9, fontweight='bold', bbox=dict(boxstyle=\"round,pad=0.3\", fc=\"mistyrose\", ec=\"crimson\", lw=1.2))\n\nax1.set_title('1. Respuesta Global: Cortante Basal vs. Desplazamiento en la C\u00faspide', fontsize=11, fontweight='bold')\nax1.set_xlabel('Desplazamiento en la C\u00faspide $\\\\Delta$ (mm)', fontsize=10)\nax1.set_ylabel('Cortante Basal $V$ (kN)', fontsize=10)\nax1.grid(True, linestyle='--', alpha=0.6)\nax1.legend(loc='upper left', fontsize=8.5, framealpha=0.9)\nax1.set_xlim(-2, 95)\n\n# Subplot 2: Evoluci\u00f3n del Momento en la R\u00f3tula ASCE 41\nax2.plot(inel_dc_hinge_rot, inel_dc_hinge_moment, 'r-', lw=2.8, label='Inel\u00e1stico: R\u00f3tula ASCE 41 (M_h vs $\\\\theta_h$)')\nax2.axhline(My, color='gray', linestyle=':', lw=1.2, label=f'Fluencia My = {My:.0f} kN*m')\nax2.axhline(Mu, color='darkorange', linestyle='--', lw=1.5, label=f'Capacidad M\u00e1xima Mu = {Mu:.0f} kN*m')\nax2.axhline(Mr, color='purple', linestyle=':', lw=1.2, label=f'Residual Mr = {Mr:.0f} kN*m')\n\n# Anotaciones pedag\u00f3gicas de los puntos ASCE 41\nax2.scatter([theta_y, theta_u, theta_r], [My, Mu, Mr], color=['green', 'darkorange', 'purple'], s=80, zorder=5)\nax2.text(theta_y, My - 18, 'B: Fluencia\\n($\\\\theta_y, M_y$)', fontsize=8, ha='center', color='green', fontweight='bold')\nax2.text(theta_u, Mu + 8, 'C: Capping\\n($\\\\theta_u, Mu$)', fontsize=8, ha='center', color='darkorange', fontweight='bold')\nax2.text(theta_r, Mr + 10, 'D: Residual\\n($\\\\theta_r, M_r$)', fontsize=8, ha='center', color='purple', fontweight='bold')\n\n# Flecha indicadora de la ca\u00edda del momento (Softening)\nax2.annotate('\u00bfPor qu\u00e9 cae el momento?\\n\u2022 Descascaramiento recubrimiento\\n\u2022 Agotamiento confinamiento\\n\u2022 Pandeo/fluencia del acero',\n             xy=((theta_u + theta_r) / 2, (Mu + Mr) / 2),\n             xytext=(theta_u + 0.005, Mu - 50),\n             arrowprops=dict(facecolor='darkred', shrink=0.08, width=1.5, headwidth=7),\n             fontsize=8.5, bbox=dict(boxstyle=\"round,pad=0.4\", fc=\"#fff5f5\", ec=\"darkred\", lw=1.2))\n\nax2.set_title('2. Comportamiento Constitutivo de la R\u00f3tula ASCE 41 al 5% H', fontsize=11, fontweight='bold')\nax2.set_xlabel('Giro Pl\u00e1stico de la R\u00f3tula $\\\\theta_h$ (rad)', fontsize=10)\nax2.set_ylabel('Momento en la R\u00f3tula $M_h$ (kN*m)', fontsize=10)\nax2.grid(True, linestyle='--', alpha=0.6)\nax2.legend(loc='lower right', fontsize=8.5, framealpha=0.9)\n\nfig.suptitle('Laboratorio Pedag\u00f3gico OpenSeesPy: Control por Desplazamiento vs. Control por Fuerza\\n(Prof. Orlando Arroyo - UIS)',\n             fontsize=13, fontweight='bold', y=0.98)\nplt.tight_layout()\n\npng_path = os.path.join(current_dir, \"cantilever_asce41_comparison.png\")\nfig.savefig(png_path, dpi=200, bbox_inches='tight')\nplt.close(fig)\n\nprint(f\"[OK] Gr\u00e1fico comparativo generado en:\\n  {png_path}\")\nprint(\"=\" * 80)\nprint(\"\u00a1EJECUCI\u00d3N COMPLETADA EXITOSAMENTE!\")\nprint(\"=\" * 80)\n"
+    ];
+
+    function switchCodeTab(idx) {
+      const btns = document.querySelectorAll('.code-tab-btn');
+      btns.forEach((b, i) => b.classList.toggle('active', i === idx));
+      document.getElementById('code-snippet').textContent = codeSnippets[idx];
+    }
+
+    function copyCode() {
+      const text = document.getElementById('code-snippet').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('btn-copy');
+        btn.textContent = '✅ ¡Copiado!';
+        setTimeout(() => btn.textContent = '📋 Copiar Código', 2000);
+      });
+    }
+
+    /* ==========================================================================
+       INICIALIZACIÓN DE LA PÁGINA (ROBUSTA Y MULTI-EVENTO)
+       ========================================================================== */
+    function startSimulator() {
+      if (!isAppInitialized) {
+        isAppInitialized = true;
+        initTheme();
+        setupCanvases();
+        setMode('dc');
+        switchCodeTab(0);
+        initKaTeX();
+        setTimeout(initKaTeX, 150);
+        setTimeout(initKaTeX, 600);
+      } else {
+        resizeAllCanvases();
+        renderAllCanvases();
+      }
+
+      // Redibujados escalonados por carga asíncrona de estilos/fuentes
+      requestAnimationFrame(() => {
+        resizeAllCanvases();
+        renderAllCanvases();
+      });
+      setTimeout(() => {
+        resizeAllCanvases();
+        renderAllCanvases();
+      }, 100);
+      setTimeout(() => {
+        resizeAllCanvases();
+        renderAllCanvases();
+      }, 350);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startSimulator);
+    } else {
+      startSimulator();
+    }
+
+    window.addEventListener('load', () => {
+      startSimulator();
+      resizeAllCanvases();
+      renderAllCanvases();
+      setTimeout(initKaTeX, 200);
+    });
+
+    window.addEventListener('resize', () => {
+      resizeAllCanvases();
+      renderAllCanvases();
+    });
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => {
+        resizeAllCanvases();
+        renderAllCanvases();
+      });
+      document.querySelectorAll('.canvas-wrapper').forEach(w => ro.observe(w));
+    }
+
+    /* ==========================================================================
+       TEMA OSCURO / CLARO
+       ========================================================================== */
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme-07');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark-theme');
+        document.getElementById('theme-icon').textContent = '☀️';
+      } else {
+        document.body.classList.remove('dark-theme');
+        document.getElementById('theme-icon').textContent = '🌙';
+      }
+
+      if (!themeListenerAdded) {
+        themeListenerAdded = true;
+        const toggleBtn = document.getElementById('theme-toggle-btn');
+        if (toggleBtn) {
+          toggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme-07', isDark ? 'dark' : 'light');
+            renderAllCanvases();
+          });
+        }
+      }
+    }
+
+    function initKaTeX() {
+      if (typeof window !== 'undefined' && typeof window.renderMathInElement === 'function') {
+        try {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+          return true;
+        } catch (e) {
+          console.warn('KaTeX render error:', e);
+        }
+      }
+      return false;
+    }
+
+    /* ==========================================================================
+       GESTIÓN DE MODOS Y ANIMACIÓN
+       ========================================================================== */
+    function setMode(mode) {
+      appState.mode = mode;
+      pauseAnimation();
+
+      document.getElementById('btn-mode-dc').classList.toggle('active', mode === 'dc');
+      document.getElementById('btn-mode-fc').classList.toggle('active', mode === 'fc');
+      document.getElementById('btn-mode-fc').classList.toggle('fail-mode', mode === 'fc');
+      document.getElementById('btn-mode-both').classList.toggle('active', mode === 'both');
+
+      const slider = document.getElementById('step-slider');
+      if (mode === 'fc') {
+        slider.max = 20; // Se enfoca en los primeros 20 pasos donde ocurre la divergencia
+      } else {
+        slider.max = N_STEPS_DC;
+      }
+
+      appState.currentStep = 0;
+      slider.value = 0;
+      updateAll();
+    }
+
+    function onSliderInput(val) {
+      appState.currentStep = parseInt(val, 10);
+      updateAll();
+    }
+
+    function stepDelta(delta) {
+      pauseAnimation();
+      const slider = document.getElementById('step-slider');
+      const maxVal = parseInt(slider.max, 10);
+      let nextVal = appState.currentStep + delta;
+      if (nextVal < 0) nextVal = 0;
+      if (nextVal > maxVal) nextVal = maxVal;
+      appState.currentStep = nextVal;
+      slider.value = nextVal;
+      updateAll();
+    }
+
+    function togglePlay() {
+      if (appState.isPlaying) {
+        pauseAnimation();
+      } else {
+        startAnimation();
+      }
+    }
+
+    function startAnimation() {
+      appState.isPlaying = true;
+      document.getElementById('play-icon').textContent = '⏸';
+      document.getElementById('play-text').textContent = 'Pausar';
+
+      const slider = document.getElementById('step-slider');
+      const maxVal = parseInt(slider.max, 10);
+
+      // Si ya está al final, reiniciar al principio
+      if (appState.currentStep >= maxVal) {
+        appState.currentStep = 0;
+        slider.value = 0;
+      }
+
+      const intervalMs = 60 / appState.speed;
+      appState.timerId = setInterval(() => {
+        if (appState.currentStep < maxVal) {
+          appState.currentStep++;
+          slider.value = appState.currentStep;
+          updateAll();
+        } else {
+          pauseAnimation();
+        }
+      }, intervalMs);
+    }
+
+    function pauseAnimation() {
+      appState.isPlaying = false;
+      document.getElementById('play-icon').textContent = '▶';
+      document.getElementById('play-text').textContent = 'Reproducir';
+      if (appState.timerId) {
+        clearInterval(appState.timerId);
+        appState.timerId = null;
+      }
+    }
+
+    function resetAnimation() {
+      pauseAnimation();
+      appState.currentStep = 0;
+      document.getElementById('step-slider').value = 0;
+      updateAll();
+    }
+
+    function setSpeed(val) {
+      appState.speed = parseFloat(val);
+      if (appState.isPlaying) {
+        pauseAnimation();
+        startAnimation();
+      }
+    }
+
+    /* ==========================================================================
+       ACTUALIZACIÓN DE TELEMETRÍA Y ALERTAS
+       ========================================================================== */
+    function updateAll() {
+      appState.showElastic = document.getElementById('chk-elastic').checked;
+      appState.showInelastic = document.getElementById('chk-inelastic').checked;
+
+      const step = appState.currentStep;
+      const slider = document.getElementById('step-slider');
+      const maxVal = slider.max;
+      document.getElementById('slider-counter').textContent = `${step} / ${maxVal}`;
+
+      updateTelemetry(step);
+      updateAlertBanner(step);
+      renderAllCanvases();
+    }
+
+    function updateTelemetry(step) {
+      const mode = appState.mode;
+
+      let disp = 0, shear = 0, mhinge = 0, mbase = 0, rot = 0, stateStr = "Elástico", solverStr = "OK (analyze: 0)";
+      let solverColor = "var(--emerald-400)";
+      let badgeClass = "badge-elastic";
+
+      if (mode === 'dc' || mode === 'both') {
+        // Control por desplazamiento
+        const s = Math.min(step, case3_in_dc.disp_m.length - 1);
+        disp = case3_in_dc.disp_m[s] * 1000; // mm
+        shear = case3_in_dc.shear_kN[s];
+        mhinge = case3_in_dc.hinge_moment_kNm[s];
+        mbase = case3_in_dc.base_moment_kNm[s];
+        rot = Math.abs(case3_in_dc.hinge_rot_rad[s]) * 1000; // mrad
+        stateStr = case3_in_dc.damage_states[s] || "Elástico";
+
+        if (stateStr.includes("Elástico")) badgeClass = "badge-elastic";
+        else if (stateStr.includes("Endurecimiento")) badgeClass = "badge-yield";
+        else if (stateStr.includes("Softening")) badgeClass = "badge-softening";
+        else badgeClass = "badge-residual";
+
+      } else {
+        // Control por fuerza
+        const isFailed = step >= FAILED_STEP_FC;
+        if (!isFailed) {
+          const s = Math.min(step, case4_in_fc.disp_m.length - 1);
+          disp = case4_in_fc.disp_m[s] * 1000;
+          shear = case4_in_fc.shear_kN[s];
+          mhinge = case4_in_fc.hinge_moment_kNm[s];
+          mbase = case4_in_fc.base_moment_kNm[s];
+          rot = Math.abs(case4_in_fc.hinge_rot_rad[s]) * 1000;
+          stateStr = "Carga Monótona Estable";
+          badgeClass = "badge-yield";
+        } else {
+          // Estado de colapso en el paso 14
+          const lastIdx = case4_in_fc.disp_m.length - 1;
+          disp = case4_in_fc.disp_m[lastIdx] * 1000;
+          shear = case4_in_fc.shear_kN[lastIdx];
+          mhinge = case4_in_fc.hinge_moment_kNm[lastIdx];
+          mbase = case4_in_fc.base_moment_kNm[lastIdx];
+          rot = Math.abs(case4_in_fc.hinge_rot_rad[lastIdx]) * 1000;
+          stateStr = "¡COLAPSO NUMÉRICO!";
+          solverStr = "FAILED (error: -3)";
+          solverColor = "var(--rose-500)";
+          badgeClass = "badge-diverge";
+        }
+      }
+
+      document.getElementById('val-disp').innerHTML = `${disp.toFixed(2)}<span class="telem-unit">mm</span>`;
+      const driftPct = (disp / 3000.0) * 100.0;
+      document.getElementById('badge-disp').textContent = `Deriva: ${driftPct.toFixed(2)}%`;
+
+      document.getElementById('val-shear').innerHTML = `${shear.toFixed(1)}<span class="telem-unit">kN</span>`;
+      document.getElementById('val-mhinge').innerHTML = `${mhinge.toFixed(1)}<span class="telem-unit">kN·m</span>`;
+      document.getElementById('val-mbase').innerHTML = `${mbase.toFixed(1)}<span class="telem-unit">kN·m</span>`;
+      document.getElementById('val-rot').innerHTML = `${rot.toFixed(2)}<span class="telem-unit">mrad</span>`;
+
+      const asceBadge = document.getElementById('badge-asce-state');
+      asceBadge.className = `telem-badge ${badgeClass}`;
+      document.getElementById('val-asce-state').textContent = stateStr.split('(')[0].trim();
+      asceBadge.textContent = stateStr.split('(')[1] ? stateStr.split('(')[1].replace(')', '') : stateStr;
+
+      const solverVal = document.getElementById('val-solver');
+      solverVal.textContent = solverStr;
+      solverVal.style.color = solverColor;
+      const solverBadge = document.getElementById('badge-solver');
+      solverBadge.textContent = solverStr.includes('FAILED') ? 'Divergencia Residuo' : 'Convergencia OK';
+      solverBadge.className = solverStr.includes('FAILED') ? 'telem-badge badge-diverge' : 'telem-badge badge-elastic';
+    }
+
+    function updateAlertBanner(step) {
+      const container = document.getElementById('alert-container');
+      const mode = appState.mode;
+
+      if (mode === 'fc' && step >= FAILED_STEP_FC) {
+        const attF = (step * (simMeta.F_target_elastic_kN / 100)).toFixed(1);
+        container.innerHTML = `
+          <div class="alert-banner">
+            <div class="alert-icon">💥</div>
+            <div class="alert-content">
+              <h4>¡Colapso Numérico en el Paso ${step}! (OpenSees error -3)</h4>
+              <p>
+                <strong>¿Qué acaba de pasar?:</strong> Se solicitó aplicar un incremento de fuerza de <strong>${attF} kN</strong>, pero la capacidad máxima real de la columna es de <strong>73.56 kN</strong>.<br>
+                Como no existe ningún estado deformado que logre equilibrar esa carga, el residuo <code>||R|| = ||F_ext - F_int||</code> nunca puede converger a cero. La matriz de rigidez tangente <code>Kt</code> se hace singular/indefinida y Newton-Raphson diverge irremediablemente.
+              </p>
+            </div>
+          </div>
+        `;
+      } else if (mode === 'dc' && step > 65) {
+        container.innerHTML = `
+          <div class="alert-banner success">
+            <div class="alert-icon">💡</div>
+            <div class="alert-content">
+              <h4>Tramo Descendente (Softening) Exitosamente Capturado</h4>
+              <p>
+                El momento en la rótula cae de <strong>209.6 kN·m</strong> a <strong>40.0 kN·m</strong> debido al descascaramiento del recubrimiento y pandeo del refuerzo. 
+                A pesar de que la rigidez tangente es negativa (<code>Kt &lt; 0</code>), el <strong>Control por Desplazamiento</strong> sigue avanzando sin problemas porque el desplazamiento es una variable impuesta monótona.
+              </p>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="alert-banner" style="background: rgba(37, 99, 235, 0.08); border-color: rgba(37, 99, 235, 0.3);">
+            <div class="alert-icon">ℹ️</div>
+            <div class="alert-content">
+              <h4>Simulación en Ejecución Paso a Paso</h4>
+              <p>
+                Usa los controles de reproducción o el deslizador para ver la evolución cinemática en la columna y la respuesta simultánea en los cuatro lienzos.
+              </p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    /* ==========================================================================
+       CONFIGURACIÓN DE LIENZOS (CANVAS)
+       ========================================================================== */
+    function setupCanvases() {
+      canvasColumn = document.getElementById('canvas-column');
+      canvasPushover = document.getElementById('canvas-pushover');
+      canvasHinge = document.getElementById('canvas-hinge');
+      canvasNR = document.getElementById('canvas-nr');
+      resizeAllCanvases();
+      renderAllCanvases();
+    }
+
+    function resizeAllCanvases() {
+      if (!canvasColumn) {
+        canvasColumn = document.getElementById('canvas-column');
+        canvasPushover = document.getElementById('canvas-pushover');
+        canvasHinge = document.getElementById('canvas-hinge');
+        canvasNR = document.getElementById('canvas-nr');
+      }
+      const cvs = [canvasColumn, canvasPushover, canvasHinge, canvasNR];
+      const dpr = window.devicePixelRatio || 1;
+      cvs.forEach(cv => {
+        if (!cv) return;
+        const parent = cv.parentElement;
+        const rect = cv.getBoundingClientRect();
+        const pRect = parent ? parent.getBoundingClientRect() : { width: 0, height: 0 };
+        // Dimensiones calculadas con fallback para evitar que el canvas sea 0x0
+        const w = Math.round(Math.max(rect.width || 0, pRect.width || 0, parent ? parent.clientWidth : 0, 320));
+        const h = Math.round(Math.max(rect.height || 0, pRect.height || 0, parent ? parent.clientHeight : 0, 320));
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+      });
+    }
+
+    function getThemeColors() {
+      const isDark = document.body.classList.contains('dark-theme');
+      return {
+        bg: isDark ? '#0d131f' : '#ffffff',
+        grid: isDark ? '#1e293b' : '#e2e8f0',
+        axis: isDark ? '#475569' : '#94a3b8',
+        text: isDark ? '#94a3b8' : '#334155',
+        textBold: isDark ? '#f3f4f6' : '#0f172a',
+        blue: isDark ? '#60a5fa' : '#2563eb',
+        rose: isDark ? '#fb7185' : '#e11d48',
+        emerald: isDark ? '#34d399' : '#059669',
+        amber: isDark ? '#fbbf24' : '#d97706',
+        purple: isDark ? '#c084fc' : '#7c3aed'
+      };
+    }
+
+    function renderAllCanvases() {
+      if (!canvasColumn) {
+        setupCanvases();
+        return;
+      }
+      renderColumnCanvas();
+      renderPushoverCanvas();
+      renderHingeCanvas();
+      renderNRCanvas();
+    }
+
+    /* ==========================================================================
+       LIENZO 1: VISTA DE LA COLUMNA EN VOLADIZO Y RÓTULA
+       ========================================================================== */
+    function renderColumnCanvas() {
+      const ctx = canvasColumn.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvasColumn.width;
+      const h = canvasColumn.height;
+      const colors = getThemeColors();
+
+      ctx.save();
+      ctx.clearRect(0, 0, w, h);
+
+      // Coordenadas base
+      const baseX = w * 0.35;
+      const baseY = h * 0.85;
+      const colHeight = h * 0.68;
+      const topY = baseY - colHeight;
+      const hingeY = baseY - (0.05 * colHeight); // 5% de H
+
+      // Desplazamiento actual (escalado para visualización atractiva)
+      const step = appState.currentStep;
+      let topDispReal = 0;
+      let isFailed = false;
+
+      if (appState.mode === 'dc' || appState.mode === 'both') {
+        const s = Math.min(step, case3_in_dc.disp_m.length - 1);
+        topDispReal = case3_in_dc.disp_m[s];
+      } else {
+        isFailed = step >= FAILED_STEP_FC;
+        const s = Math.min(step, case4_in_fc.disp_m.length - 1);
+        topDispReal = case4_in_fc.disp_m[s];
+      }
+
+      // Escala de deformación visual: 90 mm reales -> 110 px en pantalla
+      const scaleDisp = (w * 0.32) / 0.090;
+      const topDispPx = topDispReal * scaleDisp;
+
+      // 1. Dibujar suelo y empotramiento
+      ctx.fillStyle = colors.grid;
+      ctx.fillRect(baseX - 70 * dpr, baseY, 140 * dpr, 25 * dpr);
+      ctx.strokeStyle = colors.axis;
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(baseX - 80 * dpr, baseY);
+      ctx.lineTo(baseX + 80 * dpr, baseY);
+      ctx.stroke();
+
+      // Achurado de cimentación
+      ctx.lineWidth = 1 * dpr;
+      for (let i = -70; i <= 70; i += 12) {
+        ctx.beginPath();
+        ctx.moveTo(baseX + i * dpr, baseY);
+        ctx.lineTo(baseX + (i - 10) * dpr, baseY + 18 * dpr);
+        ctx.stroke();
+      }
+
+      // 2. Columna original no deformada (fantasma)
+      ctx.strokeStyle = colors.grid;
+      ctx.lineWidth = 10 * dpr;
+      ctx.setLineDash([4 * dpr, 4 * dpr]);
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(baseX, topY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 3. Columna deformada inelástica con rótula
+      const hingeDispPx = topDispPx * 0.05 * 0.3; // pequeña deflexión bajo la rótula
+      ctx.strokeStyle = isFailed ? colors.rose : colors.blue;
+      ctx.lineWidth = 12 * dpr;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Tramo 1: Base a Rótula (0 a 0.05 H)
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(baseX + hingeDispPx, hingeY);
+      ctx.stroke();
+
+      // Tramo 2: Rótula a Cúspide (0.05 H a H)
+      ctx.beginPath();
+      ctx.moveTo(baseX + hingeDispPx, hingeY);
+      // Curvatura suave
+      ctx.quadraticCurveTo(
+        baseX + hingeDispPx + (topDispPx - hingeDispPx) * 0.3,
+        hingeY - colHeight * 0.5,
+        baseX + topDispPx,
+        topY
+      );
+      ctx.stroke();
+
+      // 4. Marcador visual de la Rótula Plástica al 5% de H
+      let hingeColor = colors.emerald;
+      const th = Math.abs(case3_in_dc.hinge_rot_rad[Math.min(step, case3_in_dc.hinge_rot_rad.length - 1)] || 0);
+      if (th >= 0.024) hingeColor = colors.purple; // Residual
+      else if (th >= 0.012) hingeColor = colors.rose; // Softening
+      else if (th >= 0.0001) hingeColor = colors.amber; // Plástica activa (Fluencia a Capping)
+
+      ctx.fillStyle = hingeColor;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5 * dpr;
+      ctx.beginPath();
+      ctx.arc(baseX + hingeDispPx, hingeY, 9 * dpr, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Etiqueta Rótula
+      ctx.fillStyle = colors.textBold;
+      ctx.font = `bold ${10 * dpr}px Inter, sans-serif`;
+      ctx.fillText(`Rótula ASCE 41 (y = 0.15 m)`, baseX + hingeDispPx + 15 * dpr, hingeY + 4 * dpr);
+
+      // 5. Carga lateral en la cúspide (Flecha con fuerza V)
+      const currentV = appState.mode === 'fc' && isFailed 
+        ? case4_in_fc.shear_kN[case4_in_fc.shear_kN.length - 1]
+        : (case3_in_dc.shear_kN[Math.min(step, case3_in_dc.shear_kN.length - 1)] || 0);
+
+      const arrowLen = Math.min(90 * dpr, Math.max(25 * dpr, (currentV / 200) * 80 * dpr));
+      const topCurrX = baseX + topDispPx;
+
+      ctx.fillStyle = isFailed ? colors.rose : colors.blue;
+      ctx.strokeStyle = isFailed ? colors.rose : colors.blue;
+      ctx.lineWidth = 3 * dpr;
+
+      // Dibujar flecha lateral empujando a la derecha
+      ctx.beginPath();
+      ctx.moveTo(topCurrX - arrowLen, topY);
+      ctx.lineTo(topCurrX - 6 * dpr, topY);
+      ctx.stroke();
+
+      // Cabeza de flecha
+      ctx.beginPath();
+      ctx.moveTo(topCurrX, topY);
+      ctx.lineTo(topCurrX - 10 * dpr, topY - 6 * dpr);
+      ctx.lineTo(topCurrX - 10 * dpr, topY + 6 * dpr);
+      ctx.closePath();
+      ctx.fill();
+
+      // Texto de fuerza
+      ctx.fillStyle = colors.textBold;
+      ctx.font = `bold ${11 * dpr}px JetBrains Mono, monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillText(`V = ${currentV.toFixed(1)} kN`, topCurrX - arrowLen - 8 * dpr, topY + 4 * dpr);
+      ctx.textAlign = 'left';
+
+      // Alerta animada si colapsa por fuerza
+      if (appState.mode === 'fc' && isFailed) {
+        ctx.fillStyle = colors.rose;
+        ctx.font = `bold ${13 * dpr}px Inter, sans-serif`;
+        ctx.fillText(`💥 ¡COLAPSO NUMÉRICO!`, baseX + topDispPx + 15 * dpr, topY - 10 * dpr);
+        ctx.font = `normal ${10 * dpr}px Inter, sans-serif`;
+        ctx.fillStyle = colors.text;
+        ctx.fillText(`Paso ${step}: F_ext > V_cap (73.6 kN)`, baseX + topDispPx + 15 * dpr, topY + 6 * dpr);
+        ctx.fillText(`Residuo no converge (error -3)`, baseX + topDispPx + 15 * dpr, topY + 20 * dpr);
+      }
+
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       LIENZO 2: CURVA PUSHOVER GLOBAL (V vs Delta)
+       ========================================================================== */
+    function renderPushoverCanvas() {
+      const ctx = canvasPushover.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvasPushover.width;
+      const h = canvasPushover.height;
+      const colors = getThemeColors();
+
+      ctx.save();
+      ctx.clearRect(0, 0, w, h);
+
+      // Márgenes del gráfico
+      const padL = 60 * dpr;
+      const padR = 25 * dpr;
+      const padT = 30 * dpr;
+      const padB = 45 * dpr;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+
+      // Escalas: X (0 a 95 mm), Y (0 a 580 kN)
+      const xMax = 95.0; // mm
+      const yMax = 580.0; // kN
+
+      const getX = d_mm => padL + (d_mm / xMax) * plotW;
+      const getY = v_kn => padT + (1.0 - v_kn / yMax) * plotH;
+
+      // Cuadrícula y ejes
+      ctx.strokeStyle = colors.grid;
+      ctx.lineWidth = 1 * dpr;
+
+      // Líneas horizontales (Fuerza)
+      for (let v = 100; v <= 500; v += 100) {
+        const y = getY(v);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + plotW, y);
+        ctx.stroke();
+
+        ctx.fillStyle = colors.text;
+        ctx.font = `${9 * dpr}px JetBrains Mono, monospace`;
+        ctx.textAlign = 'right';
+        ctx.fillText(`${v}`, padL - 8 * dpr, y + 3 * dpr);
+      }
+
+      // Líneas verticales (Desplazamiento)
+      for (let d = 20; d <= 80; d += 20) {
+        const x = getX(d);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, padT + plotH);
+        ctx.stroke();
+
+        ctx.fillStyle = colors.text;
+        ctx.font = `${9 * dpr}px JetBrains Mono, monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${d}`, x, padT + plotH + 16 * dpr);
+      }
+
+      // Ejes principales
+      ctx.strokeStyle = colors.axis;
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + plotH);
+      ctx.lineTo(padL + plotW, padT + plotH);
+      ctx.stroke();
+
+      // Títulos de ejes
+      ctx.fillStyle = colors.textBold;
+      ctx.font = `bold ${10 * dpr}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('Desplazamiento en la Cúspide Δ (mm) [Deriva: 0% a 3%]', padL + plotW / 2, padT + plotH + 34 * dpr);
+
+      ctx.save();
+      ctx.translate(padL - 38 * dpr, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Cortante Basal V (kN)', 0, 0);
+      ctx.restore();
+
+      // 1. Curva Elástica (Recta hasta 533.3 kN)
+      if (appState.showElastic) {
+        ctx.strokeStyle = colors.blue;
+        ctx.lineWidth = 2 * dpr;
+        ctx.setLineDash([5 * dpr, 4 * dpr]);
+        ctx.beginPath();
+        case1_el_dc.disp_m.forEach((dm, i) => {
+          const x = getX(dm * 1000);
+          const y = getY(case1_el_dc.shear_kN[i]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 2. Curva Inelástica Completa (Fondo tenue)
+      if (appState.showInelastic) {
+        ctx.strokeStyle = 'rgba(225, 29, 72, 0.25)';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        case3_in_dc.disp_m.forEach((dm, i) => {
+          const x = getX(dm * 1000);
+          const y = getY(case3_in_dc.shear_kN[i]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      // 3. Traza activa según el modo
+      const step = appState.currentStep;
+
+      if (appState.mode === 'dc' || appState.mode === 'both') {
+        // Control por Desplazamiento
+        const currentIdx = Math.min(step, case3_in_dc.disp_m.length - 1);
+        ctx.strokeStyle = colors.rose;
+        ctx.lineWidth = 3 * dpr;
+        ctx.beginPath();
+        for (let i = 0; i <= currentIdx; i++) {
+          const x = getX(case3_in_dc.disp_m[i] * 1000);
+          const y = getY(case3_in_dc.shear_kN[i]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Punto actual
+        const curX = getX(case3_in_dc.disp_m[currentIdx] * 1000);
+        const curY = getY(case3_in_dc.shear_kN[currentIdx]);
+        ctx.fillStyle = colors.rose;
+        ctx.beginPath();
+        ctx.arc(curX, curY, 6 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2 * dpr;
+        ctx.stroke();
+
+      } else {
+        // Control por Fuerza
+        const isFailed = step >= FAILED_STEP_FC;
+        const lastIdx = isFailed ? case4_in_fc.disp_m.length - 1 : Math.min(step, case4_in_fc.disp_m.length - 1);
+
+        ctx.strokeStyle = colors.purple;
+        ctx.lineWidth = 3 * dpr;
+        ctx.beginPath();
+        for (let i = 0; i <= lastIdx; i++) {
+          const x = getX(case4_in_fc.disp_m[i] * 1000);
+          const y = getY(case4_in_fc.shear_kN[i]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        const curX = getX(case4_in_fc.disp_m[lastIdx] * 1000);
+        const curY = getY(case4_in_fc.shear_kN[lastIdx]);
+
+        if (isFailed) {
+          // Cruz de colapso en rojo
+          ctx.strokeStyle = colors.rose;
+          ctx.lineWidth = 3.5 * dpr;
+          const sz = 9 * dpr;
+          ctx.beginPath();
+          ctx.moveTo(curX - sz, curY - sz);
+          ctx.lineTo(curX + sz, curY + sz);
+          ctx.moveTo(curX + sz, curY - sz);
+          ctx.lineTo(curX - sz, curY + sz);
+          ctx.stroke();
+
+          // Etiqueta
+          ctx.fillStyle = colors.rose;
+          ctx.font = `bold ${10 * dpr}px Inter, sans-serif`;
+          ctx.textAlign = 'left';
+          ctx.fillText(`❌ Colapso numérico (${case4_in_fc.shear_kN[lastIdx].toFixed(1)} kN)`, curX + 12 * dpr, curY - 5 * dpr);
+        } else {
+          ctx.fillStyle = colors.purple;
+          ctx.beginPath();
+          ctx.arc(curX, curY, 6 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2 * dpr;
+          ctx.stroke();
+        }
+      }
+
+      // Línea de referencia de capacidad máxima teórica V_cap = 73.6 kN
+      const yCap = getY(73.56);
+      ctx.strokeStyle = colors.amber;
+      ctx.lineWidth = 1.2 * dpr;
+      ctx.setLineDash([3 * dpr, 3 * dpr]);
+      ctx.beginPath();
+      ctx.moveTo(padL, yCap);
+      ctx.lineTo(padL + plotW, yCap);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = colors.amber;
+      ctx.font = `bold ${8.5 * dpr}px Inter, sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.fillText('V_cap = 73.6 kN (Capacidad Máxima)', padL + plotW - 5 * dpr, yCap - 4 * dpr);
+
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       LIENZO 3: CURVA CONSTITUTIVA RÓTULA ASCE 41 (Mh vs thetah)
+       ========================================================================== */
+    function renderHingeCanvas() {
+      const ctx = canvasHinge.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvasHinge.width;
+      const h = canvasHinge.height;
+      const colors = getThemeColors();
+
+      ctx.save();
+      ctx.clearRect(0, 0, w, h);
+
+      const padL = 60 * dpr;
+      const padR = 25 * dpr;
+      const padT = 30 * dpr;
+      const padB = 45 * dpr;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+
+      // Escalas: X = Rotación theta_h (0 a 35 mrad), Y = Momento Mh (0 a 240 kN*m)
+      const xMax = 35.0; // mrad
+      const yMax = 240.0; // kN*m
+
+      const getX = th_mrad => padL + (th_mrad / xMax) * plotW;
+      const getY = m_knm => padT + (1.0 - m_knm / yMax) * plotH;
+
+      // Cuadrícula
+      ctx.strokeStyle = colors.grid;
+      ctx.lineWidth = 1 * dpr;
+
+      for (let m = 50; m <= 200; m += 50) {
+        const y = getY(m);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + plotW, y);
+        ctx.stroke();
+
+        ctx.fillStyle = colors.text;
+        ctx.font = `${9 * dpr}px JetBrains Mono, monospace`;
+        ctx.textAlign = 'right';
+        ctx.fillText(`${m}`, padL - 8 * dpr, y + 3 * dpr);
+      }
+
+      for (let th = 5; th <= 30; th += 5) {
+        const x = getX(th);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, padT + plotH);
+        ctx.stroke();
+
+        ctx.fillStyle = colors.text;
+        ctx.font = `${9 * dpr}px JetBrains Mono, monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${th}`, x, padT + plotH + 16 * dpr);
+      }
+
+      // Ejes
+      ctx.strokeStyle = colors.axis;
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + plotH);
+      ctx.lineTo(padL + plotW, padT + plotH);
+      ctx.stroke();
+
+      // Títulos
+      ctx.fillStyle = colors.textBold;
+      ctx.font = `bold ${10 * dpr}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('Giro Plástico de la Rótula θh (mrad)', padL + plotW / 2, padT + plotH + 34 * dpr);
+
+      ctx.save();
+      ctx.translate(padL - 38 * dpr, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Momento en la Rótula Mh (kN·m)', 0, 0);
+      ctx.restore();
+
+      // Curva ASCE 41 completa (Gris/Tenue)
+      ctx.strokeStyle = 'rgba(100, 116, 139, 0.3)';
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath();
+      case3_in_dc.hinge_rot_rad.forEach((rot, i) => {
+        const x = getX(Math.abs(rot) * 1000);
+        const y = getY(case3_in_dc.hinge_moment_kNm[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Puntos canónicos ASCE 41 marcados
+      const ptsASCE = [
+        { name: 'B: Fluencia (My)', th: 0.0, m: 180.0, color: colors.emerald },
+        { name: 'C: Capping (Mu)', th: 12.0, m: 210.0, color: colors.amber },
+        { name: 'D: Residual (Mr)', th: 24.0, m: 40.0, color: colors.purple }
+      ];
+
+      ptsASCE.forEach(pt => {
+        const px = getX(pt.th);
+        const py = getY(pt.m);
+        ctx.fillStyle = pt.color;
+        ctx.beginPath();
+        ctx.arc(px, py, 4.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = `bold ${8.5 * dpr}px Inter, sans-serif`;
+        ctx.fillText(pt.name, px + 6 * dpr, py - 6 * dpr);
+      });
+
+      // Trazo de evolución activa
+      const step = appState.currentStep;
+      const currentIdx = Math.min(step, case3_in_dc.hinge_rot_rad.length - 1);
+
+      ctx.strokeStyle = colors.rose;
+      ctx.lineWidth = 3 * dpr;
+      ctx.beginPath();
+      for (let i = 0; i <= currentIdx; i++) {
+        const x = getX(Math.abs(case3_in_dc.hinge_rot_rad[i]) * 1000);
+        const y = getY(case3_in_dc.hinge_moment_kNm[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Marcador actual
+      const curX = getX(Math.abs(case3_in_dc.hinge_rot_rad[currentIdx]) * 1000);
+      const curY = getY(case3_in_dc.hinge_moment_kNm[currentIdx]);
+      ctx.fillStyle = colors.rose;
+      ctx.beginPath();
+      ctx.arc(curX, curY, 6 * dpr, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2 * dpr;
+      ctx.stroke();
+
+      // Cuadro pedagógico "¿Por qué cae el momento?"
+      if (currentIdx > 60) {
+        const boxX = padL + 15 * dpr;
+        const boxY = padT + 15 * dpr;
+        ctx.fillStyle = 'rgba(225, 29, 72, 0.08)';
+        ctx.strokeStyle = colors.rose;
+        ctx.lineWidth = 1 * dpr;
+        ctx.fillRect(boxX, boxY, 190 * dpr, 65 * dpr);
+        ctx.strokeRect(boxX, boxY, 190 * dpr, 65 * dpr);
+
+        ctx.fillStyle = colors.rose;
+        ctx.font = `bold ${9 * dpr}px Inter, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.fillText('¿Por qué cae el momento? (Softening):', boxX + 8 * dpr, boxY + 16 * dpr);
+        ctx.font = `normal ${8 * dpr}px Inter, sans-serif`;
+        ctx.fillStyle = colors.text;
+        ctx.fillText('• Descascaramiento recubrimiento (spalling)', boxX + 8 * dpr, boxY + 30 * dpr);
+        ctx.fillText('• Agotamiento del núcleo confinado', boxX + 8 * dpr, boxY + 44 * dpr);
+        ctx.fillText('• Pandeo inelástico de barras de acero', boxX + 8 * dpr, boxY + 58 * dpr);
+      }
+
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       LIENZO 4: DIAGNÓSTICO NUMÉRICO NEWTON-RAPHSON & ESPACIO DE CARGA
+       ========================================================================== */
+    function renderNRCanvas() {
+      const ctx = canvasNR.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvasNR.width;
+      const h = canvasNR.height;
+      const colors = getThemeColors();
+
+      ctx.save();
+      ctx.clearRect(0, 0, w, h);
+
+      const padL = 50 * dpr;
+      const padR = 25 * dpr;
+      const padT = 30 * dpr;
+      const padB = 40 * dpr;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+
+      // Ejes conceptuales
+      ctx.strokeStyle = colors.axis;
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + plotH);
+      ctx.lineTo(padL + plotW, padT + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = colors.textBold;
+      ctx.font = `bold ${10 * dpr}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('Desplazamiento u', padL + plotW / 2, padT + plotH + 28 * dpr);
+
+      ctx.save();
+      ctx.translate(padL - 32 * dpr, padT + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Fuerza / Carga F', 0, 0);
+      ctx.restore();
+
+      // Dibujar curva estructural conceptual con ablandamiento (montículo)
+      ctx.strokeStyle = colors.text;
+      ctx.lineWidth = 2.5 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT + plotH);
+      // Pico en (0.45 * plotW, 0.25 * plotH)
+      const pX = padL + 0.45 * plotW;
+      const pY = padT + 0.28 * plotH;
+      ctx.quadraticCurveTo(padL + 0.2 * plotW, pY, pX, pY);
+      // Rama descendente
+      ctx.quadraticCurveTo(padL + 0.65 * plotW, pY + 0.25 * plotH, padL + plotW, padT + 0.75 * plotH);
+      ctx.stroke();
+
+      // Carga límite máxima V_cap
+      ctx.strokeStyle = colors.amber;
+      ctx.lineWidth = 1.2 * dpr;
+      ctx.setLineDash([4 * dpr, 4 * dpr]);
+      ctx.beginPath();
+      ctx.moveTo(padL, pY);
+      ctx.lineTo(padL + plotW, pY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = colors.amber;
+      ctx.font = `bold ${9 * dpr}px Inter, sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.fillText('Capacidad Máxima V_cap', padL + plotW - 8 * dpr, pY - 5 * dpr);
+
+      // CASO A: Control de Desplazamiento (Línea vertical que SIEMPRE corta la curva)
+      const uLineX = padL + 0.72 * plotW;
+      ctx.strokeStyle = colors.blue;
+      ctx.lineWidth = 1.8 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(uLineX, padT + plotH);
+      ctx.lineTo(uLineX, padT);
+      ctx.stroke();
+
+      ctx.fillStyle = colors.blue;
+      ctx.font = `bold ${9 * dpr}px Inter, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText('Control Desp. (Δu fijo)', uLineX + 5 * dpr, padT + 20 * dpr);
+      ctx.font = `normal ${8 * dpr}px Inter, sans-serif`;
+      ctx.fillText('✓ Siempre intersecta', uLineX + 5 * dpr, padT + 34 * dpr);
+
+      // CASO B: Control de Fuerza Inalcanzable (Línea horizontal superior)
+      const fTargetY = padT + 0.12 * plotH; // Por encima de V_cap
+      ctx.strokeStyle = colors.rose;
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(padL, fTargetY);
+      ctx.lineTo(padL + plotW, fTargetY);
+      ctx.stroke();
+
+      ctx.fillStyle = colors.rose;
+      ctx.font = `bold ${9 * dpr}px Inter, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText('Control Fuerza: F_ext > V_cap', padL + 10 * dpr, fTargetY - 6 * dpr);
+      ctx.font = `normal ${8 * dpr}px Inter, sans-serif`;
+      ctx.fillText('❌ Jamás cruza la curva: Residuo R > 0 infinito', padL + 10 * dpr, fTargetY + 14 * dpr);
+
+      // Flechas de divergencia Newton
+      ctx.strokeStyle = 'rgba(225, 29, 72, 0.6)';
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.setLineDash([3 * dpr, 3 * dpr]);
+      ctx.beginPath();
+      ctx.moveTo(pX, pY);
+      ctx.lineTo(pX + 0.35 * plotW, fTargetY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.restore();
+    }
+
+
+  </script>
+</body>
+</html>

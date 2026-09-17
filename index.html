@@ -1117,6 +1117,54 @@
         </div>
       </article>
 
+      <!-- Clase 07: Control por Desplazamiento vs. Control por Fuerza -->
+      <article class="class-card card-07" style="border-top: 4px solid var(--blue-500);">
+        <div>
+          <div class="class-header">
+            <span class="class-number" style="background: linear-gradient(135deg, #2563eb, #e11d48); color: #fff; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">Clase 07</span>
+            <span class="class-status" style="color: var(--emerald-400);">● Nuevo</span>
+          </div>
+          <h3 class="class-title">Control por Desplazamiento vs. Control por Fuerza: OpenSeesPy y Rótula ASCE 41</h3>
+          <p class="class-desc">
+            Compara paso a paso una columna en voladizo completamente elástica frente a una inelástica con rótula ASCE 41 al 5% de la altura. Desmitifica por qué el momento cae luego del valor máximo (\(M_u\)) y por qué el control por fuerza sufre un colapso numérico inevitable (\(\text{error } -3\)) al intentar alcanzar la fuerza del modelo elástico.
+          </p>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Columna en voladizo en OpenSeesPy:</strong> Altura \(H = 3.0\text{ m}\), sección \(400\times 400\text{ mm}\) y rótula ASCE 41 con material <code>Hysteretic</code> al 5% de \(H\).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Equilibrio estático seccional:</strong> Demostración estricta de por qué \(M_h = 0.95 \cdot M_{\text{base}} = V \cdot 0.95 H \iff V = M_h / (0.95 H)\).</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Causa física de la caída del momento:</strong> Explicación detallada del descascaramiento del recubrimiento (<em>spalling</em>), microagrietamiento del núcleo y pandeo del refuerzo.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>El caso elástico idéntico:</strong> Demostración de la identidad \(F = Ku \iff u = K^{-1}F\) entre control por fuerza y por desplazamiento.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>Colapso numérico por fuerza:</strong> Visualización del paso 14 donde \(F_{\text{ext}} > V_{\text{cap}} = 73.56\text{ kN}\), con residuo divergente y singularidad de rigidez.</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span><strong>4 lienzos sincronizados e interactivos:</strong> Vista estructural, curva Pushover global, curva ASCE 41 de la rótula y monitor de Newton-Raphson.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <a href="07_control_fuerza_vs_desplazamiento.html" class="btn-launch" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+            <span>Iniciar Clase 07</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </article>
+
     </div>
 
     <!-- ==========================================================================
@@ -1286,6 +1334,7 @@
         <li><a href="04_rotula_plastica_asce41.html">Clase 04</a></li>
         <li><a href="05_regularizacion_energia_fractura.html">Clase 05</a></li>
         <li><a href="06_matriz_rigidez_elemento_fibras.html">Clase 06</a></li>
+        <li><a href="07_control_fuerza_vs_desplazamiento.html">Clase 07</a></li>
         <li><a href="recursos_openseespy.html" style="color: var(--cyan-400); font-weight: 700;">OpenSeesPy</a></li>
         <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">Repositorio</a></li>
       </ul>
