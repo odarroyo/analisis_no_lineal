@@ -777,7 +777,7 @@
     }
 
     .wall-card.card-08 {
-      border-top: 4px solid #64748b;
+      border-top: 4px solid #0284c7;
     }
 
     .wall-card.card-08::before {
@@ -787,7 +787,7 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #64748b, #94a3b8);
+      background: linear-gradient(90deg, #0284c7, #0d6f73);
     }
 
     .wall-card.card-09 {
@@ -1275,45 +1275,45 @@
 
       <div class="walls-cards-grid">
 
-        <!-- Recurso 08: Modelado No Lineal de Muros MVLEM (En Preparación) -->
+        <!-- Recurso 08: Modelado No Lineal de Muros MVLEM (Disponible) -->
         <article class="wall-card card-08">
           <div>
             <div class="class-header">
-              <span class="class-number" style="background: rgba(100, 116, 139, 0.15); color: var(--text-faint); font-weight: 800;">Recurso 08</span>
-              <span class="class-status" style="color: var(--amber-500); font-weight: 700;">⏳ En Desarrollo</span>
+              <span class="class-number" style="background: rgba(2, 132, 199, 0.15); color: var(--cyan-400); font-weight: 800;">Recurso 08</span>
+              <span class="class-status" style="color: var(--emerald-400); font-weight: 700;">● Disponible • Interactivo</span>
             </div>
             <h3 class="class-title" style="color: var(--text-main);">Modelado No Lineal de Muros con Macroelementos MVLEM (OpenSeesPy)</h3>
             <p class="class-desc">
-              Formulación e implementación del macroelemento MVLEM (<em>Multiple-Vertical-Line-Element Model</em> - Vulcano, Bertero & Colotti, 1988; Orakcal & Wallace, 2006). Simulación de la respuesta no lineal acoplada flexión-corte en edificios de muros mediante macrofibras de concreto y acero y resortes horizontales de cortante.
+              Formulación e implementación del macroelemento MVLEM (<em>Multiple-Vertical-Line-Element Model</em> - Vulcano et al., 1988; Orakcal & Wallace, 2006). Simulación de la respuesta no lineal acoplada flexión-corte en el <strong>edificio arquetipo de 16 pisos de Ramos & Hube (2021, <em>Engineering Structures</em>)</strong> mediante macrofibras uniaxiales de concreto y acero, resortes de cortante a altura \(c \cdot h\), y descomposición del volcamiento sísmico.
             </p>
 
             <ul class="feature-list">
               <li class="feature-item">
-                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
-                <span><strong>Discretización en macrofibras:</strong> Discretización del muro en \(m\) elementos axiales uniaxiales en paralelo vinculados rígidamente en niveles superior e inferior.</span>
+                <span class="feature-icon" style="color: var(--cyan-400);">✓</span>
+                <span><strong>Discretización en macrofibras:</strong> Subdivisión del muro en \(m\) macrofibras paralelas con vigas rígidas en la base y coronamiento para cinemática de Navier-Bernoulli seccional.</span>
               </li>
               <li class="feature-item">
-                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
-                <span><strong>Leyes constitutivas uniaxiales:</strong> Concreto confinado en bordes libres (<code>Concrete02</code>), no confinado en el alma y acero con endurecimiento (<code>Hysteretic</code>).</span>
+                <span class="feature-icon" style="color: var(--cyan-400);">✓</span>
+                <span><strong>Materiales uniaxiales no lineales:</strong> Concreto confinado en los bulbos de borde (<code>Concrete02</code>), no confinado en el alma y acero longitudinal con endurecimiento (<code>Hysteretic</code>).</span>
               </li>
               <li class="feature-item">
-                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
-                <span><strong>Resorte central de cortante:</strong> Posicionado a altura \(c \cdot h\) para representar la flexibilidad y degradación a corte desacoplada/acoplada.</span>
+                <span class="feature-icon" style="color: var(--cyan-400);">✓</span>
+                <span><strong>Resorte central de cortante:</strong> Ubicado a altura relativa \(c \cdot h\) (\(c=0.4\)) para capturar la flexibilidad transversal y la degradación por cortante.</span>
               </li>
               <li class="feature-item">
-                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
-                <span><strong>Edificio de 16 pisos con muros acoplados:</strong> Modelo con diafragmas rígidos y vigas de enlace bajo análisis Pushover monotónico y cíclico.</span>
+                <span class="feature-icon" style="color: var(--cyan-400);">✓</span>
+                <span><strong>Arquetipo de 16 pisos (Ramos & Hube, 2021):</strong> Simulación pushover de muros acoplados por losas, deformada lateral, derivas de entrepiso y descomposición del volcamiento \(M_{\text{OTM}} = M_1 + M_2 + T \cdot L\).</span>
               </li>
             </ul>
           </div>
 
-          <div>
-            <div style="padding: 0.75rem 1rem; border-radius: 10px; background: var(--bg-card); border: 1px dashed var(--border-subtle); margin-bottom: 0.85rem; font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.6rem;">
-              <span>🛠️</span>
-              <span><strong>Estado:</strong> Laboratorio interactivo en preparación. El cuaderno de investigación preliminar en Python/OpenSeesPy ya está disponible en la carpeta del repositorio.</span>
-            </div>
-            <a href="https://github.com/odarroyo/analisis_no_lineal/blob/main/Codigos_OpenSeesPy/MVLEM_generator_colab.ipynb" target="_blank" rel="noopener" class="opensees-mini-link" style="text-decoration: none; justify-content: center; font-weight: 600;">
-              <span>📓 Ver Cuaderno MVLEM en GitHub</span>
+          <div class="card-footer" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
+            <a href="08_modelado_muros_mvlem.html" class="btn-launch" style="background: linear-gradient(135deg, #0284c7, #0d6f73); color: #fff; width: 100%; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);">
+              <span>Abrir Laboratorio de Muros MVLEM (Recurso 08)</span>
+              <span>&rarr;</span>
+            </a>
+            <a href="https://github.com/odarroyo/analisis_no_lineal/blob/main/Codigos_OpenSeesPy/MVLEM_generator_colab.ipynb" target="_blank" rel="noopener" class="opensees-mini-link" style="text-decoration: none; justify-content: center; font-weight: 600; padding: 0.5rem 0.75rem;">
+              <span>📓 Ver Cuaderno MVLEM en Google Colab / GitHub</span>
               <span>&rarr;</span>
             </a>
           </div>

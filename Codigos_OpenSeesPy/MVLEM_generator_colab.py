@@ -4,7 +4,11 @@
 ================================================================================
 CURSO DE ANÁLISIS NO LINEAL DE ESTRUCTURAS
 Script: Análisis Pushover de Muros de Concreto Reforzado con Elementos MVLEM
-Modelo: Edificio de 16 Pisos con Muros Acoplados (Versión Colab & Local)
+Modelo: Edificio Arquetipo de 16 Pisos con Muros Acoplados
+Referencia: Ramos, L., & Hube, M. A. (2021). Seismic response of reinforced
+            concrete wall buildings with nonlinear coupling slabs.
+            Engineering Structures, 234, 111888.
+            https://doi.org/10.1016/j.engstruct.2021.111888
 Profesor: Orlando Arroyo
 ================================================================================
 
@@ -15,7 +19,7 @@ elemento MVLEM (Multiple-Vertical-Line-Element-Model, Vulcano et al., 1988):
 - Materiales no lineales: Concrete02 (confinado en bordes, no confinado en alma) y
   acero Hysteretic con endurecimiento y degradación cíclica.
 - Edificio de 16 pisos (H = 41.6 m, entrepisos de 2.6 m) con 2 muros acoplados mediante
-  vigas de enlace y diafragmas rígidos en cada nivel.
+  vigas/losas de enlace y diafragmas rígidos en cada nivel (Ramos & Hube, 2021).
 - Análisis estático no lineal (Pushover) bajo diferentes patrones de carga lateral.
 - Gráficas didácticas: Curva de Capacidad (V/W vs Roof Drift %) y Cortante Basal vs Desplazamiento.
 - Compatible con Google Colab y protegido para ejecución local en Mac ARM.

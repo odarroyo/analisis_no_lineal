@@ -1,0 +1,2724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 08: Modelado No Lineal de Muros con Elementos MVLEM | Análisis No Lineal</title>
+  <meta name="description" content="Laboratorio interactivo de análisis no lineal en OpenSeesPy: Modelado de muros de concreto reforzado mediante macroelementos MVLEM en un edificio de 16 pisos con muros acoplados.">
+
+  <!-- KaTeX para renderizado de ecuaciones matemáticas (sin defer para disponibilidad inmediata) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES Y PALETA DE COLORES (MODO CLARO POR DEFECTO / OSCURO)
+       TEMA CLASE 08: TEAL PROFUNDO (#0d6f73), CIAN SÍSMICO (#0284c7) Y ÁMBAR (#d97706)
+       ========================================================================== */
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --border-accent: #0d6f73;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-faint: #64748b;
+
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --hero-bg: linear-gradient(135deg, #ffffff 0%, #ecfdf5 40%, #f0fdfa 100%);
+      --hero-title-gradient: linear-gradient(120deg, #0f172a 20%, #0d6f73 65%, #0284c7 100%);
+
+      --teal-600: #0d6f73;
+      --teal-500: #0f766e;
+      --teal-400: #14b8a6;
+      --teal-300: #2dd4bf;
+      --cyan-500: #0284c7;
+      --blue-500: #2563eb;
+      --emerald-500: #059669;
+      --amber-500: #d97706;
+      --rose-500: #e11d48;
+      --purple-500: #7c3aed;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: #e2e8f0;
+      --canvas-axis: #64748b;
+      --canvas-text: #1e293b;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 20px rgba(13, 111, 115, 0.2);
+    }
+
+    body.dark-theme {
+      --bg-base: #060b13;
+      --bg-surface: #0b1320;
+      --bg-card: #111d30;
+      --bg-card-hover: #192a45;
+      --border-subtle: #24354f;
+      --border-accent: #2dd4bf;
+      --text-main: #f1f5f9;
+      --text-muted: #cbd5e1;
+      --text-faint: #94a3b8;
+
+      --header-bg: rgba(11, 19, 32, 0.94);
+      --hero-bg: linear-gradient(135deg, #0b1320 0%, #082125 50%, #0c1c2e 100%);
+      --hero-title-gradient: linear-gradient(120deg, #ffffff 20%, #2dd4bf 65%, #38bdf8 100%);
+
+      --teal-600: #2dd4bf;
+      --teal-500: #14b8a6;
+      --teal-400: #2dd4bf;
+      --teal-300: #5eead4;
+      --cyan-500: #38bdf8;
+      --blue-500: #60a5fa;
+      --emerald-500: #34d399;
+      --amber-500: #fbbf24;
+      --rose-500: #fb7185;
+      --purple-500: #a78bfa;
+
+      --canvas-bg: #0d131f;
+      --canvas-grid: #1e293b;
+      --canvas-axis: #475569;
+      --canvas-text: #94a3b8;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 25px rgba(45, 212, 191, 0.25);
+    }
+
+    /* ==========================================================================
+       RESET Y ESTILOS BASE
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================================================
+       HEADER Y NAVEGACIÓN SUPERIOR
+       ========================================================================== */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+      background: var(--bg-card-hover);
+      color: var(--teal-600);
+      border-color: var(--teal-600);
+      transform: translateX(-2px);
+    }
+
+    .course-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(13, 111, 115, 0.12);
+      color: var(--teal-600);
+      border: 1px solid rgba(13, 111, 115, 0.25);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .theme-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--teal-600);
+    }
+
+    /* ==========================================================================
+       HERO PRINCIPAL
+       ========================================================================== */
+    .hero-section {
+      background: var(--hero-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(13, 111, 115, 0.12) 0%, rgba(2, 132, 199, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-container {
+      max-width: 1050px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.35rem 0.9rem;
+      border-radius: 9999px;
+      background: rgba(13, 111, 115, 0.12);
+      color: var(--teal-600);
+      border: 1px solid rgba(13, 111, 115, 0.28);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 4.2vw, 3.1rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.18;
+      background: var(--hero-title-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-desc {
+      font-size: clamp(1rem, 1.8vw, 1.18rem);
+      color: var(--text-muted);
+      max-width: 860px;
+      margin: 0 auto 1.75rem;
+      line-height: 1.65;
+    }
+
+    .hero-metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .meta-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 0.85rem 1.1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .meta-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+      margin-bottom: 0.25rem;
+    }
+
+    .meta-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* ==========================================================================
+       CONTENEDOR PRINCIPAL
+       ========================================================================== */
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* ==========================================================================
+       PANEL DE CONTROL PRINCIPAL Y ESTADOS DE PUSHOVER
+       ========================================================================== */
+    .control-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .btn-group {
+      display: inline-flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.25rem;
+      gap: 0.25rem;
+    }
+
+    .btn-ctrl {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 0.45rem 0.85rem;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-ctrl:hover {
+      background: var(--bg-card-hover);
+      color: var(--teal-600);
+    }
+
+    .btn-ctrl.active {
+      background: var(--teal-600);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(13, 111, 115, 0.35);
+    }
+
+    .btn-primary {
+      background: var(--teal-600);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--teal-500);
+      color: #ffffff;
+    }
+
+    .slider-container {
+      flex: 1;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .range-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border-subtle);
+      outline: none;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--teal-600);
+      cursor: pointer;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      transition: transform 0.15s ease, background 0.2s;
+    }
+
+    .range-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: var(--teal-500);
+    }
+
+    /* Puntos clave / Presets de análisis */
+    .presets-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .preset-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-right: 0.25rem;
+    }
+
+    .btn-preset {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-preset:hover {
+      border-color: var(--teal-600);
+      color: var(--teal-600);
+      background: var(--bg-card-hover);
+    }
+
+    .btn-preset.active {
+      background: rgba(13, 111, 115, 0.15);
+      border-color: var(--teal-600);
+      color: var(--teal-600);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       MÉTRICAS KPI EN TIEMPO REAL
+       ========================================================================== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--teal-600);
+      opacity: 0.8;
+    }
+
+    .kpi-card.kpi-cyan::before { background: var(--cyan-500); }
+    .kpi-card.kpi-amber::before { background: var(--amber-500); }
+    .kpi-card.kpi-purple::before { background: var(--purple-500); }
+    .kpi-card.kpi-emerald::before { background: var(--emerald-500); }
+
+    .kpi-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      line-height: 1.1;
+      margin-bottom: 0.3rem;
+    }
+
+    .kpi-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       CANVAS Y VISUALIZADORES 2D
+       ========================================================================== */
+    .canvas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .canvas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .canvas-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .canvas-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-tab {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-tab.active, .btn-tab:hover {
+      background: rgba(13, 111, 115, 0.12);
+      border-color: var(--teal-600);
+      color: var(--teal-600);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .canvas-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* ==========================================================================
+       DIAGRAMA CONCEPTUAL SVG DEL ELEMENTO MVLEM
+       ========================================================================== */
+    .element-diagram-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin: 1.5rem 0 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ==========================================================================
+       SECCIÓN DE TEORÍA Y ECUACIONES MATEMÁTICAS
+       ========================================================================== */
+    .theory-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .theory-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--teal-600);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .theory-subtitle {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    .theory-p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    .math-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--teal-600);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      font-size: 1.05rem;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.88rem;
+    }
+
+    .compare-table th, .compare-table td {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-subtle);
+      text-align: left;
+    }
+
+    .compare-table th {
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       PANEL DE CÓDIGO OPENSEESPY
+       ========================================================================== */
+    .code-panel {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+
+    .code-header {
+      background: #161b22;
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .code-tabs {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .code-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #8b949e;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.15s ease;
+    }
+
+    .code-tab.active, .code-tab:hover {
+      background: #21262d;
+      color: #58a6ff;
+      border-color: #30363d;
+    }
+
+    .code-content {
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #c9d1d9;
+      overflow-x: auto;
+      max-height: 480px;
+    }
+
+    /* ==========================================================================
+       QUIZ SOCRÁTICO
+       ========================================================================== */
+    .quiz-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .quiz-question {
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.85rem;
+      font-size: 0.95rem;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .quiz-option {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.65rem 1rem;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .quiz-option:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--teal-600);
+    }
+
+    .quiz-option.correct {
+      background: rgba(5, 150, 105, 0.15);
+      border-color: #059669;
+      color: #059669;
+      font-weight: 700;
+    }
+
+    .quiz-option.incorrect {
+      background: rgba(225, 29, 72, 0.15);
+      border-color: #e11d48;
+      color: #e11d48;
+      font-weight: 700;
+    }
+
+    .quiz-feedback {
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER NAVEGACIÓN -->
+  <header class="top-header">
+    <div class="header-container">
+      <div class="header-left">
+        <a href="index.html#muros-section" class="btn-back">
+          <span>&larr;</span>
+          <span>Volver al Portal del Curso</span>
+        </a>
+        <span class="course-badge">Clase 08 • Macroelementos MVLEM</span>
+      </div>
+
+      <div class="header-right">
+        <button class="theme-toggle" id="theme-toggle-btn" title="Alternar Modo Claro / Oscuro">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-label">Tema</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO PRINCIPAL -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-tag">Laboratorio Numérico Interactivo • OpenSeesPy</div>
+      <h1 class="hero-title">Modelado No Lineal de Muros Estructurales con Elementos MVLEM</h1>
+      <p class="hero-desc">
+        Formulación cinemática de sección plana de Vulcano, Bertero & Colotti (1988) y Orakcal & Wallace (2006). Simulación de la respuesta acoplada flexión-corte en el <strong>edificio arquetipo de 16 pisos de Ramos & Hube (2021, <em>Engineering Structures</em>)</strong> mediante macrofibras de concreto y acero y resorte central de cortante.
+      </p>
+
+      <div class="hero-metadata-grid">
+        <div class="meta-card">
+          <div class="meta-label">Arquetipo Estructural</div>
+          <div class="meta-value">Edificio 16 Pisos (Ramos & Hube, 2021)</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Altura Total / Entrepiso</div>
+          <div class="meta-value">41.6 m (h = 2.6 m)</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Configuración Resistente</div>
+          <div class="meta-value">2 Muros Acoplados (Lw = 7.65 m)</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Discretización Seccional</div>
+          <div class="meta-value">8 Macrofibras + Resorte Cortante c=0.4</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENEDOR PRINCIPAL INTERACTIVO -->
+  <main class="main-container">
+
+    <!-- PANEL DE CONTROL PUSHOVER -->
+    <section class="control-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🕹️</span>
+          <span>Control de Carga Lateral y Estado Deformado</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn-ctrl" id="btn-play">▶️ Reproducir</button>
+          <button class="btn-ctrl" id="btn-prev">&larr; Anterior</button>
+          <button class="btn-ctrl" id="btn-next">Siguiente &rarr;</button>
+          <button class="btn-ctrl" id="btn-reset">⏮️ Reiniciar</button>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="slider-container">
+          <div class="slider-header">
+            <span>Paso de Desplazamiento de Techo (\(\Delta_{\text{roof}}\)):</span>
+            <span id="step-display" style="font-family: var(--font-mono); font-weight: 700; color: var(--teal-600);">0 / 52</span>
+          </div>
+          <input type="range" min="0" max="52" value="0" step="1" class="range-slider" id="pushover-slider">
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-faint); margin-top: 0.25rem;">
+            <span>0.00 m (0.0% Drift)</span>
+            <span id="disp-display" style="font-weight: 700; color: var(--teal-600);">0.0000 m</span>
+            <span id="drift-display" style="font-weight: 700; color: var(--cyan-500);">0.000 % Drift</span>
+            <span>0.624 m (1.5% Drift)</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Velocidad:</span>
+          <select id="speed-select" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-subtle); padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; outline: none;">
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1.0x (Normal)</option>
+            <option value="2">2.0x (Rápido)</option>
+            <option value="4">4.0x (Máximo)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Presets / Hitos Físicos de Daño -->
+      <div class="presets-row">
+        <span class="preset-label">Saltar a Hito Crítico:</span>
+        <button class="btn-preset active" data-step="0">0. Estado Elástico (0.0% Drift)</button>
+        <button class="btn-preset" data-step="6">1. Primera Fluencia Acero Tracción (~0.17% Drift)</button>
+        <button class="btn-preset" data-step="15">2. Resistencia Máxima Vb,max (~0.43% Drift)</button>
+        <button class="btn-preset" data-step="24">3. Inicio de Aplastamiento Concreto (~0.72% Drift)</button>
+        <button class="btn-preset" data-step="35">4. Límite de Diseño NSR-10 (1.0% Drift)</button>
+        <button class="btn-preset" data-step="52">5. Demanda Extrema Inelástica (1.5% Drift)</button>
+      </div>
+    </section>
+
+    <!-- KPIS EN TIEMPO REAL -->
+    <section class="kpi-grid">
+      <div class="kpi-card kpi-cyan">
+        <div class="kpi-title">
+          <span>Deriva de Techo (\(\theta_{\text{roof}}\))</span>
+          <span>📐</span>
+        </div>
+        <div class="kpi-value" id="kpi-drift">0.000 %</div>
+        <div class="kpi-sub" id="kpi-disp">Desplazamiento: 0.000 m</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-title">
+          <span>Cortante Basal Total (\(V_{\text{base}}\))</span>
+          <span>⚡</span>
+        </div>
+        <div class="kpi-value" id="kpi-shear">0.0 kN</div>
+        <div class="kpi-sub">Suma muros M1 + M2</div>
+      </div>
+
+      <div class="kpi-card kpi-emerald">
+        <div class="kpi-title">
+          <span>Coeficiente Sísmico (\(V/W\))</span>
+          <span>🏢</span>
+        </div>
+        <div class="kpi-value" id="kpi-vw">0.000</div>
+        <div class="kpi-sub">Peso Sísmico W = 25,520 kN</div>
+      </div>
+
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-title">
+          <span>Aporte del Acople (\(T \cdot L\))</span>
+          <span>⚖️</span>
+        </div>
+        <div class="kpi-value" id="kpi-couple">0.0 %</div>
+        <div class="kpi-sub">Fracción del Volcamiento Total</div>
+      </div>
+
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-title">
+          <span>Mecanismo Inelástico</span>
+          <span>🔍</span>
+        </div>
+        <div class="kpi-value" id="kpi-state" style="font-size: 1.15rem; font-family: var(--font-sans);">Elástico Lineal</div>
+        <div class="kpi-sub" id="kpi-state-desc">Sin daño ni plastificación</div>
+      </div>
+    </section>
+
+    <!-- GRID DE VISUALIZADORES CANVASES 2D -->
+    <div class="canvas-grid">
+
+      <!-- LIENZO A: ELEVACIÓN DEL EDIFICIO DE 16 PISOS -->
+      <div class="canvas-card">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>🏢</span>
+            <span>Elevación del Edificio y Deformada Lateral</span>
+          </div>
+          <div class="canvas-toolbar">
+            <button class="btn-tab" id="btn-scale-toggle">Escala: 15x</button>
+          </div>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-building"></canvas>
+        </div>
+        <div class="canvas-legend">
+          <div class="legend-item"><span class="legend-swatch" style="background: #0284c7;"></span> Muro 1 (Barlovento / Tracción)</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: #0d6f73;"></span> Muro 2 (Sotavento / Compresión)</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: #10b981;"></span> Vigas de Acople</div>
+        </div>
+      </div>
+
+      <!-- LIENZO B: CURVA DE CAPACIDAD PUSHOVER -->
+      <div class="canvas-card">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>📈</span>
+            <span>Curva de Capacidad Pushover Global</span>
+          </div>
+          <div class="canvas-toolbar">
+            <button class="btn-tab active" id="btn-curve-vw">V/W vs % Drift</button>
+            <button class="btn-tab" id="btn-curve-dim">V (kN) vs D (m)</button>
+          </div>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-pushover"></canvas>
+        </div>
+        <div class="canvas-legend">
+          <div class="legend-item"><span class="legend-swatch" style="background: #0d6f73;"></span> Curva Pushover MVLEM</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: #e11d48;"></span> Estado Actual</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: #f59e0b;"></span> Puntos Críticos de Fluencia y Máximo</div>
+        </div>
+      </div>
+
+      <!-- LIENZO C: PERFIL SECCIONAL DE DEFORMACIONES DE LAS 8 MACROFIBRAS -->
+      <div class="canvas-card">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>🔬</span>
+            <span>Perfil Seccional \(\epsilon_k(x)\) en Macrofibras (Base Piso 1)</span>
+          </div>
+          <div class="canvas-toolbar">
+            <button class="btn-tab active" id="btn-wall-select">Muro 1 (Tracción Neta)</button>
+            <button class="btn-tab" id="btn-wall-select2">Muro 2 (Compresión Neta)</button>
+          </div>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-fibers"></canvas>
+        </div>
+        <div class="canvas-legend">
+          <div class="legend-item"><span class="legend-swatch" style="background: #0284c7;"></span> Compresión (\(\epsilon < 0\))</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: #f59e0b;"></span> Tracción Elástica (\(0 < \epsilon \le \epsilon_y\))</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: #e11d48;"></span> Fluencia Acero (\(\epsilon > \epsilon_y\))</div>
+        </div>
+      </div>
+
+      <!-- LIENZO D: DERIVAS DE ENTREPISO Y DESCOMPOSICIÓN DE MOMENTOS -->
+      <div class="canvas-card">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span id="title-canvas-d">📊 Perfil de Deriva de Entrepiso en la Altura</span>
+          </div>
+          <div class="canvas-toolbar">
+            <button class="btn-tab active" id="btn-view-drift">Derivas de Entrepiso</button>
+            <button class="btn-tab" id="btn-view-moments">Volcamiento (M_OTM)</button>
+          </div>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="canvas-drift"></canvas>
+        </div>
+        <div class="canvas-legend" id="legend-canvas-d">
+          <div class="legend-item"><span class="legend-swatch" style="background: #0d6f73;"></span> Deriva Entrepiso \(\Delta_i / h_i\) (%)</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: #e11d48;"></span> Límite NSR-10 (1.0%)</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECCIÓN DE TEORÍA Y FORMULACIÓN MATEMÁTICA -->
+    <section class="theory-section">
+      <h2 class="theory-title">📐 Fundamentación Teórica del Macroelemento MVLEM</h2>
+
+      <p class="theory-p">
+        El <strong>Multiple-Vertical-Line-Element Model (MVLEM)</strong>, formulado originalmente por <strong>Vulcano, Bertero & Colotti (1988)</strong> y perfeccionado por <strong>Orakcal, Massone & Wallace (2004, 2006)</strong>, es el macroelemento estándar para capturar la respuesta inelástica de muros de concreto armado gobernados por flexión o con interacción flexión-corte moderada.
+      </p>
+
+      <!-- DIAGRAMA CONCEPTUAL SVG DEL MACROELEMENTO MVLEM -->
+      <div class="element-diagram-card">
+        <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>📐</span>
+            <span>Esquema Cinemático y Grados de Libertad del Macroelemento MVLEM (2 Nodos, \(m\) Fibras, Resorte Cortante)</span>
+          </div>
+          <span style="font-size: 0.76rem; color: var(--teal-600); font-weight: 600;">Orakcal & Wallace (2006)</span>
+        </div>
+
+        <svg viewBox="0 0 760 400" width="100%" height="auto" style="max-height: 400px; display: block; margin: 0 auto; background: var(--canvas-bg); border-radius: 8px; border: 1px solid var(--border-subtle);" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7" />
+            </marker>
+            <marker id="arrow-teal" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#0d6f73" />
+            </marker>
+            <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#d97706" />
+            </marker>
+            <linearGradient id="beamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#0284c7" stop-opacity="0.3"/>
+              <stop offset="50%" stop-color="#0d6f73" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#0284c7" stop-opacity="0.3"/>
+            </linearGradient>
+            <pattern id="hatchRebar" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#e11d48" stroke-width="1.5" />
+            </pattern>
+          </defs>
+
+          <!-- Viga rígida superior (Piso j) -->
+          <rect x="120" y="45" width="520" height="24" rx="4" fill="url(#beamGrad)" stroke="#0d6f73" stroke-width="2"/>
+          <text x="380" y="38" text-anchor="middle" fill="var(--text-muted)" font-size="12" font-weight="700">Viga Rígida Superior (Restricción de Diafragma - Nivel j)</text>
+
+          <!-- Viga rígida inferior (Piso i) -->
+          <rect x="120" y="335" width="520" height="24" rx="4" fill="url(#beamGrad)" stroke="#0d6f73" stroke-width="2"/>
+          <text x="380" y="375" text-anchor="middle" fill="var(--text-muted)" font-size="12" font-weight="700">Viga Rígida Inferior (Nivel i)</text>
+
+          <!-- Nodos Externos i y j -->
+          <circle cx="380" cy="57" r="7" fill="#0284c7" stroke="#ffffff" stroke-width="2"/>
+          <text x="395" y="62" fill="#0284c7" font-size="13" font-weight="800">Nodo j</text>
+
+          <circle cx="380" cy="347" r="7" fill="#0284c7" stroke="#ffffff" stroke-width="2"/>
+          <text x="395" y="352" fill="#0284c7" font-size="13" font-weight="800">Nodo i</text>
+
+          <!-- Grados de libertad en Nodo j: [uj, vj, thetaj] -->
+          <line x1="380" y1="57" x2="430" y2="57" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+          <text x="435" y="54" fill="#0284c7" font-size="11" font-weight="700">u_j</text>
+
+          <line x1="380" y1="57" x2="380" y2="15" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+          <text x="386" y="20" fill="#0284c7" font-size="11" font-weight="700">v_j</text>
+
+          <path d="M 360 45 A 25 25 0 0 1 398 35" fill="none" stroke="#0284c7" stroke-width="2" marker-end="url(#arrow-blue)"/>
+          <text x="345" y="38" fill="#0284c7" font-size="11" font-weight="700">\theta_j</text>
+
+          <!-- Grados de libertad en Nodo i: [ui, vi, thetai] -->
+          <line x1="380" y1="347" x2="430" y2="347" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+          <text x="435" y="344" fill="#0284c7" font-size="11" font-weight="700">u_i</text>
+
+          <line x1="380" y1="347" x2="380" y2="305" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+          <text x="386" y="315" fill="#0284c7" font-size="11" font-weight="700">v_i</text>
+
+          <!-- Macrofibras (8 macroelementos uniaxiales) -->
+          <!-- Bulbo Izquierdo (Fibra 1: Confinado) -->
+          <rect x="135" y="69" width="30" height="266" fill="url(#hatchRebar)" opacity="0.3" stroke="#e11d48" stroke-dasharray="3,3"/>
+          <line x1="150" y1="69" x2="150" y2="180" stroke="#e11d48" stroke-width="2"/>
+          <!-- Resorte axial Fibra 1 -->
+          <path d="M 150 180 L 144 186 L 156 194 L 144 202 L 156 210 L 150 216 L 150 335" fill="none" stroke="#e11d48" stroke-width="2"/>
+          <text x="150" y="235" text-anchor="middle" fill="#e11d48" font-size="10" font-weight="700">Fibra 1</text>
+          <text x="150" y="247" text-anchor="middle" fill="var(--text-faint)" font-size="8">Borde Confinado</text>
+
+          <!-- Fibras del alma (2 a 7) -->
+          <!-- Fibra 2 -->
+          <line x1="210" y1="69" x2="210" y2="185" stroke="#0d6f73" stroke-width="1.5"/>
+          <path d="M 210 185 L 206 190 L 214 196 L 206 202 L 214 208 L 210 213 L 210 335" fill="none" stroke="#0d6f73" stroke-width="1.5"/>
+          <text x="210" y="235" text-anchor="middle" fill="var(--text-muted)" font-size="9">k=2</text>
+
+          <!-- Fibra 3 -->
+          <line x1="265" y1="69" x2="265" y2="185" stroke="#0d6f73" stroke-width="1.5"/>
+          <path d="M 265 185 L 261 190 L 269 196 L 261 202 L 269 208 L 265 213 L 265 335" fill="none" stroke="#0d6f73" stroke-width="1.5"/>
+          <text x="265" y="235" text-anchor="middle" fill="var(--text-muted)" font-size="9">k=3</text>
+
+          <!-- Fibra 4 -->
+          <line x1="320" y1="69" x2="320" y2="185" stroke="#0d6f73" stroke-width="1.5"/>
+          <path d="M 320 185 L 316 190 L 324 196 L 316 202 L 324 208 L 320 213 L 320 335" fill="none" stroke="#0d6f73" stroke-width="1.5"/>
+          <text x="320" y="235" text-anchor="middle" fill="var(--text-muted)" font-size="9">k=4</text>
+
+          <!-- Eje Centroidal del Muro (x=0) -->
+          <line x1="380" y1="69" x2="380" y2="335" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,4"/>
+
+          <!-- Fibra 5 -->
+          <line x1="440" y1="69" x2="440" y2="185" stroke="#0d6f73" stroke-width="1.5"/>
+          <path d="M 440 185 L 436 190 L 444 196 L 436 202 L 444 208 L 440 213 L 440 335" fill="none" stroke="#0d6f73" stroke-width="1.5"/>
+          <text x="440" y="235" text-anchor="middle" fill="var(--text-muted)" font-size="9">k=5</text>
+
+          <!-- Fibra 6 -->
+          <line x1="495" y1="69" x2="495" y2="185" stroke="#0d6f73" stroke-width="1.5"/>
+          <path d="M 495 185 L 491 190 L 499 196 L 491 202 L 499 208 L 495 213 L 495 335" fill="none" stroke="#0d6f73" stroke-width="1.5"/>
+          <text x="495" y="235" text-anchor="middle" fill="var(--text-muted)" font-size="9">k=6</text>
+
+          <!-- Fibra 7 -->
+          <line x1="550" y1="69" x2="550" y2="185" stroke="#0d6f73" stroke-width="1.5"/>
+          <path d="M 550 185 L 546 190 L 554 196 L 546 202 L 554 208 L 550 213 L 550 335" fill="none" stroke="#0d6f73" stroke-width="1.5"/>
+          <text x="550" y="235" text-anchor="middle" fill="var(--text-muted)" font-size="9">k=7</text>
+
+          <!-- Bulbo Derecho (Fibra 8: Confinado) -->
+          <rect x="595" y="69" width="30" height="266" fill="url(#hatchRebar)" opacity="0.3" stroke="#e11d48" stroke-dasharray="3,3"/>
+          <line x1="610" y1="69" x2="610" y2="180" stroke="#e11d48" stroke-width="2"/>
+          <path d="M 610 180 L 604 186 L 616 194 L 604 202 L 616 210 L 610 216 L 610 335" fill="none" stroke="#e11d48" stroke-width="2"/>
+          <text x="610" y="235" text-anchor="middle" fill="#e11d48" font-size="10" font-weight="700">Fibra 8</text>
+          <text x="610" y="247" text-anchor="middle" fill="var(--text-faint)" font-size="8">Borde Confinado</text>
+
+          <!-- Resorte Central de Cortante a altura c*h (c = 0.40 -> y = 335 - 0.4*266 = 228.6) -->
+          <circle cx="380" cy="228" r="5" fill="#d97706"/>
+          <!-- Enlace rígido desde el nodo inferior al resorte de corte -->
+          <line x1="380" y1="335" x2="380" y2="228" stroke="#d97706" stroke-width="2.5"/>
+          <!-- Resorte horizontal de corte -->
+          <path d="M 330 228 L 340 222 L 350 234 L 360 222 L 370 234 L 380 228 L 390 222 L 400 234 L 410 222 L 420 234 L 430 228" fill="none" stroke="#d97706" stroke-width="2.5"/>
+          <line x1="430" y1="228" x2="455" y2="228" stroke="#d97706" stroke-width="2" marker-end="url(#arrow-amber)"/>
+          <text x="460" y="232" fill="#d97706" font-size="11" font-weight="800">Resorte Cortante K_h</text>
+          <text x="460" y="246" fill="var(--text-faint)" font-size="9">a altura c·h (c = 0.40)</text>
+
+          <!-- Cotas de Altura (h) y c·h -->
+          <line x1="70" y1="69" x2="70" y2="335" stroke="var(--text-faint)" stroke-width="1.5"/>
+          <line x1="62" y1="69" x2="78" y2="69" stroke="var(--text-faint)" stroke-width="1.5"/>
+          <line x1="62" y1="335" x2="78" y2="335" stroke="var(--text-faint)" stroke-width="1.5"/>
+          <text x="52" y="205" text-anchor="middle" fill="var(--text-main)" font-size="12" font-weight="700">h = 2.6 m</text>
+
+          <line x1="95" y1="228" x2="95" y2="335" stroke="#d97706" stroke-width="1.5"/>
+          <line x1="88" y1="228" x2="102" y2="228" stroke="#d97706" stroke-width="1.5"/>
+          <line x1="88" y1="335" x2="102" y2="335" stroke="#d97706" stroke-width="1.5"/>
+          <text x="108" y="285" fill="#d97706" font-size="10" font-weight="700">c·h</text>
+
+          <!-- Cotas de Ancho (Lw) y Coordenada x_k -->
+          <line x1="135" y1="385" x2="625" y2="385" stroke="var(--text-faint)" stroke-width="1.5"/>
+          <line x1="135" y1="380" x2="135" y2="390" stroke="var(--text-faint)" stroke-width="1.5"/>
+          <line x1="625" y1="380" x2="625" y2="390" stroke="var(--text-faint)" stroke-width="1.5"/>
+          <text x="380" y="398" text-anchor="middle" fill="var(--text-main)" font-size="11" font-weight="700">Longitud del Muro L_w = 7.65 m</text>
+        </svg>
+      </div>
+
+      <!-- CAJA DE REFERENCIA BIBLIOGRÁFICA DEL EDIFICIO ARQUETIPO -->
+      <div style="background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.25); border-left: 4px solid var(--cyan-500); border-radius: 10px; padding: 1.1rem 1.35rem; margin: 1.5rem 0 1.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--cyan-500); font-size: 0.95rem; margin-bottom: 0.45rem;">
+          <span>📚</span>
+          <span>Edificio Arquetipo y Referencia Bibliográfica del Modelo</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.6rem;">
+          La geometría, propiedades seccionales y distribución de masas de este laboratorio interactivo corresponden al edificio arquetipo de 16 pisos con muros de concreto armado acoplados mediante losas/vigas no lineales investigado por <strong>Ramos y Hube (2021)</strong> en <em>Engineering Structures</em>:
+        </p>
+        <blockquote style="font-size: 0.85rem; font-family: var(--font-mono); background: var(--bg-surface); padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle); color: var(--text-main); line-height: 1.5;">
+          <strong>Ramos, L., & Hube, M. A. (2021).</strong> <em>Seismic response of reinforced concrete wall buildings with nonlinear coupling slabs.</em> <strong>Engineering Structures</strong>, 234, 111888. <a href="https://doi.org/10.1016/j.engstruct.2021.111888" target="_blank" rel="noopener" style="color: var(--cyan-500); text-decoration: underline; word-break: break-all;">https://doi.org/10.1016/j.engstruct.2021.111888</a>
+        </blockquote>
+        <p style="font-size: 0.83rem; color: var(--text-faint); margin-top: 0.55rem; line-height: 1.5;">
+          <strong>Parámetros del Arquetipo:</strong> 16 pisos (\(H = 41.6\text{ m}\), \(h = 2.6\text{ m}\)), peso sísmico reactivo \(W = 25\,520\text{ kN}\), dos muros con bulbos de borde (\(L_w = 7.65\text{ m}\), espesor de alma \(t_w = 0.30\text{ m}\), bulbos de \(7.50\text{ m}\)) separados centro a centro a \(L_{\text{arm}} = 9.15\text{ m}\) y acoplados mediante elementos de losa/viga de enlace de luz libre \(L_n = 1.50\text{ m}\).
+        </p>
+      </div>
+
+      <h3 class="theory-subtitle">1. Comparación con Otros Modelos Numéricos de Muros</h3>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Formulación</th>
+            <th>Ventajas</th>
+            <th>Limitaciones Críticas en Muros</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Elemento Viga de Fibras (Beam-Column)</strong></td>
+            <td>Rápido, un solo eje centroidal, fácil conectividad.</td>
+            <td>Asume que las secciones planas permanecen planas en todo el elemento; subestima el pandeo de borde, no captura la migración biaxial del eje neutro en muros anchos y desacopla arbitrariamente el cortante mediante un resorte elástico simple.</td>
+          </tr>
+          <tr>
+            <td><strong>Láminas Multicapa (Multilayer Shell MITC4 / DKGQ)</strong></td>
+            <td>Captura esfuerzos biaxiales microscópicos en concreto y acero mediante la teoría de campo de compresión modificada (MCFT).</td>
+            <td>Demanda computacional enorme (cientos de miles de GDL), problemas severos de convergencia en análisis dinámico paso a paso y complejidad extrema de calibración.</td>
+          </tr>
+          <tr>
+            <td><strong>Macroelemento MVLEM (Orakcal & Wallace)</strong></td>
+            <td><strong>Equilibrio óptimo:</strong> Discretiza el muro en macrofibras axiales y un resorte de corte central a \(c \cdot h\). Captura fluencia, agrietamiento, descascaramiento y migración del eje neutro sin sobrecosto numérico.</td>
+            <td>En su versión básica, la respuesta a cortante se desacopla de la respuesta a flexión (resuelto posteriormente en la extensión SFI-MVLEM de Kolozvari et al., 2015).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 class="theory-subtitle">2. Cinemática y Grados de Libertad del Elemento</h3>
+      <p class="theory-p">
+        El macroelemento MVLEM bidimensional se define entre dos nodos externos \(i\) (nodo inferior) y \(j\) (nodo superior), cada uno con 3 grados de libertad globales: \([u_i, v_i, \theta_i]\) y \([u_j, v_j, \theta_j]\). Los nodos se conectan a vigas infinitamente rígidas en las caras superior e inferior para modelar la restricción del diafragma de piso.
+      </p>
+
+      <div class="math-box">
+        $$\mathbf{u}_e = [u_i, v_i, \theta_i, u_j, v_j, \theta_j]^T \in \mathbb{R}^6$$
+        $$\Delta_{v,k} = (v_j - v_i) - x_k (\theta_j - \theta_i)$$
+        $$\epsilon_k = \frac{\Delta_{v,k}}{h} = \frac{(v_j - v_i) - x_k (\theta_j - \theta_i)}{h}$$
+      </div>
+
+      <p class="theory-p">
+        donde \(h\) es la altura del entrepiso (\(h = 2.6\text{ m}\) en nuestro edificio), \(x_k\) es la coordenada horizontal de la macrofibra \(k\) medida desde el centroide del muro, \(\Delta_{v,k}\) es el alargamiento axial de la macrofibra, y \(\epsilon_k\) es su deformación unitaria uniaxial.
+      </p>
+
+      <h3 class="theory-subtitle">3. Resorte Horizontal de Cortante</h3>
+      <p class="theory-p">
+        La respuesta a cortante se concentra en un resorte horizontal ubicado a una altura relativa \(c \cdot h\) medida desde el nodo inferior \(i\). Típicamente se adopta \(c = 0.40\), que coincide con la posición media del punto de inflexión en muros dominados por flexión. El desplazamiento relativo horizontal en el resorte es:
+      </p>
+
+      <div class="math-box">
+        $$\Delta_h = (u_j - u_i) - h(1-c)\theta_i - hc\theta_j$$
+        $$\gamma = \frac{\Delta_h}{h}$$
+        $$V = K_h \cdot \Delta_h = \left( \frac{G \cdot A_v}{h} \right) \Delta_h$$
+      </div>
+
+      <h3 class="theory-subtitle">4. Determinación de Esfuerzos y Fuerzas de Sección</h3>
+      <p class="theory-p">
+        Para cada una de las \(m = 8\) macrofibras, el esfuerzo se obtiene evaluando las leyes constitutivas uniaxiales del concreto y del acero:
+      </p>
+
+      <div class="math-box">
+        $$F_k = A_{c,k} \cdot \sigma_{c,k}(\epsilon_k) + A_{s,k} \cdot \sigma_{s,k}(\epsilon_k) = b_k t_k \left[ (1 - \rho_k)\sigma_{c,k}(\epsilon_k) + \rho_k \sigma_{s,k}(\epsilon_k) \right]$$
+        $$N = \sum_{k=1}^{m} F_k, \qquad M = \sum_{k=1}^{m} (-x_k F_k) + V \cdot (c \cdot h)$$
+      </div>
+
+      <h3 class="theory-subtitle">5. La Mecánica del Acople: Descomposición del Momento de Volcamiento (\(M_{\text{OTM}}\))</h3>
+      <p class="theory-p">
+        En un sistema de dos muros acoplados mediante vigas o losas de enlace, el momento de volcamiento total en la base no es simplemente la suma de los momentos flectores basales de cada muro individual. Las losas y vigas de enlace desarrollan grandes fuerzas de cortante vertical \(V_{\text{viga}, j}\) que se acumulan en la altura:
+      </p>
+
+      <div class="math-box">
+        $$T = \sum_{j=1}^{16} V_{\text{viga}, j}$$
+        $$M_{\text{OTM}}(z=0) = M_{\text{muro}1} + M_{\text{muro}2} + T \cdot L_{\text{arm}}$$
+      </div>
+
+      <p class="theory-p">
+        donde \(L_{\text{arm}} = 9.15\text{ m}\) es la distancia entre los ejes centroidales de los dos muros. Como demostraron <strong>Ramos y Hube (2021)</strong> y se comprueba interactivamente en el <strong>Lienzo D</strong> de este recurso, el par axial de acople \(T \cdot L_{\text{arm}}\) absorbe <strong>más del 60% del momento de volcamiento total</strong>, protegiendo las bases de los muros individuales contra sobrecargas flectoras extremas y dotando a la estructura de una enorme capacidad de disipación histerética de energía.
+      </p>
+    </section>
+
+    <!-- VISOR DE CÓDIGO OPENSEESPY -->
+    <div class="theory-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+        <h2 class="theory-title" style="margin-bottom: 0; border: none; padding: 0;">💻 Script OpenSeesPy del Modelo MVLEM</h2>
+        <div style="display: flex; gap: 0.5rem;">
+          <a href="https://github.com/odarroyo/analisis_no_lineal/blob/main/Codigos_OpenSeesPy/MVLEM_generator_colab.ipynb" target="_blank" rel="noopener" class="btn-ctrl btn-primary" style="text-decoration: none;">
+            <span>📓 Abrir en GitHub / Colab</span>
+          </a>
+          <button class="btn-ctrl" id="btn-copy-code">📋 Copiar Código</button>
+        </div>
+      </div>
+
+      <div class="code-panel">
+        <div class="code-header">
+          <div class="code-tabs">
+            <button class="code-tab active" data-tab="0">1. Geometría y Nodos</button>
+            <button class="code-tab" data-tab="1">2. Materiales</button>
+            <button class="code-tab" data-tab="2">3. Elementos MVLEM</button>
+            <button class="code-tab" data-tab="3">4. Vigas de Acople</button>
+            <button class="code-tab" data-tab="4">5. Pushover</button>
+          </div>
+          <span style="font-size: 0.75rem; color: #8b949e; font-family: var(--font-mono);">Python 3 • OpenSeesPy</span>
+        </div>
+        <pre class="code-content"><code id="code-display"># Cargando código...</code></pre>
+      </div>
+    </div>
+
+    <!-- EVALUACIÓN FORMATIVA (QUIZ SOCRÁTICO) -->
+    <div class="theory-section">
+      <h2 class="theory-title">🎯 Autoevaluación Formativa: Conceptos Clave de Muros MVLEM</h2>
+      <p class="theory-p">Pon a prueba tu comprensión de la mecánica no lineal y la formulación computacional de muros:</p>
+
+      <!-- Pregunta 1 -->
+      <div class="quiz-card" id="q1">
+        <div class="quiz-question">1. ¿Por qué el elemento MVLEM ubica su resorte horizontal de cortante a una altura \(c \cdot h\) con \(c \approx 0.40\)?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-opt="0">A) Porque a esa altura el cortante es cero según la teoría elástica de vigas.</button>
+          <button class="quiz-option" data-opt="1">B) Porque aproxima la ubicación media del punto de inflexión del muro, minimizando el error en el momento flector inducido por la deformación a corte.</button>
+          <button class="quiz-option" data-opt="2">C) Para forzar que el muro falle exclusivamente por corte en lugar de flexión.</button>
+          <button class="quiz-option" data-opt="3">D) Es un valor aleatorio de calibración que no influye en la matriz de rigidez.</button>
+        </div>
+        <div class="quiz-feedback" id="q1-fb"></div>
+      </div>
+
+      <!-- Pregunta 2 -->
+      <div class="quiz-card" id="q2">
+        <div class="quiz-question">2. En un edificio de muros acoplados, ¿qué efecto genera la acción de las vigas de acople sobre el volcamiento global?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-opt="0">A) Las vigas solo transmiten cortante horizontal, por lo que los muros trabajan como si estuvieran completamente aislados.</button>
+          <button class="quiz-option" data-opt="1">B) El cortante vertical acumulado de las vigas crea un par axial de tracción/compresión \(T \cdot L_{\text{arm}}\) que resiste la mayor parte del momento de volcamiento total.</button>
+          <button class="quiz-option" data-opt="2">C) Aumenta el momento flector en la base de ambos muros de forma simultánea e idéntica.</button>
+          <button class="quiz-option" data-opt="3">D) Elimina la deformación axial en los muros haciéndolos infinitamente rígidos verticalmente.</button>
+        </div>
+        <div class="quiz-feedback" id="q2-fb"></div>
+      </div>
+
+      <!-- Pregunta 3 -->
+      <div class="quiz-card" id="q3">
+        <div class="quiz-question">3. ¿Cuál es la principal ventaja de utilizar un modelo de concreto confinado (Concrete02 con \(k = 1.3\)) en los elementos de borde?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-opt="0">A) Reducir el módulo de elasticidad inicial del muro para que sea más flexible.</button>
+          <button class="quiz-option" data-opt="1">B) El aumento de resistencia a compresión (\(f'_{cc} = 45.5\text{ MPa}\)) y la gran capacidad de deformación inelástica (\(\epsilon_{cu} = 0.018\)) debida al confinamiento de los estribos en los extremos del muro.</button>
+          <button class="quiz-option" data-opt="2">C) Duplicar la resistencia a tracción del concreto hasta alcanzar la fluencia del acero.</button>
+          <button class="quiz-option" data-opt="3">D) Impedir cualquier tipo de agrietamiento durante toda la historia de desplazamiento.</button>
+        </div>
+        <div class="quiz-feedback" id="q3-fb"></div>
+      </div>
+
+      <!-- Pregunta 4 -->
+      <div class="quiz-card" id="q4">
+        <div class="quiz-question">4. Al observar el perfil de deformaciones unitarias \(\epsilon_k(x)\) en la base del Muro 1 (barlovento), ¿por qué casi todas las fibras entran en tracción plástica?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-opt="0">A) Porque el programa tiene un error numérico de integración seccional.</button>
+          <button class="quiz-option" data-opt="1">B) Debido a que la fuerza de tracción neta inducida por el acople \(T\) supera la carga axial gravitacional, reduciendo drásticamente la zona comprimida del muro.</button>
+          <button class="quiz-option" data-opt="2">C) Porque el concreto no tiene resistencia a compresión en el modelo MVLEM.</button>
+          <button class="quiz-option" data-opt="3">D) Porque las vigas de acople empujan hacia abajo el muro de barlovento.</button>
+        </div>
+        <div class="quiz-feedback" id="q4-fb"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- DATASET EMBEBIDO DIRECTAMENTE DE OPENSEESPY -->
+  <script>
+    window.MVLEM_DATA = {"metadata": {"title": "Simulaci\u00f3n No Lineal de Edificio de Muros Acoplados con Macroelementos MVLEM", "author": "Prof. Orlando Arroyo - Universidad Industrial de Santander", "stories": 16, "story_height_m": 2.6, "total_height_m": 41.6, "wall_spacing_m": 9.15, "wall_length_m": 7.65, "num_macrofibers": 8, "fiber_widths_m": [0.3, 1.175, 1.175, 1.175, 1.175, 1.175, 1.175, 0.3], "fiber_coords_x_m": [-3.675, -2.938, -1.763, -0.588, 0.587, 1.762, 2.937, 3.675], "thick_wall1_m": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 7.5], "thick_wall2_m": [7.5, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3], "rebar_ratio": [0.012, 0.012, 0.012, 0.012, 0.012, 0.012, 0.012, 0.012], "fc_MPa": 35.0, "fy_MPa": 420.0, "seismic_weight_kN": 25520.0, "v_max_kN": 11328.85, "vw_max": 0.4439, "d_max_m": 0.624, "drift_max_pct": 1.5}, "story_elevations_m": [0.0, 2.6, 5.2, 7.8, 10.4, 13.0, 15.6, 18.2, 20.8, 23.4, 26.0, 28.6, 31.2, 33.8, 36.4, 39.0, 41.6], "pushover_curve": {"disp_m": [-0.0, 0.006, 0.012, 0.018, 0.024, 0.03, 0.036, 0.042, 0.048, 0.054, 0.06, 0.066, 0.072, 0.078, 0.084, 0.09, 0.096, 0.102, 0.108, 0.114, 0.12, 0.126, 0.132, 0.138, 0.144, 0.15, 0.156, 0.162, 0.168, 0.174, 0.18, 0.186, 0.192, 0.198, 0.204, 0.21, 0.216, 0.222, 0.228, 0.234, 0.24, 0.246, 0.252, 0.258, 0.264, 0.27, 0.276, 0.282, 0.288, 0.294, 0.3, 0.306, 0.312, 0.318, 0.324, 0.33, 0.336, 0.342, 0.348, 0.354, 0.36, 0.366, 0.372, 0.378, 0.384, 0.39, 0.396, 0.402, 0.408, 0.414, 0.42, 0.426, 0.432, 0.438, 0.444, 0.45, 0.456, 0.462, 0.468, 0.474, 0.48, 0.486, 0.492, 0.498, 0.504, 0.51, 0.516, 0.522, 0.528, 0.534, 0.54, 0.546, 0.552, 0.558, 0.564, 0.57, 0.576, 0.582, 0.588, 0.594, 0.6, 0.606, 0.612, 0.618, 0.624], "shear_kN": [0.0, 807.2, 1610.81, 2409.92, 3206.08, 3974.84, 4649.41, 5256.94, 5814.17, 6341.88, 6837.09, 7316.31, 7784.02, 8161.6, 8500.17, 8787.07, 9053.12, 9304.63, 9541.78, 9745.64, 9917.6, 10076.31, 10209.81, 10363.05, 10506.37, 10638.79, 10779.51, 10917.84, 11052.77, 11177.44, 11299.17, 11291.71, 11091.8, 10799.26, 10525.32, 10542.0, 10576.02, 10595.71, 10558.97, 10516.41, 10471.67, 10425.49, 10380.74, 10326.4, 10262.85, 10192.81, 10119.67, 10037.08, 9650.34, 9000.29, 8944.0, 8789.71, 8503.36, 8287.14, 8056.67, 8052.76, 8043.02, 8026.49, 7994.62, 7951.63, 7903.67, 7848.68, 7782.56, 7696.22, 7537.68, 7366.9, 7365.6, 7260.98, 6975.16, 6694.98, 6666.48, 6636.8, 6604.35, 6575.76, 6567.41, 6557.54, 6546.05, 6532.78, 6517.57, 6500.2, 6480.46, 6458.04, 6454.33, 6485.61, 6516.5, 6546.96, 6576.99, 6606.55, 6635.63, 6664.21, 6692.3, 6707.11, 6716.07, 6725.03, 6733.97, 6742.92, 6751.85, 6760.78, 6769.7, 6778.61, 6787.52, 6796.42, 6805.3, 6814.18, 6823.05], "drift_pct": [-0.0, 0.0144, 0.0288, 0.0433, 0.0577, 0.0721, 0.0865, 0.101, 0.1154, 0.1298, 0.1442, 0.1587, 0.1731, 0.1875, 0.2019, 0.2163, 0.2308, 0.2452, 0.2596, 0.274, 0.2885, 0.3029, 0.3173, 0.3317, 0.3462, 0.3606, 0.375, 0.3894, 0.4038, 0.4183, 0.4327, 0.4471, 0.4615, 0.476, 0.4904, 0.5048, 0.5192, 0.5337, 0.5481, 0.5625, 0.5769, 0.5913, 0.6058, 0.6202, 0.6346, 0.649, 0.6635, 0.6779, 0.6923, 0.7067, 0.7212, 0.7356, 0.75, 0.7644, 0.7788, 0.7933, 0.8077, 0.8221, 0.8365, 0.851, 0.8654, 0.8798, 0.8942, 0.9087, 0.9231, 0.9375, 0.9519, 0.9663, 0.9808, 0.9952, 1.0096, 1.024, 1.0385, 1.0529, 1.0673, 1.0817, 1.0962, 1.1106, 1.125, 1.1394, 1.1538, 1.1683, 1.1827, 1.1971, 1.2115, 1.226, 1.2404, 1.2548, 1.2692, 1.2837, 1.2981, 1.3125, 1.3269, 1.3413, 1.3558, 1.3702, 1.3846, 1.399, 1.4135, 1.4279, 1.4423, 1.4567, 1.4712, 1.4856, 1.5], "coeff_vw": [0.0, 0.0316, 0.0631, 0.0944, 0.1256, 0.1558, 0.1822, 0.206, 0.2278, 0.2485, 0.2679, 0.2867, 0.305, 0.3198, 0.3331, 0.3443, 0.3547, 0.3646, 0.3739, 0.3819, 0.3886, 0.3948, 0.4001, 0.4061, 0.4117, 0.4169, 0.4224, 0.4278, 0.4331, 0.438, 0.4428, 0.4425, 0.4346, 0.4232, 0.4124, 0.4131, 0.4144, 0.4152, 0.4138, 0.4121, 0.4103, 0.4085, 0.4068, 0.4046, 0.4021, 0.3994, 0.3965, 0.3933, 0.3781, 0.3527, 0.3505, 0.3444, 0.3332, 0.3247, 0.3157, 0.3155, 0.3152, 0.3145, 0.3133, 0.3116, 0.3097, 0.3076, 0.305, 0.3016, 0.2954, 0.2887, 0.2886, 0.2845, 0.2733, 0.2623, 0.2612, 0.2601, 0.2588, 0.2577, 0.2573, 0.257, 0.2565, 0.256, 0.2554, 0.2547, 0.2539, 0.2531, 0.2529, 0.2541, 0.2553, 0.2565, 0.2577, 0.2589, 0.26, 0.2611, 0.2622, 0.2628, 0.2632, 0.2635, 0.2639, 0.2642, 0.2646, 0.2649, 0.2653, 0.2656, 0.266, 0.2663, 0.2667, 0.267, 0.2674]}, "interactive_states": [{"step": 0, "roof_disp_m": -0.0, "roof_drift_pct": -0.0, "base_shear_kN": 0.0, "coeff_vw": 0.0, "floor_disps_m": [0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0], "story_drifts_pct": [-0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "wall1_strains": [-9.9e-05, -0.000101, -0.000105, -0.000109, -0.000113, -0.000117, -0.00012, -0.000123], "wall2_strains": [-0.000123, -0.00012, -0.000117, -0.000113, -0.000109, -0.000105, -0.000101, -9.9e-05], "moments_kNm": {"m_wall1": 20676.8, "m_wall2": -20676.8, "m_couple": 0.0, "m_total": 0.0, "couple_ratio_pct": 0.0}}, {"step": 24, "roof_disp_m": 0.012, "roof_drift_pct": 0.0288, "base_shear_kN": 1610.81, "coeff_vw": 0.0631, "floor_disps_m": [0.0, 0.00018, 0.0005, 0.00095, 0.00151, 0.00216, 0.00288, 0.00367, 0.00452, 0.0054, 0.00631, 0.00724, 0.00819, 0.00914, 0.01009, 0.01105, 0.012], "story_drifts_pct": [0.0069, 0.0123, 0.0173, 0.0215, 0.025, 0.0277, 0.0304, 0.0327, 0.0338, 0.035, 0.0358, 0.0365, 0.0365, 0.0365, 0.0369, 0.0365], "wall1_strains": [-0.000145, -0.00013, -0.000105, -8.1e-05, -5.7e-05, -3.2e-05, -8e-06, 7e-06], "wall2_strains": [-0.000256, -0.000236, -0.000204, -0.000172, -0.00014, -0.000107, -7.5e-05, -5.5e-05], "moments_kNm": {"m_wall1": 38509.7, "m_wall2": -3179.0, "m_couple": 268.2, "m_total": 35598.9, "couple_ratio_pct": 0.8}}, {"step": 48, "roof_disp_m": 0.024, "roof_drift_pct": 0.0577, "base_shear_kN": 3206.08, "coeff_vw": 0.1256, "floor_disps_m": [0.0, 0.00035, 0.001, 0.0019, 0.00301, 0.00432, 0.00577, 0.00735, 0.00904, 0.0108, 0.01262, 0.01448, 0.01637, 0.01828, 0.02019, 0.0221, 0.024], "story_drifts_pct": [0.0135, 0.025, 0.0346, 0.0427, 0.0504, 0.0558, 0.0608, 0.065, 0.0677, 0.07, 0.0715, 0.0727, 0.0735, 0.0735, 0.0735, 0.0731], "wall1_strains": [-0.000191, -0.000158, -0.000106, -5.3e-05, -0.0, 5.2e-05, 0.000105, 0.000138], "wall2_strains": [-0.000391, -0.000353, -0.000293, -0.000232, -0.000171, -0.00011, -4.9e-05, -1.1e-05], "moments_kNm": {"m_wall1": 56277.0, "m_wall2": 14041.6, "m_couple": 535.8, "m_total": 70854.4, "couple_ratio_pct": 0.8}}, {"step": 72, "roof_disp_m": 0.036, "roof_drift_pct": 0.0865, "base_shear_kN": 4649.41, "coeff_vw": 0.1822, "floor_disps_m": [0.0, 0.00054, 0.00154, 0.00292, 0.00461, 0.00658, 0.00877, 0.01114, 0.01366, 0.0163, 0.01902, 0.0218, 0.02462, 0.02746, 0.03032, 0.03316, 0.036], "story_drifts_pct": [0.0208, 0.0385, 0.0531, 0.065, 0.0758, 0.0842, 0.0912, 0.0969, 0.1015, 0.1046, 0.1069, 0.1085, 0.1092, 0.11, 0.1092, 0.1092], "wall1_strains": [-0.000237, -0.00018, -8.9e-05, 1e-06, 9.2e-05, 0.000182, 0.000272, 0.000329], "wall2_strains": [-0.000535, -0.000478, -0.000387, -0.000296, -0.000205, -0.000114, -2.3e-05, 3.4e-05], "moments_kNm": {"m_wall1": 70125.6, "m_wall2": 31833.1, "m_couple": 793.1, "m_total": 102751.9, "couple_ratio_pct": 0.8}}, {"step": 96, "roof_disp_m": 0.048, "roof_drift_pct": 0.1154, "base_shear_kN": 5814.17, "coeff_vw": 0.2278, "floor_disps_m": [0.0, 0.00074, 0.00211, 0.00401, 0.00632, 0.00898, 0.01192, 0.01509, 0.01844, 0.02194, 0.02555, 0.02923, 0.03296, 0.03672, 0.04049, 0.04425, 0.048], "story_drifts_pct": [0.0285, 0.0527, 0.0731, 0.0888, 0.1023, 0.1131, 0.1219, 0.1288, 0.1346, 0.1388, 0.1415, 0.1435, 0.1446, 0.145, 0.1446, 0.1442], "wall1_strains": [-0.00027, -0.000183, -4.6e-05, 9.2e-05, 0.00023, 0.000367, 0.000505, 0.000591], "wall2_strains": [-0.00069, -0.000612, -0.000489, -0.000366, -0.000242, -0.000119, 4e-06, 8.1e-05], "moments_kNm": {"m_wall1": 77248.6, "m_wall2": 50217.0, "m_couple": 1027.6, "m_total": 128493.2, "couple_ratio_pct": 0.8}}, {"step": 120, "roof_disp_m": 0.06, "roof_drift_pct": 0.1442, "base_shear_kN": 6837.09, "coeff_vw": 0.2679, "floor_disps_m": [0.0, 0.00093, 0.00268, 0.0051, 0.00804, 0.0114, 0.0151, 0.01908, 0.02327, 0.02763, 0.03212, 0.03669, 0.04133, 0.04599, 0.05067, 0.05534, 0.06], "story_drifts_pct": [0.0358, 0.0673, 0.0931, 0.1131, 0.1292, 0.1423, 0.1531, 0.1612, 0.1677, 0.1727, 0.1758, 0.1785, 0.1792, 0.18, 0.1796, 0.1792], "wall1_strains": [-0.000293, -0.000176, 9e-06, 0.000194, 0.00038, 0.000565, 0.00075, 0.000867], "wall2_strains": [-0.000848, -0.00075, -0.000594, -0.000438, -0.000282, -0.000125, 3.1e-05, 0.000128], "moments_kNm": {"m_wall1": 81600.9, "m_wall2": 68251.6, "m_couple": 1247.1, "m_total": 151099.6, "couple_ratio_pct": 0.8}}, {"step": 144, "roof_disp_m": 0.072, "roof_drift_pct": 0.1731, "base_shear_kN": 7784.02, "coeff_vw": 0.305, "floor_disps_m": [0.0, 0.00111, 0.00324, 0.00617, 0.00974, 0.0138, 0.01827, 0.02306, 0.02809, 0.03332, 0.03869, 0.04416, 0.0497, 0.05527, 0.06086, 0.06644, 0.072], "story_drifts_pct": [0.0427, 0.0819, 0.1127, 0.1373, 0.1562, 0.1719, 0.1842, 0.1935, 0.2012, 0.2065, 0.2104, 0.2131, 0.2142, 0.215, 0.2146, 0.2138], "wall1_strains": [-0.000311, -0.000164, 6.9e-05, 0.000303, 0.000537, 0.00077, 0.001004, 0.00115], "wall2_strains": [-0.001007, -0.000888, -0.000699, -0.000511, -0.000322, -0.000133, 5.6e-05, 0.000174], "moments_kNm": {"m_wall1": 84868.0, "m_wall2": 85700.6, "m_couple": 1458.2, "m_total": 172026.8, "couple_ratio_pct": 0.8}}, {"step": 168, "roof_disp_m": 0.084, "roof_drift_pct": 0.2019, "base_shear_kN": 8500.17, "coeff_vw": 0.3331, "floor_disps_m": [0.0, 0.00133, 0.0039, 0.00739, 0.01161, 0.0164, 0.02164, 0.02724, 0.0331, 0.03918, 0.04541, 0.05175, 0.05817, 0.06462, 0.07109, 0.07756, 0.084], "story_drifts_pct": [0.0512, 0.0988, 0.1342, 0.1623, 0.1842, 0.2015, 0.2154, 0.2254, 0.2338, 0.2396, 0.2438, 0.2469, 0.2481, 0.2488, 0.2488, 0.2477], "wall1_strains": [-0.00033, -0.000152, 0.000133, 0.000417, 0.000701, 0.000985, 0.001269, 0.001447], "wall2_strains": [-0.001192, -0.001039, -0.000794, -0.00055, -0.000306, -6.1e-05, 0.000183, 0.000337], "moments_kNm": {"m_wall1": 88521.9, "m_wall2": 97631.5, "m_couple": 1700.3, "m_total": 187853.7, "couple_ratio_pct": 0.9}}, {"step": 192, "roof_disp_m": 0.096, "roof_drift_pct": 0.2308, "base_shear_kN": 9053.12, "coeff_vw": 0.3547, "floor_disps_m": [0.0, 0.00156, 0.0046, 0.00869, 0.01359, 0.01912, 0.02514, 0.03154, 0.03823, 0.04515, 0.05223, 0.05943, 0.06671, 0.07403, 0.08136, 0.08869, 0.096], "story_drifts_pct": [0.06, 0.1169, 0.1573, 0.1885, 0.2127, 0.2315, 0.2462, 0.2573, 0.2662, 0.2723, 0.2769, 0.28, 0.2815, 0.2819, 0.2819, 0.2812], "wall1_strains": [-0.000343, -0.000127, 0.000216, 0.000559, 0.000902, 0.001245, 0.001588, 0.001803], "wall2_strains": [-0.001368, -0.001178, -0.000875, -0.000572, -0.000269, 3.4e-05, 0.000336, 0.000527], "moments_kNm": {"m_wall1": 91444.0, "m_wall2": 106667.7, "m_couple": 1962.3, "m_total": 200074.0, "couple_ratio_pct": 1.0}}, {"step": 216, "roof_disp_m": 0.108, "roof_drift_pct": 0.2596, "base_shear_kN": 9541.78, "coeff_vw": 0.3739, "floor_disps_m": [0.0, 0.00178, 0.00529, 0.01, 0.01558, 0.02186, 0.02866, 0.03587, 0.04339, 0.05114, 0.05907, 0.06713, 0.07527, 0.08345, 0.09164, 0.09983, 0.108], "story_drifts_pct": [0.0685, 0.135, 0.1812, 0.2146, 0.2415, 0.2615, 0.2773, 0.2892, 0.2981, 0.305, 0.31, 0.3131, 0.3146, 0.315, 0.315, 0.3142], "wall1_strains": [-0.000355, -0.000102, 0.000301, 0.000703, 0.001106, 0.001508, 0.001911, 0.002163], "wall2_strains": [-0.00153, -0.001306, -0.000951, -0.000595, -0.000239, 0.000117, 0.000473, 0.000696], "moments_kNm": {"m_wall1": 93931.2, "m_wall2": 114710.3, "m_couple": 2231.7, "m_total": 210873.3, "couple_ratio_pct": 1.1}}, {"step": 240, "roof_disp_m": 0.12, "roof_drift_pct": 0.2885, "base_shear_kN": 9917.6, "coeff_vw": 0.3886, "floor_disps_m": [0.0, 0.00204, 0.00606, 0.01141, 0.01771, 0.02474, 0.03232, 0.04033, 0.04867, 0.05725, 0.06602, 0.07492, 0.08389, 0.09292, 0.10196, 0.11099, 0.12], "story_drifts_pct": [0.0785, 0.1546, 0.2058, 0.2423, 0.2704, 0.2915, 0.3081, 0.3208, 0.33, 0.3373, 0.3423, 0.345, 0.3473, 0.3477, 0.3473, 0.3465], "wall1_strains": [-0.000365, -6.3e-05, 0.000419, 0.000901, 0.001383, 0.001865, 0.002347, 0.002649], "wall2_strains": [-0.001695, -0.001434, -0.001018, -0.000602, -0.000187, 0.000229, 0.000645, 0.000907], "moments_kNm": {"m_wall1": 94577.0, "m_wall2": 122087.0, "m_couple": 2515.0, "m_total": 219178.9, "couple_ratio_pct": 1.1}}, {"step": 264, "roof_disp_m": 0.132, "roof_drift_pct": 0.3173, "base_shear_kN": 10209.81, "coeff_vw": 0.4001, "floor_disps_m": [0.0, 0.00234, 0.00694, 0.01295, 0.01997, 0.02775, 0.03612, 0.04493, 0.05407, 0.06347, 0.07306, 0.08278, 0.09258, 0.10243, 0.1123, 0.12216, 0.132], "story_drifts_pct": [0.09, 0.1769, 0.2312, 0.27, 0.2992, 0.3219, 0.3388, 0.3515, 0.3615, 0.3688, 0.3738, 0.3769, 0.3788, 0.3796, 0.3792, 0.3785], "wall1_strains": [-0.000374, -7e-06, 0.000576, 0.001159, 0.001743, 0.002326, 0.002909, 0.003275], "wall2_strains": [-0.001877, -0.001574, -0.001091, -0.000608, -0.000126, 0.000357, 0.000839, 0.001142], "moments_kNm": {"m_wall1": 93047.9, "m_wall2": 129791.2, "m_couple": 2797.8, "m_total": 225636.9, "couple_ratio_pct": 1.2}}, {"step": 288, "roof_disp_m": 0.144, "roof_drift_pct": 0.3462, "base_shear_kN": 10506.37, "coeff_vw": 0.4117, "floor_disps_m": [0.0, 0.00262, 0.00775, 0.0144, 0.02215, 0.03069, 0.03984, 0.04945, 0.05941, 0.06963, 0.08005, 0.0906, 0.10124, 0.11193, 0.12263, 0.13333, 0.144], "story_drifts_pct": [0.1008, 0.1973, 0.2558, 0.2981, 0.3285, 0.3519, 0.3696, 0.3831, 0.3931, 0.4008, 0.4058, 0.4092, 0.4112, 0.4115, 0.4115, 0.4104], "wall1_strains": [-0.000382, 4.1e-05, 0.000714, 0.001388, 0.002061, 0.002735, 0.003408, 0.003831], "wall2_strains": [-0.00205, -0.001708, -0.001163, -0.000617, -7.2e-05, 0.000474, 0.001019, 0.001361], "moments_kNm": {"m_wall1": 92410.7, "m_wall2": 136696.7, "m_couple": 3083.5, "m_total": 232190.9, "couple_ratio_pct": 1.3}}, {"step": 312, "roof_disp_m": 0.156, "roof_drift_pct": 0.375, "base_shear_kN": 10779.51, "coeff_vw": 0.4224, "floor_disps_m": [0.0, 0.00289, 0.00855, 0.01586, 0.02433, 0.03364, 0.04358, 0.05399, 0.06477, 0.07581, 0.08705, 0.09843, 0.10991, 0.12143, 0.13297, 0.14449, 0.156], "story_drifts_pct": [0.1112, 0.2177, 0.2812, 0.3258, 0.3581, 0.3823, 0.4004, 0.4146, 0.4246, 0.4323, 0.4377, 0.4415, 0.4431, 0.4438, 0.4431, 0.4427], "wall1_strains": [-0.000389, 8.9e-05, 0.000851, 0.001612, 0.002373, 0.003135, 0.003896, 0.004374], "wall2_strains": [-0.002221, -0.001841, -0.001235, -0.000629, -2.3e-05, 0.000583, 0.001189, 0.001569], "moments_kNm": {"m_wall1": 91816.8, "m_wall2": 143036.8, "m_couple": 3373.7, "m_total": 238227.2, "couple_ratio_pct": 1.4}}, {"step": 336, "roof_disp_m": 0.168, "roof_drift_pct": 0.4038, "base_shear_kN": 11052.77, "coeff_vw": 0.4331, "floor_disps_m": [0.0, 0.00315, 0.00933, 0.01729, 0.02648, 0.03655, 0.04728, 0.0585, 0.07009, 0.08196, 0.09403, 0.10625, 0.11856, 0.13092, 0.14329, 0.15566, 0.168], "story_drifts_pct": [0.1212, 0.2377, 0.3062, 0.3535, 0.3873, 0.4127, 0.4315, 0.4458, 0.4565, 0.4642, 0.47, 0.4735, 0.4754, 0.4758, 0.4758, 0.4746], "wall1_strains": [-0.000397, 0.000133, 0.000977, 0.001821, 0.002666, 0.00351, 0.004354, 0.004883], "wall2_strains": [-0.002391, -0.001973, -0.001308, -0.000642, 2.3e-05, 0.000689, 0.001354, 0.001772], "moments_kNm": {"m_wall1": 91649.1, "m_wall2": 148952.8, "m_couple": 3664.3, "m_total": 244266.1, "couple_ratio_pct": 1.5}}, {"step": 360, "roof_disp_m": 0.18, "roof_drift_pct": 0.4327, "base_shear_kN": 11299.17, "coeff_vw": 0.4428, "floor_disps_m": [0.0, 0.00342, 0.01012, 0.01872, 0.02864, 0.03948, 0.051, 0.06303, 0.07544, 0.08813, 0.10103, 0.11408, 0.12722, 0.14041, 0.15362, 0.16682, 0.18], "story_drifts_pct": [0.1315, 0.2577, 0.3308, 0.3815, 0.4169, 0.4431, 0.4627, 0.4773, 0.4881, 0.4962, 0.5019, 0.5054, 0.5073, 0.5081, 0.5077, 0.5069], "wall1_strains": [-0.000397, 0.000187, 0.001117, 0.002047, 0.002977, 0.003907, 0.004837, 0.005421], "wall2_strains": [-0.002576, -0.002119, -0.001392, -0.000665, 6.3e-05, 0.00079, 0.001517, 0.001974], "moments_kNm": {"m_wall1": 91192.5, "m_wall2": 154570.3, "m_couple": 3948.8, "m_total": 249711.6, "couple_ratio_pct": 1.6}}, {"step": 384, "roof_disp_m": 0.192, "roof_drift_pct": 0.4615, "base_shear_kN": 11091.8, "coeff_vw": 0.4346, "floor_disps_m": [0.0, 0.00393, 0.01148, 0.02091, 0.03163, 0.04325, 0.05554, 0.06833, 0.0815, 0.09494, 0.10859, 0.12238, 0.13626, 0.1502, 0.16414, 0.17808, 0.192], "story_drifts_pct": [0.1512, 0.2904, 0.3627, 0.4123, 0.4469, 0.4727, 0.4919, 0.5065, 0.5169, 0.525, 0.5304, 0.5338, 0.5362, 0.5362, 0.5362, 0.5354], "wall1_strains": [-0.000396, 0.000279, 0.001355, 0.002431, 0.003508, 0.004584, 0.00566, 0.006335], "wall2_strains": [-0.002862, -0.002306, -0.001421, -0.000535, 0.000351, 0.001237, 0.002122, 0.002678], "moments_kNm": {"m_wall1": 90994.5, "m_wall2": 149809.0, "m_couple": 4325.3, "m_total": 245128.7, "couple_ratio_pct": 1.8}}, {"step": 408, "roof_disp_m": 0.204, "roof_drift_pct": 0.4904, "base_shear_kN": 10525.32, "coeff_vw": 0.4124, "floor_disps_m": [0.0, 0.00457, 0.01314, 0.02349, 0.03506, 0.04749, 0.06055, 0.07409, 0.08798, 0.10213, 0.11648, 0.13096, 0.14553, 0.16015, 0.17478, 0.1894, 0.204], "story_drifts_pct": [0.1758, 0.3296, 0.3981, 0.445, 0.4781, 0.5023, 0.5208, 0.5342, 0.5442, 0.5519, 0.5569, 0.5604, 0.5623, 0.5627, 0.5623, 0.5615], "wall1_strains": [-0.000396, 0.00039, 0.001641, 0.002892, 0.004143, 0.005394, 0.006645, 0.007431], "wall2_strains": [-0.003165, -0.002476, -0.001377, -0.000279, 0.00082, 0.001918, 0.003017, 0.003706], "moments_kNm": {"m_wall1": 91017.9, "m_wall2": 136812.7, "m_couple": 4778.9, "m_total": 232609.6, "couple_ratio_pct": 2.1}}, {"step": 432, "roof_disp_m": 0.216, "roof_drift_pct": 0.5192, "base_shear_kN": 10576.02, "coeff_vw": 0.4144, "floor_disps_m": [0.0, 0.00502, 0.01434, 0.02545, 0.03778, 0.05098, 0.06481, 0.07912, 0.09379, 0.10871, 0.12384, 0.13909, 0.15444, 0.16983, 0.18523, 0.20063, 0.216], "story_drifts_pct": [0.1931, 0.3585, 0.4273, 0.4742, 0.5077, 0.5319, 0.5504, 0.5642, 0.5738, 0.5819, 0.5865, 0.5904, 0.5919, 0.5923, 0.5923, 0.5912], "wall1_strains": [-0.000398, 0.000469, 0.001849, 0.00323, 0.00461, 0.005991, 0.007371, 0.008238], "wall2_strains": [-0.003429, -0.002659, -0.001431, -0.000204, 0.001024, 0.002252, 0.003479, 0.00425], "moments_kNm": {"m_wall1": 91223.2, "m_wall2": 137388.2, "m_couple": 5118.6, "m_total": 233730.0, "couple_ratio_pct": 2.2}}, {"step": 456, "roof_disp_m": 0.228, "roof_drift_pct": 0.5481, "base_shear_kN": 10558.97, "coeff_vw": 0.4138, "floor_disps_m": [0.0, 0.00549, 0.01559, 0.02747, 0.04059, 0.05455, 0.06915, 0.08423, 0.09967, 0.11536, 0.13125, 0.14727, 0.16338, 0.17953, 0.1957, 0.21186, 0.228], "story_drifts_pct": [0.2112, 0.3885, 0.4569, 0.5046, 0.5369, 0.5615, 0.58, 0.5938, 0.6035, 0.6112, 0.6162, 0.6196, 0.6212, 0.6219, 0.6215, 0.6208], "wall1_strains": [-0.000399, 0.000552, 0.002067, 0.003582, 0.005097, 0.006612, 0.008127, 0.009078], "wall2_strains": [-0.003789, -0.002932, -0.001566, -0.0002, 0.001166, 0.002531, 0.003897, 0.004754], "moments_kNm": {"m_wall1": 91373.1, "m_wall2": 136550.5, "m_couple": 5429.7, "m_total": 233353.3, "couple_ratio_pct": 2.3}}, {"step": 480, "roof_disp_m": 0.24, "roof_drift_pct": 0.5769, "base_shear_kN": 10471.67, "coeff_vw": 0.4103, "floor_disps_m": [0.0, 0.00598, 0.01689, 0.02957, 0.04347, 0.05821, 0.07358, 0.08943, 0.10562, 0.12208, 0.13872, 0.1555, 0.17236, 0.18927, 0.20619, 0.22311, 0.24], "story_drifts_pct": [0.23, 0.4196, 0.4877, 0.5346, 0.5669, 0.5912, 0.6096, 0.6227, 0.6331, 0.64, 0.6454, 0.6485, 0.6504, 0.6508, 0.6508, 0.6496], "wall1_strains": [-0.000398, 0.000642, 0.002297, 0.003953, 0.005609, 0.007265, 0.008921, 0.00996], "wall2_strains": [-0.004214, -0.003265, -0.001752, -0.00024, 0.001273, 0.002785, 0.004298, 0.005247], "moments_kNm": {"m_wall1": 91282.4, "m_wall2": 134417.7, "m_couple": 5723.9, "m_total": 231423.9, "couple_ratio_pct": 2.5}}, {"step": 504, "roof_disp_m": 0.252, "roof_drift_pct": 0.6058, "base_shear_kN": 10380.74, "coeff_vw": 0.4068, "floor_disps_m": [0.0, 0.00648, 0.0182, 0.03167, 0.04635, 0.06187, 0.07802, 0.09462, 0.11158, 0.1288, 0.1462, 0.16373, 0.18135, 0.19901, 0.21669, 0.23436, 0.252], "story_drifts_pct": [0.2492, 0.4508, 0.5181, 0.5646, 0.5969, 0.6212, 0.6385, 0.6523, 0.6623, 0.6692, 0.6742, 0.6777, 0.6792, 0.68, 0.6796, 0.6785], "wall1_strains": [-0.000396, 0.000731, 0.002528, 0.004325, 0.006122, 0.007919, 0.009715, 0.010843], "wall2_strains": [-0.004658, -0.003617, -0.001957, -0.000297, 0.001363, 0.003023, 0.004682, 0.005724], "moments_kNm": {"m_wall1": 91197.1, "m_wall2": 132206.8, "m_couple": 6010.4, "m_total": 229414.3, "couple_ratio_pct": 2.6}}, {"step": 528, "roof_disp_m": 0.264, "roof_drift_pct": 0.6346, "base_shear_kN": 10262.85, "coeff_vw": 0.4021, "floor_disps_m": [0.0, 0.00698, 0.01952, 0.0338, 0.04927, 0.06557, 0.08248, 0.09985, 0.11757, 0.13554, 0.1537, 0.17198, 0.19035, 0.20876, 0.22719, 0.24561, 0.264], "story_drifts_pct": [0.2685, 0.4823, 0.5492, 0.595, 0.6269, 0.6504, 0.6681, 0.6815, 0.6912, 0.6985, 0.7031, 0.7065, 0.7081, 0.7088, 0.7085, 0.7073], "wall1_strains": [-0.000395, 0.000822, 0.002762, 0.004701, 0.006641, 0.008581, 0.01052, 0.011738], "wall2_strains": [-0.005152, -0.004016, -0.002205, -0.000394, 0.001416, 0.003227, 0.005038, 0.006174], "moments_kNm": {"m_wall1": 91137.4, "m_wall2": 129390.8, "m_couple": 6280.6, "m_total": 226808.9, "couple_ratio_pct": 2.8}}, {"step": 552, "roof_disp_m": 0.276, "roof_drift_pct": 0.6635, "base_shear_kN": 10119.67, "coeff_vw": 0.3965, "floor_disps_m": [0.0, 0.00749, 0.02087, 0.03595, 0.05221, 0.06929, 0.08697, 0.10511, 0.12358, 0.14231, 0.16121, 0.18025, 0.19936, 0.21852, 0.2377, 0.25686, 0.276], "story_drifts_pct": [0.2881, 0.5146, 0.58, 0.6254, 0.6569, 0.68, 0.6977, 0.7104, 0.7204, 0.7269, 0.7323, 0.735, 0.7369, 0.7377, 0.7369, 0.7362], "wall1_strains": [-0.000395, 0.000913, 0.002996, 0.00508, 0.007163, 0.009247, 0.011331, 0.012638], "wall2_strains": [-0.00569, -0.004457, -0.002491, -0.000526, 0.001439, 0.003405, 0.00537, 0.006603], "moments_kNm": {"m_wall1": 91209.1, "m_wall2": 125897.8, "m_couple": 6537.7, "m_total": 223644.7, "couple_ratio_pct": 2.9}}, {"step": 576, "roof_disp_m": 0.288, "roof_drift_pct": 0.6923, "base_shear_kN": 9650.34, "coeff_vw": 0.3781, "floor_disps_m": [0.0, 0.00809, 0.02244, 0.03842, 0.05552, 0.07339, 0.09185, 0.11073, 0.12994, 0.14939, 0.16901, 0.18875, 0.20857, 0.22843, 0.2483, 0.26816, 0.288], "story_drifts_pct": [0.3112, 0.5519, 0.6146, 0.6577, 0.6873, 0.71, 0.7262, 0.7388, 0.7481, 0.7546, 0.7592, 0.7623, 0.7638, 0.7642, 0.7638, 0.7631], "wall1_strains": [-0.000396, 0.001015, 0.003264, 0.005513, 0.007761, 0.01001, 0.012259, 0.01367], "wall2_strains": [-0.006648, -0.005289, -0.003125, -0.00096, 0.001204, 0.003369, 0.005533, 0.006892], "moments_kNm": {"m_wall1": 91716.5, "m_wall2": 114876.0, "m_couple": 6679.9, "m_total": 213272.4, "couple_ratio_pct": 3.1}}, {"step": 600, "roof_disp_m": 0.3, "roof_drift_pct": 0.7212, "base_shear_kN": 8944.0, "coeff_vw": 0.3505, "floor_disps_m": [0.0, 0.00877, 0.02418, 0.04111, 0.05908, 0.07777, 0.097, 0.11662, 0.13655, 0.15669, 0.17699, 0.19741, 0.2179, 0.23843, 0.25896, 0.27949, 0.3], "story_drifts_pct": [0.3373, 0.5927, 0.6512, 0.6912, 0.7188, 0.7396, 0.7546, 0.7665, 0.7746, 0.7808, 0.7854, 0.7881, 0.7896, 0.7896, 0.7896, 0.7888], "wall1_strains": [-0.000397, 0.001127, 0.003556, 0.005986, 0.008415, 0.010844, 0.013273, 0.014798], "wall2_strains": [-0.008153, -0.00665, -0.004254, -0.001859, 0.000537, 0.002932, 0.005328, 0.006831], "moments_kNm": {"m_wall1": 92492.1, "m_wall2": 98540.6, "m_couple": 6629.7, "m_total": 197662.3, "couple_ratio_pct": 3.4}}, {"step": 624, "roof_disp_m": 0.312, "roof_drift_pct": 0.75, "base_shear_kN": 8503.36, "coeff_vw": 0.3332, "floor_disps_m": [0.0, 0.00936, 0.02573, 0.04355, 0.06235, 0.08183, 0.10183, 0.12221, 0.14287, 0.16373, 0.18476, 0.20588, 0.22708, 0.24831, 0.26955, 0.29079, 0.312], "story_drifts_pct": [0.36, 0.6296, 0.6854, 0.7231, 0.7492, 0.7692, 0.7838, 0.7946, 0.8023, 0.8088, 0.8123, 0.8154, 0.8165, 0.8169, 0.8169, 0.8158], "wall1_strains": [-0.000399, 0.001228, 0.00382, 0.006412, 0.009003, 0.011595, 0.014187, 0.015814], "wall2_strains": [-0.009452, -0.007827, -0.005237, -0.002646, -5.6e-05, 0.002534, 0.005124, 0.00675], "moments_kNm": {"m_wall1": 93035.6, "m_wall2": 88275.7, "m_couple": 6612.9, "m_total": 187924.2, "couple_ratio_pct": 3.5}}, {"step": 648, "roof_disp_m": 0.324, "roof_drift_pct": 0.7788, "base_shear_kN": 8056.67, "coeff_vw": 0.3157, "floor_disps_m": [0.0, 0.00996, 0.02729, 0.04599, 0.06562, 0.0859, 0.10667, 0.1278, 0.14919, 0.17079, 0.19252, 0.21436, 0.23626, 0.2582, 0.28014, 0.30208, 0.324], "story_drifts_pct": [0.3831, 0.6665, 0.7192, 0.755, 0.78, 0.7988, 0.8127, 0.8227, 0.8308, 0.8358, 0.84, 0.8423, 0.8438, 0.8438, 0.8438, 0.8431], "wall1_strains": [-0.0004, 0.001329, 0.004084, 0.006839, 0.009594, 0.012349, 0.015104, 0.016833], "wall2_strains": [-0.010661, -0.008913, -0.006127, -0.003341, -0.000556, 0.00223, 0.005016, 0.006764], "moments_kNm": {"m_wall1": 93568.4, "m_wall2": 77846.2, "m_couple": 6637.9, "m_total": 178052.5, "couple_ratio_pct": 3.7}}, {"step": 672, "roof_disp_m": 0.336, "roof_drift_pct": 0.8077, "base_shear_kN": 8043.02, "coeff_vw": 0.3152, "floor_disps_m": [0.0, 0.01043, 0.02853, 0.048, 0.06841, 0.08946, 0.111, 0.1329, 0.15506, 0.17742, 0.19992, 0.22253, 0.2452, 0.2679, 0.29061, 0.31332, 0.336], "story_drifts_pct": [0.4012, 0.6962, 0.7488, 0.785, 0.8096, 0.8285, 0.8423, 0.8523, 0.86, 0.8654, 0.8696, 0.8719, 0.8731, 0.8735, 0.8735, 0.8723], "wall1_strains": [-0.000401, 0.001413, 0.004302, 0.007191, 0.01008, 0.012969, 0.015858, 0.017671], "wall2_strains": [-0.011416, -0.009582, -0.006659, -0.003737, -0.000815, 0.002108, 0.00503, 0.006864], "moments_kNm": {"m_wall1": 93703.1, "m_wall2": 77276.9, "m_couple": 6770.6, "m_total": 177750.6, "couple_ratio_pct": 3.8}}, {"step": 696, "roof_disp_m": 0.348, "roof_drift_pct": 0.8365, "base_shear_kN": 7994.62, "coeff_vw": 0.3133, "floor_disps_m": [0.0, 0.0109, 0.0298, 0.05006, 0.07124, 0.09307, 0.11537, 0.13804, 0.16096, 0.18409, 0.20736, 0.23072, 0.25415, 0.27762, 0.30109, 0.32455, 0.348], "story_drifts_pct": [0.4192, 0.7269, 0.7792, 0.8146, 0.8396, 0.8577, 0.8719, 0.8815, 0.8896, 0.895, 0.8985, 0.9012, 0.9027, 0.9027, 0.9023, 0.9019], "wall1_strains": [-0.000402, 0.001497, 0.004523, 0.007548, 0.010574, 0.013599, 0.016625, 0.018524], "wall2_strains": [-0.012194, -0.010271, -0.007208, -0.004144, -0.00108, 0.001984, 0.005047, 0.00697], "moments_kNm": {"m_wall1": 93867.6, "m_wall2": 75913.2, "m_couple": 6900.4, "m_total": 176681.2, "couple_ratio_pct": 3.9}}, {"step": 720, "roof_disp_m": 0.36, "roof_drift_pct": 0.8654, "base_shear_kN": 7903.67, "coeff_vw": 0.3097, "floor_disps_m": [0.0, 0.01139, 0.0311, 0.05215, 0.07412, 0.09672, 0.11979, 0.14322, 0.16691, 0.1908, 0.21482, 0.23895, 0.26313, 0.28735, 0.31158, 0.3358, 0.36], "story_drifts_pct": [0.4381, 0.7581, 0.8096, 0.845, 0.8692, 0.8873, 0.9012, 0.9112, 0.9188, 0.9238, 0.9281, 0.93, 0.9315, 0.9319, 0.9315, 0.9308], "wall1_strains": [-0.000402, 0.001584, 0.004749, 0.007914, 0.011079, 0.014244, 0.017408, 0.019395], "wall2_strains": [-0.012974, -0.010959, -0.007748, -0.004537, -0.001326, 0.001885, 0.005096, 0.007111], "moments_kNm": {"m_wall1": 94064.0, "m_wall2": 73568.3, "m_couple": 7038.9, "m_total": 174671.2, "couple_ratio_pct": 4.0}}, {"step": 744, "roof_disp_m": 0.372, "roof_drift_pct": 0.8942, "base_shear_kN": 7782.56, "coeff_vw": 0.305, "floor_disps_m": [0.0, 0.01189, 0.03242, 0.05427, 0.07702, 0.10041, 0.12425, 0.14844, 0.1729, 0.19754, 0.22232, 0.24719, 0.27213, 0.2971, 0.32208, 0.34705, 0.372], "story_drifts_pct": [0.4573, 0.7896, 0.8404, 0.875, 0.8996, 0.9169, 0.9304, 0.9408, 0.9477, 0.9531, 0.9565, 0.9592, 0.9604, 0.9608, 0.9604, 0.9596], "wall1_strains": [-0.000403, 0.001672, 0.004978, 0.008284, 0.01159, 0.014897, 0.018203, 0.020278], "wall2_strains": [-0.013845, -0.011735, -0.008372, -0.00501, -0.001648, 0.001714, 0.005076, 0.007187], "moments_kNm": {"m_wall1": 94298.1, "m_wall2": 70553.3, "m_couple": 7143.3, "m_total": 171994.7, "couple_ratio_pct": 4.2}}, {"step": 768, "roof_disp_m": 0.384, "roof_drift_pct": 0.9231, "base_shear_kN": 7537.68, "coeff_vw": 0.2954, "floor_disps_m": [0.0, 0.01243, 0.03383, 0.05651, 0.08007, 0.10424, 0.12885, 0.1538, 0.17901, 0.20439, 0.22991, 0.25552, 0.2812, 0.3069, 0.33261, 0.35831, 0.384], "story_drifts_pct": [0.4781, 0.8231, 0.8723, 0.9062, 0.9296, 0.9465, 0.9596, 0.9696, 0.9762, 0.9815, 0.985, 0.9877, 0.9885, 0.9888, 0.9885, 0.9881], "wall1_strains": [-0.000405, 0.001764, 0.00522, 0.008676, 0.012131, 0.015587, 0.019043, 0.021212], "wall2_strains": [-0.01496, -0.012744, -0.009214, -0.005684, -0.002154, 0.001376, 0.004906, 0.007122], "moments_kNm": {"m_wall1": 94665.2, "m_wall2": 64751.8, "m_couple": 7165.8, "m_total": 166582.8, "couple_ratio_pct": 4.3}}, {"step": 792, "roof_disp_m": 0.396, "roof_drift_pct": 0.9519, "base_shear_kN": 7365.6, "coeff_vw": 0.2886, "floor_disps_m": [0.0, 0.01294, 0.03518, 0.05868, 0.08303, 0.10798, 0.13337, 0.15908, 0.18504, 0.21118, 0.23744, 0.2638, 0.29022, 0.31667, 0.34312, 0.36957, 0.396], "story_drifts_pct": [0.4977, 0.8554, 0.9038, 0.9365, 0.9596, 0.9765, 0.9888, 0.9985, 1.0054, 1.01, 1.0138, 1.0162, 1.0173, 1.0173, 1.0173, 1.0165], "wall1_strains": [-0.000406, 0.001854, 0.005454, 0.009054, 0.012655, 0.016255, 0.019855, 0.022115], "wall2_strains": [-0.016015, -0.013701, -0.010013, -0.006325, -0.002637, 0.001051, 0.00474, 0.007054], "moments_kNm": {"m_wall1": 94968.2, "m_wall2": 60612.7, "m_couple": 7198.8, "m_total": 162779.7, "couple_ratio_pct": 4.4}}, {"step": 816, "roof_disp_m": 0.408, "roof_drift_pct": 0.9808, "base_shear_kN": 6975.16, "coeff_vw": 0.2733, "floor_disps_m": [0.0, 0.01352, 0.03669, 0.06106, 0.08624, 0.11198, 0.13813, 0.1646, 0.1913, 0.21817, 0.24516, 0.27224, 0.29937, 0.32653, 0.3537, 0.38086, 0.408], "story_drifts_pct": [0.52, 0.8912, 0.9373, 0.9685, 0.99, 1.0058, 1.0181, 1.0269, 1.0335, 1.0381, 1.0415, 1.0435, 1.0446, 1.045, 1.0446, 1.0438], "wall1_strains": [-0.000407, 0.001952, 0.005711, 0.00947, 0.013229, 0.016988, 0.020748, 0.023107], "wall2_strains": [-0.01752, -0.015087, -0.011212, -0.007337, -0.003462, 0.000413, 0.004288, 0.00672], "moments_kNm": {"m_wall1": 95506.3, "m_wall2": 51565.5, "m_couple": 7079.4, "m_total": 154151.1, "couple_ratio_pct": 4.6}}, {"step": 840, "roof_disp_m": 0.42, "roof_drift_pct": 1.0096, "base_shear_kN": 6666.48, "coeff_vw": 0.2612, "floor_disps_m": [0.0, 0.01407, 0.03815, 0.06336, 0.08935, 0.11588, 0.1428, 0.17003, 0.19747, 0.22508, 0.2528, 0.28061, 0.30847, 0.33635, 0.36425, 0.39213, 0.42], "story_drifts_pct": [0.5412, 0.9262, 0.9696, 0.9996, 1.0204, 1.0354, 1.0473, 1.0554, 1.0619, 1.0662, 1.0696, 1.0715, 1.0723, 1.0731, 1.0723, 1.0719], "wall1_strains": [-0.000408, 0.002048, 0.005961, 0.009873, 0.013786, 0.017698, 0.021611, 0.024067], "wall2_strains": [-0.018832, -0.01629, -0.012239, -0.008188, -0.004138, -8.7e-05, 0.003964, 0.006506], "moments_kNm": {"m_wall1": 95910.3, "m_wall2": 44391.7, "m_couple": 7027.1, "m_total": 147329.1, "couple_ratio_pct": 4.8}}, {"step": 864, "roof_disp_m": 0.432, "roof_drift_pct": 1.0385, "base_shear_kN": 6604.35, "coeff_vw": 0.2588, "floor_disps_m": [0.0, 0.01455, 0.03942, 0.06542, 0.09219, 0.11949, 0.14719, 0.17518, 0.20339, 0.23176, 0.26024, 0.28881, 0.31743, 0.34608, 0.37473, 0.40337, 0.432], "story_drifts_pct": [0.5596, 0.9565, 1.0, 1.0296, 1.05, 1.0654, 1.0765, 1.085, 1.0912, 1.0954, 1.0988, 1.1008, 1.1019, 1.1019, 1.1015, 1.1012], "wall1_strains": [-0.000407, 0.002135, 0.006185, 0.010235, 0.014285, 0.018336, 0.022386, 0.024928], "wall2_strains": [-0.019666, -0.017034, -0.01284, -0.008646, -0.004453, -0.000259, 0.003934, 0.006566], "moments_kNm": {"m_wall1": 96028.2, "m_wall2": 42793.6, "m_couple": 7134.3, "m_total": 145956.1, "couple_ratio_pct": 4.9}}, {"step": 888, "roof_disp_m": 0.444, "roof_drift_pct": 1.0673, "base_shear_kN": 6567.41, "coeff_vw": 0.2573, "floor_disps_m": [0.0, 0.01503, 0.04068, 0.06746, 0.09501, 0.12308, 0.15155, 0.1803, 0.20928, 0.23841, 0.26767, 0.297, 0.32638, 0.35579, 0.3852, 0.41461, 0.444], "story_drifts_pct": [0.5781, 0.9865, 1.03, 1.0596, 1.0796, 1.095, 1.1058, 1.1146, 1.1204, 1.1254, 1.1281, 1.13, 1.1312, 1.1312, 1.1312, 1.1304], "wall1_strains": [-0.000407, 0.00222, 0.006407, 0.010593, 0.014779, 0.018965, 0.023151, 0.025779], "wall2_strains": [-0.020481, -0.017761, -0.013428, -0.009095, -0.004762, -0.000429, 0.003904, 0.006624], "moments_kNm": {"m_wall1": 96125.7, "m_wall2": 41769.6, "m_couple": 7244.3, "m_total": 145139.7, "couple_ratio_pct": 5.0}}, {"step": 912, "roof_disp_m": 0.456, "roof_drift_pct": 1.0962, "base_shear_kN": 6546.05, "coeff_vw": 0.2565, "floor_disps_m": [0.0, 0.0155, 0.04193, 0.06949, 0.0978, 0.12665, 0.15588, 0.18541, 0.21515, 0.24506, 0.27507, 0.30517, 0.33532, 0.36549, 0.39567, 0.42584, 0.456], "story_drifts_pct": [0.5962, 1.0165, 1.06, 1.0888, 1.1096, 1.1242, 1.1358, 1.1438, 1.1504, 1.1542, 1.1577, 1.1596, 1.1604, 1.1608, 1.1604, 1.16], "wall1_strains": [-0.000407, 0.002306, 0.006627, 0.010948, 0.015269, 0.01959, 0.023911, 0.026623], "wall2_strains": [-0.021285, -0.01848, -0.014009, -0.009539, -0.005068, -0.000598, 0.003872, 0.006678], "moments_kNm": {"m_wall1": 96210.9, "m_wall2": 41101.6, "m_couple": 7355.3, "m_total": 144667.7, "couple_ratio_pct": 5.1}}, {"step": 936, "roof_disp_m": 0.468, "roof_drift_pct": 1.125, "base_shear_kN": 6517.57, "coeff_vw": 0.2554, "floor_disps_m": [0.0, 0.01597, 0.04318, 0.07152, 0.10061, 0.13023, 0.16023, 0.19053, 0.22104, 0.2517, 0.28249, 0.31335, 0.34426, 0.3752, 0.40614, 0.43708, 0.468], "story_drifts_pct": [0.6142, 1.0465, 1.09, 1.1188, 1.1392, 1.1538, 1.1654, 1.1735, 1.1792, 1.1842, 1.1869, 1.1888, 1.19, 1.19, 1.19, 1.1892], "wall1_strains": [-0.000406, 0.002391, 0.006847, 0.011304, 0.01576, 0.020217, 0.024673, 0.02747], "wall2_strains": [-0.022105, -0.019212, -0.014604, -0.009995, -0.005386, -0.000778, 0.003831, 0.006723], "moments_kNm": {"m_wall1": 96303.4, "m_wall2": 40273.5, "m_couple": 7461.2, "m_total": 144038.2, "couple_ratio_pct": 5.2}}, {"step": 960, "roof_disp_m": 0.48, "roof_drift_pct": 1.1538, "base_shear_kN": 6480.46, "coeff_vw": 0.2539, "floor_disps_m": [0.0, 0.01644, 0.04444, 0.07356, 0.10342, 0.13381, 0.16459, 0.19565, 0.22693, 0.25836, 0.28991, 0.32153, 0.35321, 0.38491, 0.41662, 0.44832, 0.48], "story_drifts_pct": [0.6323, 1.0769, 1.12, 1.1485, 1.1688, 1.1838, 1.1946, 1.2031, 1.2088, 1.2135, 1.2162, 1.2185, 1.2192, 1.2196, 1.2192, 1.2185], "wall1_strains": [-0.000406, 0.002477, 0.007069, 0.011661, 0.016254, 0.020846, 0.025438, 0.028321], "wall2_strains": [-0.022943, -0.019962, -0.015214, -0.010466, -0.005718, -0.00097, 0.003778, 0.006758], "moments_kNm": {"m_wall1": 96404.9, "m_wall2": 39252.0, "m_couple": 7561.1, "m_total": 143218.1, "couple_ratio_pct": 5.3}}, {"step": 984, "roof_disp_m": 0.492, "roof_drift_pct": 1.1827, "base_shear_kN": 6454.33, "coeff_vw": 0.2529, "floor_disps_m": [0.0, 0.01691, 0.0457, 0.07559, 0.10623, 0.13739, 0.16893, 0.20076, 0.2328, 0.265, 0.29732, 0.32971, 0.36215, 0.39461, 0.42709, 0.45955, 0.492], "story_drifts_pct": [0.6504, 1.1073, 1.1496, 1.1785, 1.1985, 1.2131, 1.2242, 1.2323, 1.2385, 1.2431, 1.2458, 1.2477, 1.2485, 1.2492, 1.2485, 1.2481], "wall1_strains": [-0.000406, 0.002562, 0.007289, 0.012017, 0.016745, 0.021472, 0.0262, 0.029167], "wall2_strains": [-0.023768, -0.020701, -0.015815, -0.010929, -0.006043, -0.001157, 0.003729, 0.006796], "moments_kNm": {"m_wall1": 96496.8, "m_wall2": 38479.8, "m_couple": 7664.0, "m_total": 142640.6, "couple_ratio_pct": 5.4}}, {"step": 1008, "roof_disp_m": 0.504, "roof_drift_pct": 1.2115, "base_shear_kN": 6516.5, "coeff_vw": 0.2553, "floor_disps_m": [0.0, 0.01735, 0.04688, 0.07753, 0.10893, 0.14086, 0.17317, 0.20577, 0.23859, 0.27157, 0.30465, 0.33782, 0.37104, 0.40428, 0.43753, 0.47077, 0.504], "story_drifts_pct": [0.6673, 1.1358, 1.1788, 1.2077, 1.2281, 1.2427, 1.2538, 1.2623, 1.2685, 1.2723, 1.2758, 1.2777, 1.2785, 1.2788, 1.2785, 1.2781], "wall1_strains": [-0.000405, 0.002643, 0.0075, 0.012357, 0.017214, 0.022071, 0.026928, 0.029977], "wall2_strains": [-0.024458, -0.021312, -0.0163, -0.011288, -0.006275, -0.001263, 0.003749, 0.006895], "moments_kNm": {"m_wall1": 96505.3, "m_wall2": 39701.3, "m_couple": 7808.0, "m_total": 144014.6, "couple_ratio_pct": 5.4}}, {"step": 1032, "roof_disp_m": 0.516, "roof_drift_pct": 1.2404, "base_shear_kN": 6576.99, "coeff_vw": 0.2577, "floor_disps_m": [0.0, 0.0178, 0.04807, 0.07948, 0.11164, 0.14433, 0.17741, 0.21079, 0.24438, 0.27813, 0.31199, 0.34594, 0.37993, 0.41395, 0.44798, 0.482, 0.516], "story_drifts_pct": [0.6846, 1.1642, 1.2081, 1.2369, 1.2573, 1.2723, 1.2838, 1.2919, 1.2981, 1.3023, 1.3058, 1.3073, 1.3085, 1.3088, 1.3085, 1.3077], "wall1_strains": [-0.000405, 0.002725, 0.007712, 0.012698, 0.017684, 0.022671, 0.027657, 0.030787], "wall2_strains": [-0.025152, -0.021927, -0.016788, -0.01165, -0.006511, -0.001372, 0.003766, 0.006992], "moments_kNm": {"m_wall1": 96515.7, "m_wall2": 40885.4, "m_couple": 7950.4, "m_total": 145351.4, "couple_ratio_pct": 5.5}}, {"step": 1056, "roof_disp_m": 0.528, "roof_drift_pct": 1.2692, "base_shear_kN": 6635.63, "coeff_vw": 0.26, "floor_disps_m": [0.0, 0.01824, 0.04927, 0.08142, 0.11435, 0.14781, 0.18166, 0.2158, 0.25017, 0.28469, 0.31933, 0.35405, 0.38882, 0.42362, 0.45842, 0.49322, 0.528], "story_drifts_pct": [0.7015, 1.1935, 1.2365, 1.2665, 1.2869, 1.3019, 1.3131, 1.3219, 1.3277, 1.3323, 1.3354, 1.3373, 1.3385, 1.3385, 1.3385, 1.3377], "wall1_strains": [-0.000404, 0.002807, 0.007923, 0.013039, 0.018155, 0.023271, 0.028387, 0.031598], "wall2_strains": [-0.025851, -0.022547, -0.017281, -0.012016, -0.006751, -0.001485, 0.00378, 0.007085], "moments_kNm": {"m_wall1": 96528.1, "m_wall2": 42028.3, "m_couple": 8091.1, "m_total": 146647.5, "couple_ratio_pct": 5.5}}, {"step": 1080, "roof_disp_m": 0.54, "roof_drift_pct": 1.2981, "base_shear_kN": 6692.3, "coeff_vw": 0.2622, "floor_disps_m": [0.0, 0.01869, 0.05046, 0.08337, 0.11706, 0.15128, 0.18591, 0.22082, 0.25596, 0.29126, 0.32667, 0.36217, 0.39772, 0.43329, 0.46887, 0.50444, 0.54], "story_drifts_pct": [0.7188, 1.2219, 1.2658, 1.2958, 1.3162, 1.3319, 1.3427, 1.3515, 1.3577, 1.3619, 1.3654, 1.3673, 1.3681, 1.3685, 1.3681, 1.3677], "wall1_strains": [-0.000404, 0.002889, 0.008135, 0.01338, 0.018626, 0.023872, 0.029118, 0.03241], "wall2_strains": [-0.026556, -0.023171, -0.017779, -0.012387, -0.006995, -0.001602, 0.00379, 0.007174], "moments_kNm": {"m_wall1": 96544.4, "m_wall2": 43125.6, "m_couple": 8229.9, "m_total": 147899.8, "couple_ratio_pct": 5.6}}, {"step": 1104, "roof_disp_m": 0.552, "roof_drift_pct": 1.3269, "base_shear_kN": 6716.07, "coeff_vw": 0.2632, "floor_disps_m": [0.0, 0.01915, 0.05168, 0.08535, 0.11981, 0.1548, 0.19019, 0.22588, 0.26179, 0.29786, 0.33405, 0.37031, 0.40663, 0.44298, 0.47933, 0.51567, 0.552], "story_drifts_pct": [0.7365, 1.2512, 1.295, 1.3254, 1.3458, 1.3612, 1.3727, 1.3812, 1.3873, 1.3919, 1.3946, 1.3969, 1.3981, 1.3981, 1.3977, 1.3973], "wall1_strains": [-0.000404, 0.002971, 0.008349, 0.013727, 0.019104, 0.024482, 0.02986, 0.033235], "wall2_strains": [-0.027205, -0.023738, -0.018215, -0.012691, -0.007167, -0.001643, 0.003881, 0.007348], "moments_kNm": {"m_wall1": 96603.6, "m_wall2": 43420.7, "m_couple": 8400.9, "m_total": 148425.1, "couple_ratio_pct": 5.7}}, {"step": 1128, "roof_disp_m": 0.564, "roof_drift_pct": 1.3558, "base_shear_kN": 6733.97, "coeff_vw": 0.2639, "floor_disps_m": [0.0, 0.0196, 0.0529, 0.08734, 0.12256, 0.15833, 0.19449, 0.23095, 0.26762, 0.30446, 0.34142, 0.37846, 0.41555, 0.45267, 0.48979, 0.5269, 0.564], "story_drifts_pct": [0.7538, 1.2808, 1.3246, 1.3546, 1.3758, 1.3908, 1.4023, 1.4104, 1.4169, 1.4215, 1.4246, 1.4265, 1.4277, 1.4277, 1.4273, 1.4269], "wall1_strains": [-0.000404, 0.003054, 0.008564, 0.014074, 0.019584, 0.025094, 0.030604, 0.034062], "wall2_strains": [-0.027845, -0.024295, -0.018639, -0.012983, -0.007326, -0.00167, 0.003986, 0.007536], "moments_kNm": {"m_wall1": 96665.3, "m_wall2": 43578.0, "m_couple": 8577.5, "m_total": 148820.8, "couple_ratio_pct": 5.8}}, {"step": 1152, "roof_disp_m": 0.576, "roof_drift_pct": 1.3846, "base_shear_kN": 6751.85, "coeff_vw": 0.2646, "floor_disps_m": [0.0, 0.02006, 0.05412, 0.08933, 0.12532, 0.16185, 0.19878, 0.23601, 0.27346, 0.31107, 0.3488, 0.38661, 0.42447, 0.46236, 0.50025, 0.53813, 0.576], "story_drifts_pct": [0.7715, 1.31, 1.3542, 1.3842, 1.405, 1.4204, 1.4319, 1.4404, 1.4465, 1.4512, 1.4542, 1.4562, 1.4573, 1.4573, 1.4569, 1.4565], "wall1_strains": [-0.000404, 0.003137, 0.00878, 0.014422, 0.020064, 0.025706, 0.031348, 0.03489], "wall2_strains": [-0.028485, -0.024852, -0.019064, -0.013275, -0.007486, -0.001698, 0.004091, 0.007724], "moments_kNm": {"m_wall1": 96727.1, "m_wall2": 43734.9, "m_couple": 8754.0, "m_total": 149215.9, "couple_ratio_pct": 5.9}}, {"step": 1176, "roof_disp_m": 0.588, "roof_drift_pct": 1.4135, "base_shear_kN": 6769.7, "coeff_vw": 0.2653, "floor_disps_m": [0.0, 0.02052, 0.05534, 0.09132, 0.12808, 0.16538, 0.20308, 0.24108, 0.27929, 0.31768, 0.35618, 0.39476, 0.43339, 0.47204, 0.51071, 0.54936, 0.588], "story_drifts_pct": [0.7892, 1.3392, 1.3838, 1.4138, 1.4346, 1.45, 1.4615, 1.4696, 1.4765, 1.4808, 1.4838, 1.4858, 1.4865, 1.4873, 1.4865, 1.4862], "wall1_strains": [-0.000404, 0.00322, 0.008995, 0.014769, 0.020544, 0.026318, 0.032093, 0.035717], "wall2_strains": [-0.029126, -0.02541, -0.019489, -0.013568, -0.007647, -0.001726, 0.004195, 0.007911], "moments_kNm": {"m_wall1": 96789.0, "m_wall2": 43891.2, "m_couple": 8930.2, "m_total": 149610.4, "couple_ratio_pct": 6.0}}, {"step": 1200, "roof_disp_m": 0.6, "roof_drift_pct": 1.4423, "base_shear_kN": 6787.52, "coeff_vw": 0.266, "floor_disps_m": [0.0, 0.02098, 0.05656, 0.09331, 0.13083, 0.1689, 0.20737, 0.24614, 0.28513, 0.32428, 0.36355, 0.4029, 0.44231, 0.48173, 0.52117, 0.56059, 0.6], "story_drifts_pct": [0.8069, 1.3685, 1.4135, 1.4431, 1.4642, 1.4796, 1.4912, 1.4996, 1.5058, 1.5104, 1.5135, 1.5158, 1.5162, 1.5169, 1.5162, 1.5158], "wall1_strains": [-0.000404, 0.003303, 0.00921, 0.015117, 0.021024, 0.02693, 0.032837, 0.036545], "wall2_strains": [-0.029768, -0.025968, -0.019915, -0.013861, -0.007808, -0.001755, 0.004299, 0.008098], "moments_kNm": {"m_wall1": 96851.0, "m_wall2": 44047.0, "m_couple": 9106.2, "m_total": 150004.2, "couple_ratio_pct": 6.1}}, {"step": 1224, "roof_disp_m": 0.612, "roof_drift_pct": 1.4712, "base_shear_kN": 6805.3, "coeff_vw": 0.2667, "floor_disps_m": [0.0, 0.02143, 0.05779, 0.09529, 0.13359, 0.17243, 0.21167, 0.25121, 0.29097, 0.33089, 0.37093, 0.41105, 0.45122, 0.49142, 0.53163, 0.57182, 0.612], "story_drifts_pct": [0.8242, 1.3985, 1.4423, 1.4731, 1.4938, 1.5092, 1.5208, 1.5292, 1.5354, 1.54, 1.5431, 1.545, 1.5462, 1.5465, 1.5458, 1.5454], "wall1_strains": [-0.000404, 0.003386, 0.009425, 0.015464, 0.021504, 0.027543, 0.033582, 0.037372], "wall2_strains": [-0.030409, -0.026527, -0.020341, -0.014155, -0.00797, -0.001784, 0.004402, 0.008285], "moments_kNm": {"m_wall1": 96913.1, "m_wall2": 44202.2, "m_couple": 9281.9, "m_total": 150397.2, "couple_ratio_pct": 6.2}}, {"step": 1248, "roof_disp_m": 0.624, "roof_drift_pct": 1.5, "base_shear_kN": 6823.05, "coeff_vw": 0.2674, "floor_disps_m": [0.0, 0.02189, 0.05901, 0.09728, 0.13634, 0.17595, 0.21596, 0.25627, 0.2968, 0.33749, 0.37831, 0.4192, 0.46014, 0.50111, 0.54208, 0.58305, 0.624], "story_drifts_pct": [0.8419, 1.4277, 1.4719, 1.5023, 1.5235, 1.5388, 1.5504, 1.5588, 1.565, 1.57, 1.5727, 1.5746, 1.5758, 1.5758, 1.5758, 1.575], "wall1_strains": [-0.000404, 0.003469, 0.009641, 0.015812, 0.021983, 0.028155, 0.034326, 0.0382], "wall2_strains": [-0.031052, -0.027086, -0.020768, -0.01445, -0.008132, -0.001814, 0.004505, 0.00847], "moments_kNm": {"m_wall1": 96975.4, "m_wall2": 44356.7, "m_couple": 9457.4, "m_total": 150789.5, "couple_ratio_pct": 6.3}}]};
+  </script>
+
+  <!-- LÓGICA DE INTERACCIÓN, CANVAS 2D Y FÍSICA -->
+  <script>
+    /* ==========================================================================
+       VARIABLES GLOBALES DE ESTADO Y DATOS DE SIMULACIÓN
+       ========================================================================== */
+    const MVLEM = window.MVLEM_DATA || {};
+    const states = MVLEM.interactive_states || [];
+    const totalStates = states.length;
+
+    let isInitialized = false;
+    let currentStepIdx = 0;
+    let isPlaying = false;
+    let playTimer = null;
+    let playSpeed = 1;
+    let scaleAmp = 15; // Factor de amplificación visual de la deformada
+    let activeCurveMode = 'vw'; // 'vw' o 'dim'
+    let activeWallIdx = 0; // 0: Muro 1 (Tracción), 1: Muro 2 (Compresión)
+    let activeViewD = 'drift'; // 'drift' o 'moments'
+
+    /* ==========================================================================
+       GESTIÓN DEL TEMA CLARO / OSCURO CON PERSISTENCIA
+       ========================================================================== */
+    function applyTheme(isDark) {
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+        const icon = document.getElementById('theme-icon');
+        if (icon) icon.textContent = '☀️';
+      } else {
+        document.body.classList.remove('dark-theme');
+        const icon = document.getElementById('theme-icon');
+        if (icon) icon.textContent = '🌙';
+      }
+      try {
+        localStorage.setItem('nl_course_theme_mvlem', isDark ? 'dark' : 'light');
+      } catch (e) {}
+
+      // Solo redibujar si ya se completó la inicialización
+      if (isInitialized) {
+        renderAllCanvases();
+      }
+    }
+
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = !document.body.classList.contains('dark-theme');
+        applyTheme(isDark);
+      });
+    }
+
+    // Cargar tema guardado
+    let savedTheme = 'light';
+    try {
+      savedTheme = localStorage.getItem('nl_course_theme_mvlem') || localStorage.getItem('nl_course_theme') || 'light';
+    } catch(e) {}
+    applyTheme(savedTheme === 'dark');
+
+    /* ==========================================================================
+       ESTADOS FÍSICOS Y MECANISMO DE DAÑO
+       ========================================================================== */
+    function getPhysicalState(drift) {
+      if (drift < 0.12) {
+        return { name: "Elástico Lineal", desc: "Sin agrietamiento ni plastificación apreciable" };
+      } else if (drift < 0.25) {
+        return { name: "Agrietamiento y Fluencia", desc: "Primera fluencia en armadura de borde a tracción" };
+      } else if (drift < 0.50) {
+        return { name: "Capacidad Máxima (Pico)", desc: "Cortante basal máximo (Vb = 11,329 kN) y fluencia en vigas" };
+      } else if (drift < 0.85) {
+        return { name: "Degradación / Daño", desc: "Aplastamiento inicial de bulbo en compresión" };
+      } else if (drift < 1.15) {
+        return { name: "Plastificación Extensa", desc: "Límite de diseño NSR-10 (1.0% deriva) superado" };
+      } else {
+        return { name: "Demanda Extrema", desc: "Deformación inelástica severa en la rótula plástica basal" };
+      }
+    }
+
+    /* ==========================================================================
+       ACTUALIZACIÓN DEL PASO DE ANÁLISIS
+       ========================================================================== */
+    const slider = document.getElementById('pushover-slider');
+    const stepDisplay = document.getElementById('step-display');
+    const dispDisplay = document.getElementById('disp-display');
+    const driftDisplay = document.getElementById('drift-display');
+
+    const kpiDrift = document.getElementById('kpi-drift');
+    const kpiDisp = document.getElementById('kpi-disp');
+    const kpiShear = document.getElementById('kpi-shear');
+    const kpiVw = document.getElementById('kpi-vw');
+    const kpiCouple = document.getElementById('kpi-couple');
+    const kpiState = document.getElementById('kpi-state');
+    const kpiStateDesc = document.getElementById('kpi-state-desc');
+
+    if (slider) {
+      slider.max = totalStates > 0 ? totalStates - 1 : 52;
+    }
+
+    function updateStep(idx) {
+      if (totalStates === 0) return;
+      currentStepIdx = Math.max(0, Math.min(idx, totalStates - 1));
+
+      if (slider) slider.value = currentStepIdx;
+
+      const st = states[currentStepIdx];
+      if (stepDisplay) stepDisplay.textContent = `${currentStepIdx} / ${totalStates - 1}`;
+      if (dispDisplay) dispDisplay.textContent = `${st.roof_disp_m.toFixed(4)} m`;
+      if (driftDisplay) driftDisplay.textContent = `${st.roof_drift_pct.toFixed(3)} % Drift`;
+
+      if (kpiDrift) kpiDrift.textContent = `${st.roof_drift_pct.toFixed(3)} %`;
+      if (kpiDisp) kpiDisp.textContent = `Desplazamiento: ${st.roof_disp_m.toFixed(4)} m`;
+      if (kpiShear) kpiShear.textContent = `${st.base_shear_kN.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kN`;
+      if (kpiVw) kpiVw.textContent = st.coeff_vw.toFixed(3);
+      if (kpiCouple) kpiCouple.textContent = `${st.moments_kNm.couple_ratio_pct.toFixed(1)} %`;
+
+      const phys = getPhysicalState(st.roof_drift_pct);
+      if (kpiState) kpiState.textContent = phys.name;
+      if (kpiStateDesc) kpiStateDesc.textContent = phys.desc;
+
+      // Actualizar botones de presets
+      document.querySelectorAll('.btn-preset').forEach(btn => {
+        const bStep = parseInt(btn.dataset.step);
+        if (Math.abs(bStep - currentStepIdx) <= 1) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      renderAllCanvases();
+    }
+
+    if (slider) {
+      slider.addEventListener('input', (e) => {
+        updateStep(parseInt(e.target.value));
+      });
+    }
+
+    // Controles Play / Pause
+    const btnPlay = document.getElementById('btn-play');
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        if (btnPlay) {
+          btnPlay.innerHTML = '⏸️ Pausar';
+          btnPlay.classList.add('active');
+        }
+        if (currentStepIdx >= totalStates - 1) currentStepIdx = 0;
+        playTimer = setInterval(() => {
+          if (currentStepIdx < totalStates - 1) {
+            updateStep(currentStepIdx + 1);
+          } else {
+            togglePlay();
+          }
+        }, 140 / playSpeed);
+      } else {
+        if (btnPlay) {
+          btnPlay.innerHTML = '▶️ Reproducir';
+          btnPlay.classList.remove('active');
+        }
+        if (playTimer) clearInterval(playTimer);
+      }
+    }
+    if (btnPlay) btnPlay.addEventListener('click', togglePlay);
+
+    const btnPrev = document.getElementById('btn-prev');
+    if (btnPrev) btnPrev.addEventListener('click', () => updateStep(currentStepIdx - 1));
+
+    const btnNext = document.getElementById('btn-next');
+    if (btnNext) btnNext.addEventListener('click', () => updateStep(currentStepIdx + 1));
+
+    const btnReset = document.getElementById('btn-reset');
+    if (btnReset) {
+      btnReset.addEventListener('click', () => {
+        if (isPlaying) togglePlay();
+        updateStep(0);
+      });
+    }
+
+    const speedSelect = document.getElementById('speed-select');
+    if (speedSelect) {
+      speedSelect.addEventListener('change', (e) => {
+        playSpeed = parseFloat(e.target.value);
+        if (isPlaying) {
+          clearInterval(playTimer);
+          playTimer = setInterval(() => {
+            if (currentStepIdx < totalStates - 1) {
+              updateStep(currentStepIdx + 1);
+            } else {
+              togglePlay();
+            }
+          }, 140 / playSpeed);
+        }
+      });
+    }
+
+    // Botones de presets
+    document.querySelectorAll('.btn-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        updateStep(parseInt(btn.dataset.step));
+      });
+    });
+
+    // Toolbars de Canvases
+    const btnScale = document.getElementById('btn-scale-toggle');
+    if (btnScale) {
+      btnScale.addEventListener('click', (e) => {
+        if (scaleAmp === 15) {
+          scaleAmp = 30;
+          e.target.textContent = 'Escala: 30x (Amplificada)';
+        } else if (scaleAmp === 30) {
+          scaleAmp = 5;
+          e.target.textContent = 'Escala: 5x (Sutil)';
+        } else {
+          scaleAmp = 15;
+          e.target.textContent = 'Escala: 15x';
+        }
+        renderCanvasBuilding();
+      });
+    }
+
+    const btnCurveVw = document.getElementById('btn-curve-vw');
+    const btnCurveDim = document.getElementById('btn-curve-dim');
+    if (btnCurveVw && btnCurveDim) {
+      btnCurveVw.addEventListener('click', () => {
+        activeCurveMode = 'vw';
+        btnCurveVw.classList.add('active');
+        btnCurveDim.classList.remove('active');
+        renderCanvasPushover();
+      });
+      btnCurveDim.addEventListener('click', () => {
+        activeCurveMode = 'dim';
+        btnCurveDim.classList.add('active');
+        btnCurveVw.classList.remove('active');
+        renderCanvasPushover();
+      });
+    }
+
+    const btnWall1 = document.getElementById('btn-wall-select');
+    const btnWall2 = document.getElementById('btn-wall-select2');
+    if (btnWall1 && btnWall2) {
+      btnWall1.addEventListener('click', () => {
+        activeWallIdx = 0;
+        btnWall1.classList.add('active');
+        btnWall2.classList.remove('active');
+        renderCanvasFibers();
+      });
+      btnWall2.addEventListener('click', () => {
+        activeWallIdx = 1;
+        btnWall2.classList.add('active');
+        btnWall1.classList.remove('active');
+        renderCanvasFibers();
+      });
+    }
+
+    const btnViewDrift = document.getElementById('btn-view-drift');
+    const btnViewMoments = document.getElementById('btn-view-moments');
+    if (btnViewDrift && btnViewMoments) {
+      btnViewDrift.addEventListener('click', () => {
+        activeViewD = 'drift';
+        btnViewDrift.classList.add('active');
+        btnViewMoments.classList.remove('active');
+        const titleD = document.getElementById('title-canvas-d');
+        if (titleD) titleD.textContent = '📊 Perfil de Deriva de Entrepiso en la Altura';
+        const legD = document.getElementById('legend-canvas-d');
+        if (legD) {
+          legD.innerHTML = `
+            <div class="legend-item"><span class="legend-swatch" style="background: #0d6f73;"></span> Deriva Entrepiso \\(\\Delta_i / h_i\\) (%)</div>
+            <div class="legend-item"><span class="legend-swatch" style="background: #e11d48;"></span> Límite NSR-10 (1.0%)</div>
+          `;
+          if (window.renderMathInElement) window.renderMathInElement(legD);
+        }
+        renderCanvasDrift();
+      });
+      btnViewMoments.addEventListener('click', () => {
+        activeViewD = 'moments';
+        btnViewMoments.classList.add('active');
+        btnViewDrift.classList.remove('active');
+        const titleD = document.getElementById('title-canvas-d');
+        if (titleD) titleD.textContent = '⚖️ Descomposición del Momento de Volcamiento (M_OTM)';
+        const legD = document.getElementById('legend-canvas-d');
+        if (legD) {
+          legD.innerHTML = `
+            <div class="legend-item"><span class="legend-swatch" style="background: #7c3aed;"></span> Par de Acople (\\(T \\cdot L\\))</div>
+            <div class="legend-item"><span class="legend-swatch" style="background: #0284c7;"></span> Flexión Muro 1 (\\(M_1\\))</div>
+            <div class="legend-item"><span class="legend-swatch" style="background: #0d6f73;"></span> Flexión Muro 2 (\\(M_2\\))</div>
+          `;
+          if (window.renderMathInElement) window.renderMathInElement(legD);
+        }
+        renderCanvasDrift();
+      });
+    }
+
+    /* ==========================================================================
+       CANVAS 2D: RENDERIZADORES GRÁFICOS CON SOPORTE HiDPI
+       ========================================================================== */
+    function setupCanvas(canvas) {
+      if (!canvas) return null;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width > 0 ? rect.width : (canvas.parentElement ? canvas.parentElement.clientWidth : 400);
+      const h = rect.height > 0 ? rect.height : 380;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+      return { ctx, width: w, height: h };
+    }
+
+    function isDark() {
+      return document.body.classList.contains('dark-theme');
+    }
+
+    // LIENZO A: ELEVACIÓN DEL EDIFICIO DE 16 PISOS
+    function renderCanvasBuilding() {
+      const canvas = document.getElementById('canvas-building');
+      const setup = setupCanvas(canvas);
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+
+      const dark = isDark();
+      const colGrid = dark ? '#1e293b' : '#e2e8f0';
+      const colText = dark ? '#94a3b8' : '#64748b';
+      const colGround = dark ? '#334155' : '#cbd5e1';
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (states.length === 0) return;
+      const st = states[currentStepIdx];
+      const floorDisps = st.floor_disps_m;
+      const H = (MVLEM.metadata && MVLEM.metadata.total_height_m) ? MVLEM.metadata.total_height_m : 41.6;
+      const numStories = 16;
+      const wallDist = 9.15; // m
+      const wallLen = 7.65;  // m
+
+      // Márgenes y escalas de dibujo
+      const padBottom = 35;
+      const padTop = 25;
+      const plotH = height - padBottom - padTop;
+      const scaleY = plotH / H;
+
+      // Centro geométrico en X
+      const centerX = width * 0.45;
+      const scaleX_geom = width * 0.022; // Escala para la distancia entre muros
+      const ampX = scaleAmp * 45; // Amplificación visual del desplazamiento
+
+      const xW1_orig = centerX - (wallDist / 2) * scaleX_geom;
+      const xW2_orig = centerX + (wallDist / 2) * scaleX_geom;
+      const wWallPx = wallLen * scaleX_geom * 0.45;
+
+      // 1. Suelo / Cimentación
+      const yGround = height - padBottom;
+      ctx.strokeStyle = colGround;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(20, yGround);
+      ctx.lineTo(width - 20, yGround);
+      ctx.stroke();
+
+      // Hachurado de empotramiento en la base
+      ctx.strokeStyle = colGrid;
+      ctx.lineWidth = 1;
+      for (let x = 30; x < width - 30; x += 12) {
+        ctx.beginPath();
+        ctx.moveTo(x, yGround);
+        ctx.lineTo(x - 8, yGround + 10);
+        ctx.stroke();
+      }
+
+      // 2. Dibujar pisos y deformada
+      ctx.font = '10px Inter, sans-serif';
+      ctx.fillStyle = colText;
+
+      // Nivel de daño según la deriva
+      const drift = st.roof_drift_pct;
+      let colBeam = '#10b981'; // Verde elástico
+      if (drift > 0.4) colBeam = '#f59e0b'; // Ámbar plastificación
+      if (drift > 0.9) colBeam = '#e11d48'; // Rojo daño extenso
+
+      // Coordenadas calculadas piso a piso
+      const ptsW1 = [];
+      const ptsW2 = [];
+
+      for (let j = 0; j <= numStories; j++) {
+        const z = j * 2.6;
+        const yPx = yGround - z * scaleY;
+        const uLat = floorDisps[j] * ampX;
+
+        const x1 = xW1_orig + uLat;
+        const x2 = xW2_orig + uLat;
+
+        ptsW1.push({ x: x1, y: yPx });
+        ptsW2.push({ x: x2, y: yPx });
+
+        // Líneas guía de piso
+        if (j > 0 && j % 4 === 0) {
+          ctx.strokeStyle = colGrid;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(35, yPx);
+          ctx.lineTo(width - 35, yPx);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillText(`Piso ${j} (${z.toFixed(1)}m)`, 10, yPx + 3);
+        }
+      }
+
+      // 3. Dibujar Muros deformados como columnas anchas (polígonos)
+      // Muro 1 (Barlovento / Tracción Neta)
+      ctx.fillStyle = dark ? 'rgba(2, 132, 199, 0.25)' : 'rgba(2, 132, 199, 0.15)';
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      for (let j = 0; j <= numStories; j++) {
+        const pt = ptsW1[j];
+        if (j === 0) ctx.moveTo(pt.x - wWallPx / 2, pt.y);
+        else ctx.lineTo(pt.x - wWallPx / 2, pt.y);
+      }
+      for (let j = numStories; j >= 0; j--) {
+        const pt = ptsW1[j];
+        ctx.lineTo(pt.x + wWallPx / 2, pt.y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Muro 2 (Sotavento / Compresión Neta)
+      ctx.fillStyle = dark ? 'rgba(13, 111, 115, 0.28)' : 'rgba(13, 111, 115, 0.15)';
+      ctx.strokeStyle = dark ? '#2dd4bf' : '#0d6f73';
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      for (let j = 0; j <= numStories; j++) {
+        const pt = ptsW2[j];
+        if (j === 0) ctx.moveTo(pt.x - wWallPx / 2, pt.y);
+        else ctx.lineTo(pt.x - wWallPx / 2, pt.y);
+      }
+      for (let j = numStories; j >= 0; j--) {
+        const pt = ptsW2[j];
+        ctx.lineTo(pt.x + wWallPx / 2, pt.y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 4. Vigas de acople en cada piso
+      ctx.strokeStyle = colBeam;
+      ctx.lineWidth = 3;
+      for (let j = 1; j <= numStories; j++) {
+        const p1 = ptsW1[j];
+        const p2 = ptsW2[j];
+        ctx.beginPath();
+        ctx.moveTo(p1.x + wWallPx / 2, p1.y);
+        ctx.lineTo(p2.x - wWallPx / 2, p2.y);
+        ctx.stroke();
+
+        // Rótulas plásticas en extremos de vigas si hay plastificación
+        if (drift > 0.4) {
+          ctx.fillStyle = '#e11d48';
+          ctx.beginPath();
+          ctx.arc(p1.x + wWallPx / 2 + 3, p1.y, 2.5, 0, Math.PI * 2);
+          ctx.arc(p2.x - wWallPx / 2 - 3, p2.y, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Rótulas plásticas basales en muros
+      if (drift > 0.17) {
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.arc(ptsW1[0].x, ptsW1[0].y - 8, 4, 0, Math.PI * 2);
+        ctx.arc(ptsW2[0].x, ptsW2[0].y - 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 5. Flechas de fuerzas laterales aplicadas (distribución triangular invertida)
+      ctx.strokeStyle = dark ? '#fbbf24' : '#d97706';
+      ctx.fillStyle = dark ? '#fbbf24' : '#d97706';
+      ctx.lineWidth = 1.5;
+      for (let j = 4; j <= numStories; j += 4) {
+        const pt = ptsW1[j];
+        const fLen = (j / numStories) * 35;
+        const xStart = pt.x - wWallPx / 2 - fLen - 8;
+        const xEnd = pt.x - wWallPx / 2 - 4;
+
+        ctx.beginPath();
+        ctx.moveTo(xStart, pt.y);
+        ctx.lineTo(xEnd, pt.y);
+        ctx.stroke();
+
+        // Punta de flecha
+        ctx.beginPath();
+        ctx.moveTo(xEnd, pt.y);
+        ctx.lineTo(xEnd - 5, pt.y - 3);
+        ctx.lineTo(xEnd - 5, pt.y + 3);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Rótulos de Muros en la parte superior
+      ctx.font = '700 11px Inter, sans-serif';
+      ctx.fillStyle = '#0284c7';
+      ctx.fillText("Muro 1 (M1)", ptsW1[numStories].x - 25, ptsW1[numStories].y - 12);
+      ctx.fillStyle = dark ? '#2dd4bf' : '#0d6f73';
+      ctx.fillText("Muro 2 (M2)", ptsW2[numStories].x - 25, ptsW2[numStories].y - 12);
+
+      // Leyenda de amplificación
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.fillStyle = colText;
+      ctx.fillText(`Amplificación visual: ${scaleAmp}x`, width - 170, height - 12);
+    }
+
+    // LIENZO B: CURVA DE CAPACIDAD PUSHOVER
+    function renderCanvasPushover() {
+      const canvas = document.getElementById('canvas-pushover');
+      const setup = setupCanvas(canvas);
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+
+      const dark = isDark();
+      const colGrid = dark ? '#1e293b' : '#e2e8f0';
+      const colText = dark ? '#94a3b8' : '#64748b';
+      const colCurve = dark ? '#2dd4bf' : '#0d6f73';
+
+      ctx.clearRect(0, 0, width, height);
+
+      const pCurve = MVLEM.pushover_curve;
+      if (!pCurve) return;
+
+      const isVw = activeCurveMode === 'vw';
+
+      // Parámetros de ejes
+      const padLeft = 60;
+      const padRight = 30;
+      const padTop = 30;
+      const padBottom = 45;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      // Rangos máximos
+      const xMax = isVw ? 1.6 : 0.65; // % Drift o Metros
+      const yMax = isVw ? 0.52 : 12500; // V/W o kN
+
+      const getX = (val) => padLeft + (val / xMax) * plotW;
+      const getY = (val) => padTop + plotH - (val / yMax) * plotH;
+
+      // 1. Rejilla y Ejes
+      ctx.strokeStyle = colGrid;
+      ctx.lineWidth = 1;
+      ctx.font = '10px Inter, sans-serif';
+      ctx.fillStyle = colText;
+      ctx.textAlign = 'center';
+
+      // Divisiones en X
+      const numXDivs = 5;
+      for (let i = 0; i <= numXDivs; i++) {
+        const valX = (xMax / numXDivs) * i;
+        const xPx = getX(valX);
+        ctx.beginPath();
+        ctx.moveTo(xPx, padTop);
+        ctx.lineTo(xPx, padTop + plotH);
+        ctx.stroke();
+        ctx.fillText(isVw ? `${valX.toFixed(1)}%` : `${valX.toFixed(2)}m`, xPx, padTop + plotH + 16);
+      }
+
+      // Divisiones en Y
+      ctx.textAlign = 'right';
+      const numYDivs = 5;
+      for (let i = 0; i <= numYDivs; i++) {
+        const valY = (yMax / numYDivs) * i;
+        const yPx = getY(valY);
+        ctx.beginPath();
+        ctx.moveTo(padLeft, yPx);
+        ctx.lineTo(padLeft + plotW, yPx);
+        ctx.stroke();
+        ctx.fillText(isVw ? valY.toFixed(2) : Math.round(valY), padLeft - 8, yPx + 4);
+      }
+
+      // Ejes principales
+      ctx.strokeStyle = dark ? '#475569' : '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padLeft, padTop);
+      ctx.lineTo(padLeft, padTop + plotH);
+      ctx.lineTo(padLeft + plotW, padTop + plotH);
+      ctx.stroke();
+
+      // Títulos de ejes
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.fillStyle = dark ? '#f1f5f9' : '#0f172a';
+      ctx.textAlign = 'center';
+      ctx.fillText(isVw ? "Deriva de Techo (%)" : "Desplazamiento de Techo D_roof (m)", padLeft + plotW / 2, padTop + plotH + 34);
+
+      ctx.save();
+      ctx.translate(16, padTop + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(isVw ? "Coeficiente Sísmico (V / W)" : "Cortante Basal Total Vb (kN)", 0, 0);
+      ctx.restore();
+
+      // 2. Línea de límite NSR-10 (Deriva 1.0%)
+      const xNsr = getX(1.0);
+      if (isVw && xNsr < padLeft + plotW) {
+        ctx.strokeStyle = 'rgba(225, 29, 72, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xNsr, padTop);
+        ctx.lineTo(xNsr, padTop + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#e11d48';
+        ctx.font = '9px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText("Límite NSR-10 (1.0%)", xNsr + 4, padTop + 14);
+      }
+
+      // 3. Dibujar Curva Pushover Completa
+      const curveX = isVw ? pCurve.drift_pct : pCurve.disp_m;
+      const curveY = isVw ? pCurve.coeff_vw : pCurve.shear_kN;
+
+      ctx.strokeStyle = colCurve;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let i = 0; i < curveX.length; i++) {
+        const px = getX(curveX[i]);
+        const py = getY(curveY[i]);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Área sombreada bajo la curva
+      ctx.lineTo(getX(curveX[curveX.length - 1]), getY(0));
+      ctx.lineTo(getX(0), getY(0));
+      ctx.closePath();
+      ctx.fillStyle = dark ? 'rgba(45, 212, 191, 0.08)' : 'rgba(13, 111, 115, 0.06)';
+      ctx.fill();
+
+      // 4. Marcadores de Hitos Clave
+      const hitos = [
+        { name: "Fluencia Borde (0.17%)", drift: 0.173, vw: 0.305, shear: 7784 },
+        { name: "Capacidad Máx Vb (0.43%)", drift: 0.433, vw: 0.443, shear: 11299 },
+        { name: "Aplastamiento (0.75%)", drift: 0.75, vw: 0.333, shear: 8503 }
+      ];
+
+      hitos.forEach(h => {
+        const hx = getX(isVw ? h.drift : h.drift * 0.416);
+        const hy = getY(isVw ? h.vw : h.shear);
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // 5. Marcador del Estado Actual
+      if (states.length > 0) {
+        const st = states[currentStepIdx];
+        const curX = getX(isVw ? st.roof_drift_pct : st.roof_disp_m);
+        const curY = getY(isVw ? st.coeff_vw : st.base_shear_kN);
+
+        // Líneas guía al punto actual
+        ctx.strokeStyle = 'rgba(225, 29, 72, 0.4)';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, curY);
+        ctx.lineTo(curX, curY);
+        ctx.lineTo(curX, padTop + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Punto pulsante actual
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.arc(curX, curY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Rótulo con coordenadas del punto
+        ctx.fillStyle = dark ? '#ffffff' : '#0f172a';
+        ctx.font = '700 11px JetBrains Mono, monospace';
+        ctx.textAlign = curX > width - 120 ? 'right' : 'left';
+        const txtLabel = isVw
+          ? `(${st.roof_drift_pct.toFixed(2)}%, ${st.coeff_vw.toFixed(3)})`
+          : `(${st.roof_disp_m.toFixed(3)}m, ${Math.round(st.base_shear_kN)}kN)`;
+        ctx.fillText(txtLabel, curX + (curX > width - 120 ? -10 : 10), curY - 10);
+      }
+    }
+
+    // LIENZO C: PERFIL SECCIONAL DE DEFORMACIONES DE LAS 8 MACROFIBRAS
+    function renderCanvasFibers() {
+      const canvas = document.getElementById('canvas-fibers');
+      const setup = setupCanvas(canvas);
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+
+      const dark = isDark();
+      const colGrid = dark ? '#1e293b' : '#e2e8f0';
+      const colText = dark ? '#94a3b8' : '#64748b';
+
+      ctx.clearRect(0, 0, width, height);
+      if (states.length === 0 || !MVLEM.metadata) return;
+
+      const st = states[currentStepIdx];
+      const strains = activeWallIdx === 0 ? st.wall1_strains : st.wall2_strains;
+      const xCoords = MVLEM.metadata.fiber_coords_x_m; // [-3.675 ... 3.675]
+      const widths = MVLEM.metadata.fiber_widths_m;
+      const numFibers = 8;
+      const wallTitle = activeWallIdx === 0 ? "Muro 1 (Barlovento / Tracción Neta)" : "Muro 2 (Sotavento / Compresión Neta)";
+
+      // Márgenes
+      const padLeft = 65;
+      const padRight = 35;
+      const padTop = 35;
+      const padBottom = 45;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      // Rangos de deformación en Y: de -0.025 (compresión) a +0.035 (tracción)
+      const epsMin = -0.025;
+      const epsMax = 0.035;
+
+      const getX = (valX) => padLeft + ((valX + 3.825) / 7.65) * plotW;
+      const getY = (valEps) => padTop + plotH - ((valEps - epsMin) / (epsMax - epsMin)) * plotH;
+
+      // 1. Rejilla y Eje Neutro (eps = 0)
+      ctx.strokeStyle = colGrid;
+      ctx.lineWidth = 1;
+
+      // Líneas horizontales de deformación
+      const gridEps = [-0.02, -0.01, 0, 0.01, 0.02, 0.03];
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.fillStyle = colText;
+      ctx.textAlign = 'right';
+
+      gridEps.forEach(epsVal => {
+        const yPx = getY(epsVal);
+        ctx.beginPath();
+        ctx.moveTo(padLeft, yPx);
+        ctx.lineTo(padLeft + plotW, yPx);
+        ctx.stroke();
+        ctx.fillText((epsVal * 1000).toFixed(0) + "‰", padLeft - 8, yPx + 4);
+      });
+
+      // EJE NEUTRO DESTACADO (eps = 0)
+      const yZero = getY(0);
+      ctx.strokeStyle = dark ? '#64748b' : '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padLeft, yZero);
+      ctx.lineTo(padLeft + plotW, yZero);
+      ctx.stroke();
+
+      // Límites de materiales
+      // Fluencia acero tracción eps_y = 0.0021
+      const yEy = getY(0.0021);
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(padLeft, yEy);
+      ctx.lineTo(padLeft + plotW, yEy);
+      ctx.stroke();
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = '9px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText("Fluencia Acero (\u03B5y = +0.0021)", padLeft + 8, yEy - 3);
+
+      // Aplastamiento concreto confinado eps_cu = -0.018
+      const yEcu = getY(-0.018);
+      ctx.strokeStyle = 'rgba(225, 29, 72, 0.7)';
+      ctx.beginPath();
+      ctx.moveTo(padLeft, yEcu);
+      ctx.lineTo(padLeft + plotW, yEcu);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#e11d48';
+      ctx.fillText("Aplastamiento Concreto Confinado (\u03B5cu = -0.018)", padLeft + 8, yEcu - 3);
+
+      // 2. Dibujar las 8 barras de macrofibra
+      for (let k = 0; k < numFibers; k++) {
+        const xCent = xCoords[k];
+        const bW = widths[k];
+        const eps = strains[k];
+
+        const xLeft = getX(xCent - bW / 2);
+        const xRight = getX(xCent + bW / 2);
+        const barW = Math.max(xRight - xLeft, 2);
+        const yVal = getY(eps);
+
+        // Color según el estado
+        let colBar = '#0284c7'; // Compresión
+        if (eps > 0.0021) {
+          colBar = '#e11d48'; // Fluencia tracción
+        } else if (eps > 0) {
+          colBar = '#f59e0b'; // Tracción elástica
+        } else if (eps < -0.018) {
+          colBar = '#7f1d1d'; // Aplastamiento severo
+        }
+
+        ctx.fillStyle = colBar;
+        const rectTop = Math.min(yZero, yVal);
+        const rectHeight = Math.abs(yVal - yZero);
+        ctx.fillRect(xLeft, rectTop, barW - 1, rectHeight);
+
+        // Borde de la barra
+        ctx.strokeStyle = dark ? '#0b1320' : '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(xLeft, rectTop, barW - 1, rectHeight);
+
+        // Rótulo del número de fibra
+        ctx.font = '9px Inter, sans-serif';
+        ctx.fillStyle = colText;
+        ctx.textAlign = 'center';
+        ctx.fillText(`F${k + 1}`, (xLeft + xRight) / 2, padTop + plotH + 16);
+      }
+
+      // 3. Línea continua de sección plana (Navier-Bernoulli: eps(x) = eps0 + x * phi)
+      ctx.strokeStyle = dark ? '#ffffff' : '#0f172a';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let k = 0; k < numFibers; k++) {
+        const px = getX(xCoords[k]);
+        const py = getY(strains[k]);
+        if (k === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Puntos sobre la línea
+      for (let k = 0; k < numFibers; k++) {
+        const px = getX(xCoords[k]);
+        const py = getY(strains[k]);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Título de la pared activa
+      ctx.font = '700 11px Inter, sans-serif';
+      ctx.fillStyle = dark ? '#ffffff' : '#0f172a';
+      ctx.textAlign = 'center';
+      ctx.fillText(wallTitle, padLeft + plotW / 2, padTop - 12);
+    }
+
+    // LIENZO D: DERIVAS DE ENTREPISO Y DESCOMPOSICIÓN DE VOLCAMIENTO
+    function renderCanvasDrift() {
+      const canvas = document.getElementById('canvas-drift');
+      const setup = setupCanvas(canvas);
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+
+      const dark = isDark();
+      const colGrid = dark ? '#1e293b' : '#e2e8f0';
+      const colText = dark ? '#94a3b8' : '#64748b';
+
+      ctx.clearRect(0, 0, width, height);
+      if (states.length === 0) return;
+
+      const st = states[currentStepIdx];
+      const isDrift = activeViewD === 'drift';
+
+      const padLeft = 60;
+      const padRight = 30;
+      const padTop = 30;
+      const padBottom = 45;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      if (isDrift) {
+        // ==========================================
+        // VISTA 1: PERFIL DE DERIVA DE ENTREPISO (%)
+        // ==========================================
+        const numStories = 16;
+        const drifts = st.story_drifts_pct;
+        const driftMax = 1.6; // % escala máxima
+
+        const getX = (valD) => padLeft + (valD / driftMax) * plotW;
+        const getY = (story) => padTop + plotH - (story / numStories) * plotH;
+
+        // Rejilla
+        ctx.strokeStyle = colGrid;
+        ctx.lineWidth = 1;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.fillStyle = colText;
+        ctx.textAlign = 'center';
+
+        for (let d = 0; d <= driftMax; d += 0.4) {
+          const xPx = getX(d);
+          ctx.beginPath();
+          ctx.moveTo(xPx, padTop);
+          ctx.lineTo(xPx, padTop + plotH);
+          ctx.stroke();
+          ctx.fillText(`${d.toFixed(1)}%`, xPx, padTop + plotH + 16);
+        }
+
+        ctx.textAlign = 'right';
+        for (let s = 2; s <= numStories; s += 2) {
+          const yPx = getY(s);
+          ctx.beginPath();
+          ctx.moveTo(padLeft, yPx);
+          ctx.lineTo(padLeft + plotW, yPx);
+          ctx.stroke();
+          ctx.fillText(`P${s}`, padLeft - 8, yPx + 4);
+        }
+
+        // Límite NSR-10 (1.0%)
+        const xLimit = getX(1.0);
+        ctx.strokeStyle = 'rgba(225, 29, 72, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xLimit, padTop);
+        ctx.lineTo(xLimit, padTop + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#e11d48';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText("Límite NSR-10 (1.0%)", xLimit + 4, padTop + 14);
+
+        // Perfil de Deriva
+        ctx.strokeStyle = dark ? '#2dd4bf' : '#0d6f73';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let s = 1; s <= numStories; s++) {
+          const dVal = drifts[s - 1];
+          const px = getX(dVal);
+          const py = getY(s);
+          if (s === 1) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Puntos
+        for (let s = 1; s <= numStories; s++) {
+          const dVal = drifts[s - 1];
+          const px = getX(dVal);
+          const py = getY(s);
+          ctx.fillStyle = dVal > 1.0 ? '#e11d48' : '#0d6f73';
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Título eje X
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.fillStyle = dark ? '#f1f5f9' : '#0f172a';
+        ctx.textAlign = 'center';
+        ctx.fillText("Deriva de Entrepiso (% altura de entrepiso)", padLeft + plotW / 2, padTop + plotH + 34);
+
+      } else {
+        // ==========================================
+        // VISTA 2: DESCOMPOSICIÓN DE VOLCAMIENTO
+        // ==========================================
+        const mData = st.moments_kNm;
+        const m1 = Math.abs(mData.m_wall1);
+        const m2 = Math.abs(mData.m_wall2);
+        const mCouple = Math.abs(mData.m_couple);
+        const mTotal = m1 + m2 + mCouple;
+
+        const maxM = 280000; // kNm escala
+        const barW = 60;
+
+        // Barras de momentos: M1, M2, T*L, Total
+        const items = [
+          { label: "Muro 1 (M1)", val: m1, col: "#0284c7" },
+          { label: "Muro 2 (M2)", val: m2, col: dark ? "#2dd4bf" : "#0d6f73" },
+          { label: "Par T·L", val: mCouple, col: "#7c3aed" },
+          { label: "M_OTM Total", val: mTotal, col: "#d97706" }
+        ];
+
+        const spacing = plotW / items.length;
+
+        // Rejilla horizontal
+        ctx.strokeStyle = colGrid;
+        ctx.lineWidth = 1;
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.fillStyle = colText;
+        ctx.textAlign = 'right';
+
+        for (let mVal = 0; mVal <= maxM; mVal += 50000) {
+          const yPx = padTop + plotH - (mVal / maxM) * plotH;
+          ctx.beginPath();
+          ctx.moveTo(padLeft, yPx);
+          ctx.lineTo(padLeft + plotW, yPx);
+          ctx.stroke();
+          ctx.fillText((mVal / 1000).toFixed(0) + "k", padLeft - 8, yPx + 4);
+        }
+
+        // Dibujar barras
+        items.forEach((item, idx) => {
+          const xCenter = padLeft + spacing * idx + spacing / 2;
+          const barH = (item.val / maxM) * plotH;
+          const yPx = padTop + plotH - barH;
+
+          ctx.fillStyle = item.col;
+          ctx.fillRect(xCenter - barW / 2, yPx, barW, barH);
+          ctx.strokeStyle = dark ? '#0b1320' : '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(xCenter - barW / 2, yPx, barW, barH);
+
+          // Rótulo con valor
+          ctx.font = '700 10px JetBrains Mono, monospace';
+          ctx.fillStyle = dark ? '#f1f5f9' : '#0f172a';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${(item.val / 1000).toFixed(1)}k`, xCenter, yPx - 6);
+
+          // Rótulo de categoría
+          ctx.font = '600 10px Inter, sans-serif';
+          ctx.fillStyle = colText;
+          ctx.fillText(item.label, xCenter, padTop + plotH + 16);
+
+          // Porcentaje del total
+          if (mTotal > 0 && idx < 3) {
+            const pct = ((item.val / mTotal) * 100).toFixed(1);
+            ctx.font = '700 9px Inter, sans-serif';
+            ctx.fillStyle = item.col;
+            ctx.fillText(`${pct}%`, xCenter, padTop + plotH + 28);
+          }
+        });
+
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.fillStyle = dark ? '#f1f5f9' : '#0f172a';
+        ctx.textAlign = 'center';
+        ctx.fillText("Componentes del Momento de Volcamiento (kN·m)", padLeft + plotW / 2, padTop - 12);
+      }
+    }
+
+    function renderAllCanvases() {
+      renderCanvasBuilding();
+      renderCanvasPushover();
+      renderCanvasFibers();
+      renderCanvasDrift();
+    }
+
+    window.addEventListener('resize', renderAllCanvases);
+
+    /* ==========================================================================
+       SNIPPETS DE CÓDIGO OPENSEESPY
+       ========================================================================== */
+    const CODE_SNIPPETS = [
+      `# 1. DEFINICIÓN DE GEOMETRÍA Y NODOS DEL EDIFICIO DE 16 PISOS
+import openseespy.opensees as ops
+
+ops.wipe()
+ops.model('basic', '-ndm', 2, '-ndf', 3)
+
+# Parámetros del Edificio
+N_stories = 16
+h_story = 2.6  # Altura de entrepiso en metros
+L_wall = 7.65   # Longitud de cada muro en metros
+L_arm = 9.15    # Distancia entre ejes centroidales de muros
+c_shear = 0.40  # Altura relativa del resorte de cortante MVLEM
+
+# Generación de nodos principales de muros
+for j in range(N_stories + 1):
+    y = j * h_story
+    # Muro 1 (Centroide en X = 0.0)
+    ops.node(1000 + j, 0.0, y)
+    # Muro 2 (Centroide en X = 9.15)
+    ops.node(2000 + j, L_arm, y)
+
+# Empotramiento en la base (Piso 0)
+ops.fix(1000, 1, 1, 1)
+ops.fix(2000, 1, 1, 1)`,
+
+      `# 2. DEFINICIÓN DE MATERIALES UNIAXIALES
+# Material 1: Concreto confinado en bulbos de borde (Concrete02)
+fc_conf = -45.5e3  # 45.5 MPa (Confinado Mander)
+eps_0_conf = -0.004
+fcu_conf = -9.1e3   # 20% resistencia residual
+epsu_conf = -0.018  # Gran ductilidad por estribos
+lambda_ratio = 0.1
+ft_conf = 2070.0
+Ets = 2.0e6
+ops.uniaxialMaterial('Concrete02', 1, fc_conf, eps_0_conf, fcu_conf, epsu_conf, lambda_ratio, ft_conf, Ets)
+
+# Material 2: Concreto no confinado en el alma
+fc_unconf = -35.0e3  # 35 MPa
+eps_0_unconf = -0.002
+fcu_unconf = 0.0
+epsu_unconf = -0.006
+ops.uniaxialMaterial('Concrete02', 2, fc_unconf, eps_0_unconf, fcu_unconf, epsu_unconf, lambda_ratio, ft_conf, Ets)
+
+# Material 3: Acero de refuerzo longitudinal (Hysteretic)
+Fy = 420.0e3    # 420 MPa
+Es = 200.0e6    # 200 GPa
+eps_y = Fy / Es # 0.0021
+ops.uniaxialMaterial('Hysteretic', 3,
+    Fy, eps_y, 1.25*Fy, 0.05, 0.2*Fy, 0.10,
+    -Fy, -eps_y, -1.25*Fy, -0.05, -0.2*Fy, -0.10,
+    0.5, 0.5, 0.0, 0.0)`,
+
+      `# 3. CONSTRUCCIÓN DE ELEMENTOS MVLEM EN LA ALTURA
+# Cada muro tiene 8 macrofibras (bulbos de 7.5m espesor y alma de 0.3m)
+fiber_thick_W1 = [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 7.5]
+fiber_thick_W2 = [7.5, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
+fiber_widths = [0.3, 1.175, 1.175, 1.175, 1.175, 1.175, 1.175, 0.3]
+rebar_ratio = [0.012]*8
+
+# Propiedades del resorte de cortante a altura c*h
+G = 9.8e6  # Módulo de corte
+Av = 0.3 * 7.65 * 0.83  # Área de cortante efectiva
+Kh = (G * Av) / h_story
+
+for j in range(1, N_stories + 1):
+    tag_ele1 = 100 + j
+    tag_ele2 = 200 + j
+    # Elemento MVLEM: tag, dens, ndI, ndJ, m, c
+    ops.element('MVLEM', tag_ele1, 0.0, 1000 + j - 1, 1000 + j, 8, c_shear,
+                '-thick', *fiber_thick_W1, '-width', *fiber_widths,
+                '-rho', *rebar_ratio, '-matConcrete', 1, 2, 2, 2, 2, 2, 2, 1,
+                '-matSteel', 3, 3, 3, 3, 3, 3, 3, 3, '-matShear', 4)`,
+
+      `# 4. CONECTIVIDAD DE VIGAS DE ACOPLE Y DIAFRAGMAS RÍGIDOS
+# Viga de enlace elástica con rigidez reducida por agrietamiento
+L_clear_beam = 1.50 # m (Viga corta de acople)
+h_beam = 0.60
+b_beam = 0.30
+I_beam_cracked = 0.35 * (b_beam * h_beam**3 / 12.0)
+A_beam = b_beam * h_beam
+
+# Conectar nodos de borde mediante elementos viga
+for j in range(1, N_stories + 1):
+    beam_tag = 5000 + j
+    # Conexión entre cara derecha de Muro 1 y cara izquierda de Muro 2
+    ops.element('elasticBeamColumn', beam_tag, 1000 + j, 2000 + j,
+                A_beam, 2.5e7, I_beam_cracked, 1)`,
+
+      `# 5. PROTOCOLO DE ANÁLISIS PUSHOVER MONOTÓNICO
+# Patrón de cargas laterales triangulares invertidas
+ops.pattern('Plain', 2, 1)
+for j in range(1, N_stories + 1):
+    z = j * h_story
+    F_lat = (z / 41.6) * 100.0  # Distribución de fuerza proporcional a la altura
+    ops.load(1000 + j, F_lat, 0.0, 0.0)
+    ops.load(2000 + j, F_lat, 0.0, 0.0)
+
+# Algoritmo de control por desplazamiento en el nodo de cubierta
+node_ctrl = 1000 + N_stories
+D_max = 0.015 * 41.6  # 1.5% deriva = 0.624 m
+d_incr = 0.0005       # Pasos de 0.5 mm
+
+ops.integrator('DisplacementControl', node_ctrl, 1, d_incr)
+ops.analysis('Static')
+# Ejecución del pushover registrando cortante basal y derivas...`
+    ];
+
+    const codeDisplay = document.getElementById('code-display');
+    if (codeDisplay) {
+      codeDisplay.textContent = CODE_SNIPPETS[0];
+    }
+
+    document.querySelectorAll('.code-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        const tabIdx = parseInt(e.target.dataset.tab);
+        if (codeDisplay) codeDisplay.textContent = CODE_SNIPPETS[tabIdx];
+      });
+    });
+
+    const btnCopy = document.getElementById('btn-copy-code');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        if (!codeDisplay) return;
+        navigator.clipboard.writeText(codeDisplay.textContent).then(() => {
+          btnCopy.textContent = '✅ ¡Copiado!';
+          setTimeout(() => btnCopy.textContent = '📋 Copiar Código', 2000);
+        });
+      });
+    }
+
+    /* ==========================================================================
+       EVALUACIÓN FORMATIVA (QUIZ INTERACTIVO)
+       ========================================================================== */
+    const QUIZ_ANSWERS = {
+      q1: { correct: 1, explanation: "¡Correcto! En muros esbeltos dominados por flexión, el punto de inflexión de momento flector se ubica aproximadamente al 40% de la altura de entrepiso (c = 0.40). Ubicar allí el resorte de cortante minimiza el momento espurio introducido por la rotación de los nodos." },
+      q2: { correct: 1, explanation: "¡Correcto! La acumulación del cortante vertical transferido por las vigas de acople crea un par axial de tracción/compresión T · L que resiste más del 60% del momento de volcamiento total, aligerando drásticamente los flectores en la base de cada muro." },
+      q3: { correct: 1, explanation: "¡Correcto! El confinamiento provisto por los estribos cerrados incrementa tanto la resistencia máxima a compresión (Mander k = 1.3 -> 45.5 MPa) como la ductilidad de deformación última (ecu = 0.018), evitando fallas frágiles por compresión en los extremos del muro." },
+      q4: { correct: 1, explanation: "¡Correcto! La fuerza axial de tracción neta inducida por el acople reduce la zona comprimida del muro de barlovento, empujando el eje neutro hacia el extremo más comprimido y provocando que casi todas las macrofibras del alma entren en fluencia por tracción." }
+    };
+
+    document.querySelectorAll('.quiz-card').forEach(card => {
+      const qId = card.id;
+      const qData = QUIZ_ANSWERS[qId];
+      if (!qData) return;
+
+      const fb = card.querySelector('.quiz-feedback');
+      const options = card.querySelectorAll('.quiz-option');
+
+      options.forEach(btn => {
+        btn.addEventListener('click', () => {
+          options.forEach(b => {
+            b.classList.remove('correct', 'incorrect');
+            b.disabled = true;
+          });
+          const chosen = parseInt(btn.dataset.opt);
+
+          if (chosen === qData.correct) {
+            btn.classList.add('correct');
+            if (fb) {
+              fb.style.display = 'block';
+              fb.style.background = 'rgba(5, 150, 105, 0.15)';
+              fb.style.color = '#059669';
+              fb.textContent = qData.explanation;
+            }
+          } else {
+            btn.classList.add('incorrect');
+            const correctBtn = card.querySelector(`[data-opt="${qData.correct}"]`);
+            if (correctBtn) correctBtn.classList.add('correct');
+            if (fb) {
+              fb.style.display = 'block';
+              fb.style.background = 'rgba(225, 29, 72, 0.15)';
+              fb.style.color = '#e11d48';
+              fb.textContent = 'Respuesta incorrecta. ' + qData.explanation;
+            }
+          }
+        });
+      });
+    });
+
+    /* ==========================================================================
+       RENDERIZADO DE ECUACIONES MATEMÁTICAS CON KaTeX
+       ========================================================================== */
+    function initKaTeX() {
+      if (typeof window !== 'undefined' && typeof window.renderMathInElement === 'function') {
+        try {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false,
+            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+          });
+          return true;
+        } catch (e) {
+          console.warn('KaTeX render error:', e);
+        }
+      }
+      return false;
+    }
+
+    // Inicialización al cargar la ventana y el DOM
+    window.addEventListener('DOMContentLoaded', () => {
+      isInitialized = true;
+      initKaTeX();
+      updateStep(0);
+    });
+
+    window.addEventListener('load', () => {
+      isInitialized = true;
+      initKaTeX();
+      updateStep(0);
+      renderAllCanvases();
+    });
+
+    // Intervalo de reintento para KaTeX (en caso de carga asíncrona desde CDN)
+    let katexAttempts = 0;
+    const katexTimer = setInterval(() => {
+      katexAttempts++;
+      if (initKaTeX() || katexAttempts > 30) {
+        clearInterval(katexTimer);
+      }
+    }, 120);
+  </script>
+</body>
+</html>

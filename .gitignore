@@ -42,3 +42,8 @@ papers_reading/
 __pycache__/
 *.pyc
 *.code-workspace
+
+# Large model data and archives
+Modelos/
+*.pkl
+*.zip
