@@ -97,6 +97,23 @@ Plataforma educativa y conjunto de laboratorios computacionales interactivos dis
     5. [Tutorial 4: Modelo de fibras - Pushover](https://youtu.be/hGzWuKDobbY)
   * **[Biblioteca `opseestools`](https://github.com/odarroyo/opseestools) & [Publicación en SoftwareX (Elsevier)](https://www.sciencedirect.com/science/article/pii/S2352711024002036):** Paquete de Python (`pip install opseestools`) con 4 módulos (`analisis`, `analisis3D`, `utilidades`, `Lib_frag`) y documentación en [ReadTheDocs](https://opseestools.readthedocs.io/en/latest/index.html). Cita: *Arroyo et al. (2024), SoftwareX, 27, 101832*.
 
+### 9. [Recurso 08 — Modelado No Lineal de Muros con Macroelementos MVLEM en OpenSeesPy](https://github.com/odarroyo/analisis_no_lineal/blob/main/Codigos_OpenSeesPy/MVLEM_generator_colab.ipynb) ⏳ *(En Desarrollo)*
+* **Objetivo:** Formular e implementar el macroelemento MVLEM (*Multiple-Vertical-Line-Element Model* - Vulcano et al., Wallace & Kolozvari) para simular la interacción flexo-compresión-corte en edificios de muros de concreto reforzado.
+* **Características:**
+  * Discretización en macrofibras uniaxiales verticales con leyes constitutivas de concreto confinado (`Concrete02`) y acero (`Hysteretic`).
+  * Resorte central de cortante horizontal desacoplado/acoplado.
+  * Análisis pushover de edificios de 16 pisos con 2 muros acoplados mediante vigas de enlace.
+  * Cuaderno interactivo en Google Colab (`MVLEM_generator_colab.ipynb`) disponible en el repositorio.
+
+### 10. [Recurso 09 — Selector de Curvas de Fragilidad: Muros de Colombia](https://odarroyo.github.io/analisis_no_lineal/09_selector_curvas_fragilidad_muros_colombia.html) 🏢
+* **Objetivo:** Herramienta interactiva y autónoma para identificar arquetipos colombianos de edificios de muros estructurales afines a un edificio consultado y comparar sus funciones lognormales acumuladas de fragilidad sísmica.
+* **Características:**
+  * **Cálculo de Semejanza Multivariada (Distancia tipo Gower):** Búsqueda adaptativa ponderando altura ($H$), espesor ($t_w$), período ($T$), índice de muros ($IM$), densidad, relación $H/T$, relación de aspecto ($A_r$) y carga axial ($ALR$).
+  * **Gráficas Dinámicas de Curvas Lognormales en SVG:** Probabilidad de excedencia $P(DS \ge ds | IM)$ para los 4 estados de daño ($DS_1$ Leve, $DS_2$ Moderado, $DS_3$ Extenso, $DS_4$ Completo).
+  * **Comparador Directo entre Candidatos:** Superposición interactiva para un estado de daño seleccionado.
+  * **Parámetros Lognormales $\theta$ y $\beta$:** Consulta de medianas de capacidad espectral y dispersiones logarítmicas por estado de daño.
+  * **Exportación a CSV e Impresión/PDF:** Funcionamiento 100% autónomo y offline sin dependencias externas.
+
 ---
 
 ## 🎨 Características de Diseño

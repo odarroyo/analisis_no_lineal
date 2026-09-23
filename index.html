@@ -48,6 +48,8 @@
       --rose-500: #be123c;
       --purple-400: #7c3aed;
       --purple-500: #6d28d9;
+      --teal-400: #0d6f73;
+      --teal-500: #094d50;
 
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
@@ -85,6 +87,8 @@
       --rose-500: #f43f5e;
       --purple-400: #c084fc;
       --purple-500: #a855f7;
+      --teal-400: #2dd4bf;
+      --teal-500: #14b8a6;
 
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
@@ -720,6 +724,90 @@
       color: var(--text-muted);
     }
 
+    /* ==========================================================================
+       SECCIÓN ESPECIALIZADA: ANÁLISIS DE MUROS Y FRAGILIDAD SÍSMICA
+       ========================================================================== */
+    .walls-section {
+      margin-top: 4rem;
+      padding-top: 2.5rem;
+      border-top: 2px dashed var(--border-subtle);
+    }
+
+    .walls-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(13, 111, 115, 0.12);
+      color: var(--teal-400);
+      margin-bottom: 0.5rem;
+      font-family: var(--font-mono);
+      border: 1px solid rgba(13, 111, 115, 0.25);
+    }
+
+    .walls-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .wall-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.85rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .wall-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .wall-card.card-08 {
+      border-top: 4px solid #64748b;
+    }
+
+    .wall-card.card-08::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #64748b, #94a3b8);
+    }
+
+    .wall-card.card-09 {
+      border-top: 4px solid #0d6f73;
+    }
+
+    .wall-card.card-09::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #0d6f73, #159b96, #0284c7);
+    }
+
+    .wall-card.card-09:hover {
+      border-color: var(--teal-400);
+    }
+
     /* Banner de Notas Teóricas */
     .theory-banner {
       background: var(--bg-surface);
@@ -816,6 +904,9 @@
         </div>
       </a>
       <div class="header-actions">
+        <a href="#muros-section" class="btn-icon" style="background: rgba(13, 111, 115, 0.1); color: var(--teal-400); border-color: rgba(13, 111, 115, 0.3); font-weight: 700;">
+          <span>🏢 Muros</span>
+        </a>
         <a href="recursos_openseespy.html" class="btn-icon" style="background: rgba(2, 132, 199, 0.1); color: var(--cyan-400); border-color: rgba(2, 132, 199, 0.3); font-weight: 700;">
           <span>🐍 OpenSeesPy</span>
         </a>
@@ -844,6 +935,7 @@
       <div class="hero-badge">📐 Formulación KaTeX Rigurosa</div>
       <div class="hero-badge">🖥️ Canvas 2D HiDPI con Autoescala</div>
       <div class="hero-badge">☀️ Modo Proyección en Aula</div>
+      <a href="#muros-section" class="hero-badge" style="text-decoration: none; border-color: var(--teal-400); color: var(--teal-400); font-weight: 700; background: rgba(13, 111, 115, 0.08);">🏢 Sección Muros & Fragilidad →</a>
       <a href="recursos_openseespy.html" class="hero-badge" style="text-decoration: none; border-color: var(--cyan-400); color: var(--cyan-400); font-weight: 700; background: rgba(2, 132, 199, 0.08);">🐍 Hub OpenSeesPy & opseestools →</a>
     </div>
   </section>
@@ -1168,8 +1260,111 @@
     </div>
 
     <!-- ==========================================================================
-         SECCIÓN DESTACADA: ECOSISTEMA Y RECURSOS OPENSEESPY
+         SECCIÓN ESPECIALIZADA: ANÁLISIS DE MUROS Y FRAGILIDAD SÍSMICA
          ========================================================================== -->
+    <section class="walls-section" id="muros-section">
+      <div class="section-title-wrap" style="margin-bottom: 1.75rem;">
+        <div class="walls-badge">
+          🏢 Muros Estructurales de Concreto Reforzado
+        </div>
+        <h2 class="section-title">🏢 Modelación No Lineal y Fragilidad Sísmica de Muros</h2>
+        <p class="section-desc">
+          Módulo dedicado al comportamiento inelástico, macroelementos MVLEM, interacción flexión-corte y evaluación probabilística de la vulnerabilidad y fragilidad sísmica en tipologías y arquetipos de muros estructurales colombianos.
+        </p>
+      </div>
+
+      <div class="walls-cards-grid">
+
+        <!-- Recurso 08: Modelado No Lineal de Muros MVLEM (En Preparación) -->
+        <article class="wall-card card-08">
+          <div>
+            <div class="class-header">
+              <span class="class-number" style="background: rgba(100, 116, 139, 0.15); color: var(--text-faint); font-weight: 800;">Recurso 08</span>
+              <span class="class-status" style="color: var(--amber-500); font-weight: 700;">⏳ En Desarrollo</span>
+            </div>
+            <h3 class="class-title" style="color: var(--text-main);">Modelado No Lineal de Muros con Macroelementos MVLEM (OpenSeesPy)</h3>
+            <p class="class-desc">
+              Formulación e implementación del macroelemento MVLEM (<em>Multiple-Vertical-Line-Element Model</em> - Vulcano, Bertero & Colotti, 1988; Orakcal & Wallace, 2006). Simulación de la respuesta no lineal acoplada flexión-corte en edificios de muros mediante macrofibras de concreto y acero y resortes horizontales de cortante.
+            </p>
+
+            <ul class="feature-list">
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
+                <span><strong>Discretización en macrofibras:</strong> Discretización del muro en \(m\) elementos axiales uniaxiales en paralelo vinculados rígidamente en niveles superior e inferior.</span>
+              </li>
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
+                <span><strong>Leyes constitutivas uniaxiales:</strong> Concreto confinado en bordes libres (<code>Concrete02</code>), no confinado en el alma y acero con endurecimiento (<code>Hysteretic</code>).</span>
+              </li>
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
+                <span><strong>Resorte central de cortante:</strong> Posicionado a altura \(c \cdot h\) para representar la flexibilidad y degradación a corte desacoplada/acoplada.</span>
+              </li>
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--amber-500);">⏳</span>
+                <span><strong>Edificio de 16 pisos con muros acoplados:</strong> Modelo con diafragmas rígidos y vigas de enlace bajo análisis Pushover monotónico y cíclico.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <div style="padding: 0.75rem 1rem; border-radius: 10px; background: var(--bg-card); border: 1px dashed var(--border-subtle); margin-bottom: 0.85rem; font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.6rem;">
+              <span>🛠️</span>
+              <span><strong>Estado:</strong> Laboratorio interactivo en preparación. El cuaderno de investigación preliminar en Python/OpenSeesPy ya está disponible en la carpeta del repositorio.</span>
+            </div>
+            <a href="https://github.com/odarroyo/analisis_no_lineal/blob/main/Codigos_OpenSeesPy/MVLEM_generator_colab.ipynb" target="_blank" rel="noopener" class="opensees-mini-link" style="text-decoration: none; justify-content: center; font-weight: 600;">
+              <span>📓 Ver Cuaderno MVLEM en GitHub</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- Recurso 09: Selector de Curvas de Fragilidad - Muros de Colombia (Disponible) -->
+        <article class="wall-card card-09">
+          <div>
+            <div class="class-header">
+              <span class="class-number" style="background: rgba(13, 111, 115, 0.15); color: var(--teal-400); font-weight: 800;">Recurso 09</span>
+              <span class="class-status" style="color: var(--emerald-400); font-weight: 700;">● Disponible • Interactivo</span>
+            </div>
+            <h3 class="class-title" style="color: var(--text-main);">Selector de Curvas de Fragilidad — Muros de Colombia</h3>
+            <p class="class-desc">
+              Herramienta exploratoria e interactiva que identifica arquetipos colombianos de edificios de muros estructurales afines a un caso de estudio y compara sus funciones lognormales acumuladas de fragilidad sísmica. Funciona 100% en el navegador sin dependencias externas.
+            </p>
+
+            <ul class="feature-list">
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--teal-400);">✓</span>
+                <span><strong>Semejanza multivariada (Gower):</strong> Evaluación ponderada por rango con parámetros geométricos y dinámicos (\(H\), \(t_w\), \(T\), \(IM\), Densidad, \(H/T\), \(A_r\), \(ALR\)).</span>
+              </li>
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--teal-400);">✓</span>
+                <span><strong>Curvas lognormales interactivas en SVG:</strong> Probabilidad de excedencia \(P(DS \ge ds | IM)\) para 4 estados de daño (\(DS_1\) Leve, \(DS_2\) Moderado, \(DS_3\) Extenso, \(DS_4\) Completo).</span>
+              </li>
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--teal-400);">✓</span>
+                <span><strong>Comparador inter-arquetipos:</strong> Superposición directa de curvas entre los \(k\) mejores candidatos para un estado de daño específico seleccionado.</span>
+              </li>
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--teal-400);">✓</span>
+                <span><strong>Parámetros lognormales \(\theta\) y \(\beta\):</strong> Consulta instantánea de medianas de aceleración/demanda espectral y desviaciones estándar logarítmicas.</span>
+              </li>
+              <li class="feature-item">
+                <span class="feature-icon" style="color: var(--teal-400);">✓</span>
+                <span><strong>Exportación e informes:</strong> Descarga inmediata de resultados tabulados en CSV y formato preparado para impresión o guardado a PDF.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-footer" style="margin-top: 1rem;">
+            <a href="09_selector_curvas_fragilidad_muros_colombia.html" class="btn-launch" style="background: linear-gradient(135deg, #0d6f73, #159b96); color: #fff; width: 100%; box-shadow: 0 4px 12px rgba(13, 111, 115, 0.25);">
+              <span>Abrir Selector de Curvas de Fragilidad (Recurso 09)</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </article>
+
+      </div>
+    </section>
     <section class="opensees-hub-section" id="opensees-section">
       <div class="section-title-wrap" style="margin-bottom: 1.5rem;">
         <div style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.65rem; border-radius: 6px; background: rgba(2, 132, 199, 0.12); color: var(--cyan-400); margin-bottom: 0.5rem;">
@@ -1335,6 +1530,8 @@
         <li><a href="05_regularizacion_energia_fractura.html">Clase 05</a></li>
         <li><a href="06_matriz_rigidez_elemento_fibras.html">Clase 06</a></li>
         <li><a href="07_control_fuerza_vs_desplazamiento.html">Clase 07</a></li>
+        <li><a href="#muros-section" style="color: var(--teal-400); font-weight: 700;">Muros</a></li>
+        <li><a href="09_selector_curvas_fragilidad_muros_colombia.html" style="color: var(--teal-400); font-weight: 700;">Recurso 09 (Fragilidad)</a></li>
         <li><a href="recursos_openseespy.html" style="color: var(--cyan-400); font-weight: 700;">OpenSeesPy</a></li>
         <li><a href="https://github.com/odarroyo/analisis_no_lineal" target="_blank" rel="noopener">Repositorio</a></li>
       </ul>
