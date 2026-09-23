@@ -35,7 +35,7 @@
   </div>
   <div class="eyebrow">Herramienta exploratoria · Edificios de muros</div>
   <h1>Selector de curvas de fragilidad</h1>
-  <p class="subtitle">Identifica arquetipos colombianos semejantes a un edificio consultado y compara sus funciones lognormales de fragilidad. Funciona completamente sin conexión.</p>
+  <p class="subtitle">Identifica arquetipos colombianos semejantes a un edificio consultado y compara sus funciones lognormales de fragilidad sísmica, sustentadas en las investigaciones de <strong>Bonett et al. (2026)</strong> y <strong>Arroyo et al. (2025)</strong> en <em>Earthquake Spectra</em>. Funciona completamente sin conexión.</p>
 </header>
 <main>
   <div class="layout">
@@ -60,7 +60,7 @@
       </div>
       <div class="field"><label>Número de candidatos</label><select id="topK"><option>3</option><option selected>5</option><option>6</option><option>8</option></select></div>
       <div class="actions"><button class="btn primary" id="analyze">Buscar curvas</button><button class="btn secondary" id="clear">Limpiar</button></div>
-      <details class="method"><summary>Cómo se calcula la semejanza</summary><p>Se usa una distancia tipo Gower. Cada diferencia numérica se divide por el rango observado en la base y <em>Hazard</em> se compara como categoría. El grupo H–T–H/T aporta un solo componente para evitar duplicar información. La semejanza es 100 × (1 − distancia).</p></details>
+      <details class="method"><summary>Cómo se calcula la semejanza y origen de datos</summary><p>Se usa una distancia tipo Gower. Cada diferencia numérica se divide por el rango observado en la base y <em>Hazard</em> se compara como categoría. El grupo H–T–H/T aporta un solo componente para evitar duplicar información. La semejanza es 100 × (1 − distancia).</p><p style="margin-top:6px;border-top:1px dashed #d5dedb;padding-top:6px;"><strong>Sustento científico:</strong> La base de datos de arquetipos y parámetros lognormales (&theta;, &beta;) proviene de los modelos no lineales y estudios de fragilidad de <em>Bonett et al. (2026)</em> y <em>Arroyo et al. (2025)</em> en <em>Earthquake Spectra</em>.</p></details>
     </aside>
     <section class="results">
       <div id="empty" class="card empty"><div class="icon">⌁</div><h2>Ingrese al menos una característica</h2><p>La herramienta adaptará la comparación a los parámetros disponibles.</p></div>
@@ -71,6 +71,35 @@
         <div class="card chart-card"><div class="chart-head"><div><div class="chart-title">Curvas del arquetipo seleccionado</div><div class="chart-sub" id="singleSub"></div></div></div><svg id="singleChart" viewBox="0 0 760 390" role="img"></svg><div id="singleLegend" class="legend"></div></div>
         <div class="card chart-card"><div class="chart-head"><div><div class="chart-title">Comparación entre candidatos</div><div class="chart-sub">Probabilidad de excedencia para un estado de daño</div></div><select id="compareDS"><option value="1">DS1</option><option value="2">DS2</option><option value="3" selected>DS3</option><option value="4">DS4</option></select></div><svg id="compareChart" viewBox="0 0 760 390" role="img"></svg><div id="compareLegend" class="legend"></div></div>
         <div class="card detail"><h3 id="detailTitle">Detalle del candidato</h3><div id="detailTable"></div><div id="fragParams" class="frag-grid"></div></div>
+      </div>
+      <!-- Publicaciones de Referencia y Sustento Científico -->
+      <div class="card" style="padding: 22px 24px; margin-top: 18px; border-left: 5px solid var(--teal); background: var(--card);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <span style="font-size: 22px;">📚</span>
+          <h3 style="font-family: Georgia, serif; font-size: 19px; margin: 0; color: var(--ink); font-weight: 600;">Manuscritos de Referencia y Sustento Científico</h3>
+        </div>
+        <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.55;">
+          La base de datos de arquetipos estructurales, indicadores de configuración geométrica y parámetros de las funciones lognormales de fragilidad sísmica (&theta;, &beta;) implementados en esta herramienta interactiva se sustentan en las siguientes investigaciones publicadas en <strong><em>Earthquake Spectra</em></strong>:
+        </p>
+        <div style="display: grid; gap: 12px;">
+          <div style="padding: 14px 16px; background: #f5f8f7; border: 1px solid rgba(13, 111, 115, 0.16); border-radius: 11px; font-size: 12.5px; line-height: 1.6; color: var(--ink);">
+            <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--teal); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+              <span>📄</span> Impacto de Configuraciones Estructurales (2026)
+            </div>
+            <strong>Bonett, R., Vidales, F., Arroyo, O., Ocampo, J. J., Feliciano, D., &amp; Carrillo, J. (2026).</strong> Impact of Structural Configurations on Seismic Performance of Low‐and Mid‐Rise Thin Lightly Reinforced Concrete Wall Buildings. <em>Earthquake Spectra</em>, 42(2), e70010.
+          </div>
+          <div style="padding: 14px 16px; background: #f5f8f7; border: 1px solid rgba(13, 111, 115, 0.16); border-radius: 11px; font-size: 12.5px; line-height: 1.6; color: var(--ink);">
+            <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--teal); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+              <span>📄</span> Evaluación de Fragilidad Sísmica en Colombia (2025)
+            </div>
+            <strong>Arroyo, O., Bonett, R., Vidales, F., Ocampo, J. J., Feliciano, D., Carrillo, J., &amp; Novoa, D. (2025).</strong> Seismic fragility assessment of reinforced concrete wall buildings in Colombia: Insights and implications for earthquake-resistant design. <em>Earthquake Spectra</em>, 41(1), 354–380.
+            <div style="margin-top: 6px;">
+              <a href="https://doi.org/10.1177/87552930241297564" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 4px; color: var(--teal2); font-weight: 600; text-decoration: underline; font-size: 11.5px;">
+                <span>https://doi.org/10.1177/87552930241297564</span> &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="footer-note">Herramienta de apoyo exploratorio. La semejanza geométrica no sustituye el juicio ingenieril, la inspección del daño ni un análisis específico del edificio.</div>
     </section>
